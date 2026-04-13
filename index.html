@@ -61,13 +61,6 @@ header { text-align: center; margin-bottom: 36px; }
 .metal-swatch { width: 13px; height: 13px; border-radius: 50%; }
 .metal-swatch.silber { background: linear-gradient(135deg, #d4d8dc, #8a9299); }
 .metal-swatch.gold   { background: linear-gradient(135deg, #e8c97e, #b8863a); }
-.wa-btn { display: block; width: 100%; padding: 16px; background: var(--lava); color: #fff; border: none; cursor: pointer; font-family: 'Jost', sans-serif; font-weight: 400; font-size: 16px; letter-spacing: 0.15em; text-transform: uppercase; text-align: center; transition: background 0.2s; border-radius: 1px; text-decoration: none; }
-.wa-btn:hover { background: var(--ocean); }
-.wa-btn.disabled { background: #bbb; cursor: not-allowed; pointer-events: none; }
-.shop-btn { display: block; width: 100%; padding: 15px; background: transparent; color: var(--lava); border: 1px solid var(--lava); cursor: pointer; font-family: 'Jost', sans-serif; font-weight: 400; font-size: 16px; letter-spacing: 0.15em; text-transform: uppercase; text-align: center; transition: all 0.2s; border-radius: 1px; text-decoration: none; margin-bottom: 12px; }
-.shop-btn:hover { background: var(--lava); color: #fff; }
-.shop-btn.hidden { display: none; }
-.hint { font-size: 14px; color: #111; text-align: center; margin-top: 10px; letter-spacing: 0.06em; }
 .summary-box { display: none; background: #f4f3ef; border: 1px solid #e8e5df; border-radius: 1px; padding: 18px 20px; margin-bottom: 20px; }
 .summary-box.visible { display: block; }
 .summary-title { font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; font-weight: 500; margin-bottom: 10px; }
@@ -75,6 +68,10 @@ header { text-align: center; margin-bottom: 36px; }
 .copy-btn { margin-top: 14px; display: inline-block; border: 1px solid #111; background: transparent; padding: 9px 18px; font-family: 'Jost', sans-serif; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; color: #111; transition: all 0.2s; border-radius: 1px; }
 .copy-btn:hover { background: #111; color: #fff; }
 .copy-btn.copied { background: #111; color: #fff; }
+.next-step { display: none; background: var(--lava); color: #fff; border-radius: 1px; padding: 18px 20px; text-align: center; }
+.next-step.visible { display: block; }
+.next-step-label { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+.next-step-text { font-size: 15px; letter-spacing: 0.06em; line-height: 1.6; }
 </style>
 </head>
 <body>
@@ -103,7 +100,7 @@ header { text-align: center; margin-bottom: 36px; }
 </button>
 <button class="design-btn" onclick="setDesign('energie', this)">
 <span class="design-btn-name">Energie Armband</span>
-<span class="design-btn-desc">Platzhalter Perle · Lava · Platzhalter Perle · 3 Kristalle – 1, 2 oder 3 Farben</span>
+<span class="design-btn-desc">Platzhalter Perle · Lavaperle · Platzhalter Perle · 3 Kristalle – 1, 2 oder 3 Farben</span>
 </button>
 </div>
 </div>
@@ -153,16 +150,12 @@ header { text-align: center; margin-bottom: 36px; }
 <button class="copy-btn" id="copy-btn" onclick="copyText()">Text kopieren</button>
 </div>
 
-<button id="shop-btn" class="shop-btn hidden" onclick="window.open('https://laroyallanzarote.com/products/wunschanfertigungen')">
-Als Wunschanfertigung bestellen
-</button>
-<a id="wa-btn" class="wa-btn disabled" href="#" target="_top">
-Wunscharmband per WhatsApp anfragen
-</a>
-<div class="hint">Du wirst direkt zu WhatsApp weitergeleitet.</div>
-
+<div class="next-step" id="next-step">
+<div class="next-step-label">Schritt 5</div>
+<div class="next-step-text">Kopiere den Text. Bestelle dein Wunscharmband direkt unten als Wunschanfertigung oder schreib mir per WhatsApp, wenn du Fragen hast.</div>
 </div>
 
+</div>
 </div>
 
 <script>
@@ -190,7 +183,6 @@ const COLORS = [
 ];
 
 const GREY      = { hex: '#c8c8c8', shimmer: '#e4e4e4' };
-const WA_NUMBER = '34619890099';
 
 const state = {
 design: null,
@@ -327,7 +319,7 @@ else if (b.shape === 'bicone') drawBicone(ctx, x, y, R_CRYSTAL, b.hex, b.shimmer
 else                           drawSphere(ctx, x, y, R_CRYSTAL, b.hex, b.shimmer, 0.65);
 }
 updateLabel();
-updateButton();
+updateSummary();
 }
 
 function updateLabel() {
@@ -367,17 +359,15 @@ state.count &&
 state.metal &&
 state.slots.filter(Boolean).length === state.count;
 }
-function updateButton() {
-const btn = document.getElementById('wa-btn');
+
+function updateSummary() {
 if (isReady()) {
-btn.className = 'wa-btn';
-btn.onclick = () => window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(buildMessage())}`);document.getElementById('summary-box').classList.add('visible');
+document.getElementById('summary-box').classList.add('visible');
 document.getElementById('summary-text').textContent = buildSummary();
-document.getElementById('shop-btn').classList.remove('hidden');
+document.getElementById('next-step').classList.add('visible');
 } else {
-btn.className = 'wa-btn disabled';
 document.getElementById('summary-box').classList.remove('visible');
-document.getElementById('shop-btn').classList.add('hidden');
+document.getElementById('next-step').classList.remove('visible');
 }
 }
 
@@ -535,16 +525,6 @@ drawBracelet();
 function getEnergieColorAtPos(pos) {
 const slotIdx = state.count === 1 ? 0 : state.count === 2 ? state.ePos[pos] : pos;
 return state.slots[slotIdx] || '';
-}
-
-function buildMessage() {
-if (state.design === 'dk') {
-return `Hola, ich möchte gerne ein Doppel Kristall Armband bestellen:\n\nMaterial: Schwarze Lavaperlen 6 mm + Kristallperlen 6 mm\nFarben: ${state.slots.join(', ')}\nEdelstahl: ${state.metal}\nPreis: 45 €\n\nWäre das möglich? Danke!`;
-} else {
-const posNames   = ['Links', 'Mitte', 'Rechts'];
-const colorLines = posNames.map((p, i) => `${p}: ${getEnergieColorAtPos(i)}`).join('\n');
-return `Hola, ich möchte gerne ein Energie Armband bestellen:\n\nMaterial: Schwarze Lavaperlen 6 mm + Kristallperlen 6 mm\nKristallfarben:\n${colorLines}\nEdelstahl: ${state.metal}\nPreis: 45 €\n\nWäre das möglich? Danke!`;
-}
 }
 
 function buildSummary() {
