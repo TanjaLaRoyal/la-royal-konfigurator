@@ -175,10 +175,12 @@
     <button class="copy-btn" id="copy-btn" onclick="copyText()">Text kopieren</button>
   </div>
 
-  <a id="shop-btn" class="shop-btn hidden" href="https://laroyallanzarote.com/products/wunschanfertigungen" target="_blank" rel="noopener">
+  <a id="shop-btn" class="shop-btn hidden" href="https://laroyallanzarote.com/products/wunschanfertigungen"
+     onclick="window.open('https://laroyallanzarote.com/products/wunschanfertigungen','_blank'); return false;">
     Als Wunschanfertigung bestellen
   </a>
-  <a id="wa-btn" class="wa-btn disabled" href="#" target="_blank" rel="noopener">
+  <a id="wa-btn" class="wa-btn disabled" href="#"
+     onclick="if(this.href!='#'){ window.open(this.href,'_blank'); return false; }">
     Wunscharmband per WhatsApp anfragen
   </a>
   <div class="hint">Du wirst direkt zu WhatsApp weitergeleitet.</div>
