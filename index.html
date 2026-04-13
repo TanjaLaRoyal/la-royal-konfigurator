@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Royal – Wunscharmband</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --sand: #faf9f6; --lava: #1a1a1a; --gold: #c9a96e;
+    --ocean: #1d5f7a; --soft: #f4f3ef; --text: #111; --muted: #222;
+  }
+  body { background: var(--sand); color: var(--text); font-family: 'Jost', sans-serif; font-weight: 300; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px 60px; }
+  header { text-align: center; margin-bottom: 36px; }
+  .brand { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(2.2rem, 6vw, 3.6rem); letter-spacing: 0.18em; color: var(--lava); line-height: 1; }
+  .tagline { font-size: 16px; letter-spacing: 0.2em; text-transform: uppercase; color: #111; margin-top: 8px; }
+  .divider { width: 48px; height: 1px; background: var(--gold); margin: 20px auto 0; }
+  .card { background: #fff; border-radius: 2px; padding: 32px 28px; width: 100%; max-width: 580px; box-shadow: 0 2px 24px rgba(0,0,0,0.06); }
+
+  /* Canvas oben (Mobil) */
+  .bracelet-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; background: var(--soft); padding: 24px 20px 18px; border-radius: 1px; margin-bottom: 28px; }
+
+  /* Desktop: Zwei-Spalten-Layout */
+  @media (min-width: 700px) {
+    .card { display: grid; grid-template-columns: 300px 1fr; column-gap: 36px; max-width: 860px; align-items: start; }
+    .bracelet-wrap { position: sticky; top: 40px; margin-bottom: 0; grid-column: 1; grid-row: 1; }
+    .options-col { grid-column: 2; grid-row: 1; }
+  }
+  .preview-label { font-family: 'Cormorant Garamond', serif; font-size: 15px; color: #111; font-style: italic; text-align: center; min-height: 1.4em; }
+  .preview-label.filled { color: #111; font-style: normal; font-size: 16px; }
+
+  .section-label { font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; margin-bottom: 12px; font-weight: 500; }
+  .section { margin-bottom: 28px; }
+
+  /* Design-Auswahl */
+  .design-options { display: flex; flex-direction: column; gap: 10px; }
+  .design-btn { border: 1px solid #ddd; background: transparent; padding: 16px 20px; cursor: pointer; border-radius: 1px; font-family: 'Jost', sans-serif; font-weight: 300; letter-spacing: 0.04em; transition: all 0.2s; text-align: left; color: var(--text); display: flex; flex-direction: column; gap: 5px; width: 100%; }
+  .design-btn.active { border-color: #111; background: #f4f3ef; }
+  .design-btn:hover:not(.active) { border-color: #111; }
+  .design-btn-name { font-size: 17px; font-weight: 400; }
+  .design-btn-desc { font-size: 13px; color: #111; letter-spacing: 0.04em; }
+
+  .count-options { display: flex; gap: 10px; }
+  .count-btn { flex: 1; border: 1px solid #ddd; background: transparent; padding: 12px 6px; font-family: 'Cormorant Garamond', serif; font-size: 17px; color: var(--text); cursor: pointer; border-radius: 1px; transition: all 0.2s; text-align: center; }
+  .count-btn.active { border-color: #111; background: var(--gold); color: #fff; }
+  .count-btn:hover:not(.active) { border-color: #111; color: #111; }
+
+  .color-slot { margin-bottom: 16px; }
+  .slot-label { font-size: 14px; letter-spacing: 0.15em; text-transform: uppercase; color: #111; margin-bottom: 8px; font-weight: 500; }
+  .color-options { display: flex; flex-wrap: wrap; gap: 7px; }
+  .color-chip { display: flex; align-items: center; gap: 7px; border: 1px solid #ddd; padding: 6px 10px; border-radius: 1px; cursor: pointer; font-size: 15px; transition: all 0.2s; background: transparent; font-family: 'Jost', sans-serif; font-weight: 300; color: var(--text); }
+  .color-chip:hover:not(.active) { border-color: #111; }
+  .color-chip.active { border-color: #111; background: #f4f3ef; }
+  .color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.1); }
+
+  /* Positions-Tabelle (Energie 2-farbig) */
+  .position-section-label { font-size: 14px; letter-spacing: 0.15em; text-transform: uppercase; color: #111; margin-bottom: 10px; font-weight: 500; margin-top: 20px; }
+  .position-table { border: 1px solid #e0dbd0; border-radius: 1px; overflow: hidden; }
+  .position-row { display: flex; align-items: center; padding: 10px 14px; border-bottom: 1px solid #e0dbd0; gap: 12px; }
+  .position-row:last-child { border-bottom: none; }
+  .position-name { font-size: 15px; color: #111; font-weight: 400; width: 64px; flex-shrink: 0; letter-spacing: 0.05em; }
+  .position-toggle { display: flex; flex: 1; gap: 8px; }
+  .pos-btn { flex: 1; border: 1px solid #ddd; background: transparent; padding: 8px 4px; cursor: pointer; border-radius: 1px; font-size: 13px; font-family: 'Jost', sans-serif; font-weight: 300; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px; color: #111; }
+  .pos-btn.active { border-color: #111; background: #f4f3ef; }
+  .pos-btn:hover:not(.active) { border-color: #111; }
+  .pos-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.1); }
+
+  .metal-options { display: flex; gap: 12px; }
+  .metal-btn { flex: 1; border: 1px solid #ddd; background: transparent; padding: 13px; cursor: pointer; border-radius: 1px; font-family: 'Jost', sans-serif; font-weight: 300; font-size: 16px; letter-spacing: 0.06em; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text); }
+  .metal-btn.active { border-color: #111; background: #f4f3ef; }
+  .metal-btn:hover:not(.active) { border-color: #111; }
+  .metal-swatch { width: 13px; height: 13px; border-radius: 50%; }
+  .metal-swatch.silber { background: linear-gradient(135deg, #d4d8dc, #8a9299); }
+  .metal-swatch.gold   { background: linear-gradient(135deg, #e8c97e, #b8863a); }
+
+  .wa-btn { display: block; width: 100%; padding: 16px; background: var(--lava); color: #fff; border: none; cursor: pointer; font-family: 'Jost', sans-serif; font-weight: 400; font-size: 16px; letter-spacing: 0.15em; text-transform: uppercase; text-align: center; transition: background 0.2s; border-radius: 1px; text-decoration: none; }
+  .wa-btn:hover { background: var(--ocean); }
+  .wa-btn.disabled { background: #bbb; cursor: not-allowed; pointer-events: none; }
+  .shop-btn { display: block; width: 100%; padding: 15px; background: transparent; color: var(--lava); border: 1px solid var(--lava); cursor: pointer; font-family: 'Jost', sans-serif; font-weight: 400; font-size: 16px; letter-spacing: 0.15em; text-transform: uppercase; text-align: center; transition: all 0.2s; border-radius: 1px; text-decoration: none; margin-bottom: 12px; }
+  .shop-btn:hover { background: var(--lava); color: #fff; }
+  .shop-btn.hidden { display: none; }
+  .hint { font-size: 14px; color: #111; text-align: center; margin-top: 10px; letter-spacing: 0.06em; }
+
+  .summary-box { display: none; background: #f4f3ef; border: 1px solid #e8e5df; border-radius: 1px; padding: 18px 20px; margin-bottom: 20px; }
+  .summary-box.visible { display: block; }
+  .summary-title { font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; font-weight: 500; margin-bottom: 10px; }
+  .summary-text { font-size: 16px; color: #111; line-height: 1.7; white-space: pre-line; font-family: 'Jost', sans-serif; }
+  .copy-btn { margin-top: 14px; display: inline-block; border: 1px solid #111; background: transparent; padding: 9px 18px; font-family: 'Jost', sans-serif; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; color: #111; transition: all 0.2s; border-radius: 1px; }
+  .copy-btn:hover { background: #111; color: #fff; }
+  .copy-btn.copied { background: #111; color: #fff; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">La Royal</div>
+  <div class="tagline">Gestalte dein Wunscharmband</div>
+  <div class="divider"></div>
+</header>
+
+<div class="card">
+
+  <!-- Armband-Vorschau oben -->
+  <div class="bracelet-wrap">
+    <canvas id="bracelet-canvas" width="280" height="280"></canvas>
+    <div class="preview-label" id="preview-label">Wähle unten dein Design – das Armband füllt sich mit deinen Farben.</div>
+  </div>
+
+  <div class="options-col">
+
+  <!-- Schritt 1: Design wählen -->
+  <div class="section">
+    <div class="section-label">1 · Design wählen</div>
+    <div class="design-options">
+      <button class="design-btn" onclick="setDesign('dk', this)">
+        <span class="design-btn-name">Doppel Kristall Armband</span>
+        <span class="design-btn-desc">Lavaperle · Kristall · Platzhalter Perle · Kristall – 1, 2 oder 4 Farben</span>
+      </button>
+      <button class="design-btn" onclick="setDesign('energie', this)">
+        <span class="design-btn-name">Energie Armband</span>
+        <span class="design-btn-desc">Platzhalter Perle · Lava · Platzhalter Perle · 3 Kristalle – 1, 2 oder 3 Farben</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Schritt 2: Farbanzahl – Doppel Kristall -->
+  <div class="section" id="dk-count-section" style="display:none">
+    <div class="section-label">2 · Wie viele Kristallfarben?</div>
+    <div class="count-options">
+      <button class="count-btn" onclick="setCount(1,this)">Einfarbig</button>
+      <button class="count-btn" onclick="setCount(2,this)">Zweifarbig</button>
+      <button class="count-btn" onclick="setCount(4,this)">Vierfarbig</button>
+    </div>
+  </div>
+
+  <!-- Schritt 2: Farbanzahl – Energie -->
+  <div class="section" id="en-count-section" style="display:none">
+    <div class="section-label">2 · Wie viele Kristallfarben?</div>
+    <div class="count-options">
+      <button class="count-btn" onclick="setCount(1,this)">Einfarbig</button>
+      <button class="count-btn" onclick="setCount(2,this)">Zweifarbig</button>
+      <button class="count-btn" onclick="setCount(3,this)">Dreifarbig</button>
+    </div>
+  </div>
+
+  <!-- Schritt 3: Farben wählen -->
+  <div class="section" id="color-section" style="display:none">
+    <div class="section-label">3 · Kristallfarben wählen</div>
+    <div id="slots-wrapper"></div>
+    <!-- Positions-Tabelle nur für Energie 2-farbig -->
+    <div id="position-section" style="display:none">
+      <div class="position-section-label">Position wählen</div>
+      <div class="position-table" id="position-table"></div>
+    </div>
+  </div>
+
+  <!-- Schritt 4: Edelstahl -->
+  <div class="section" id="metal-section" style="display:none">
+    <div class="section-label">4 · Edelstahl</div>
+    <div class="metal-options">
+      <button class="metal-btn" onclick="setMetal('Silber',this)">
+        <span class="metal-swatch silber"></span> Silber
+      </button>
+      <button class="metal-btn" onclick="setMetal('Gold',this)">
+        <span class="metal-swatch gold"></span> Gold
+      </button>
+    </div>
+  </div>
+
+  <!-- Zusammenfassung -->
+  <div class="summary-box" id="summary-box">
+    <div class="summary-title">Deine Auswahl</div>
+    <div class="summary-text" id="summary-text"></div>
+    <button class="copy-btn" id="copy-btn" onclick="copyText()">Text kopieren</button>
+  </div>
+
+  <a id="shop-btn" class="shop-btn hidden" href="https://laroyallanzarote.com/products/wunschanfertigungen" target="_blank">
+    Als Wunschanfertigung bestellen
+  </a>
+  <a id="wa-btn" class="wa-btn disabled" href="#">
+    Wunscharmband per WhatsApp anfragen
+  </a>
+  <div class="hint">Du wirst direkt zu WhatsApp weitergeleitet.</div>
+
+  </div><!-- /options-col -->
+
+</div>
+
+<script>
+const COLORS = [
+  // Blau
+  { name: 'Capri Blau',                hex: '#1a6bb5', shimmer: '#5aaae8', shape: 'round'  },
+  { name: 'Himmelblau',                hex: '#6CB8D8', shimmer: '#A0D4EC', shape: 'bicone' },
+  { name: 'Luft · ein Hauch von Blau', hex: '#C0D8EE', shimmer: '#E0F0FF', shape: 'bicone' },
+  { name: 'Meeresblau',                hex: '#1A508C', shimmer: '#3A78B8', shape: 'bicone' },
+  { name: 'Montana Blau',              hex: '#1A3D78', shimmer: '#3060A8', shape: 'round'  },
+  // Türkis
+  { name: 'Türkise Lagune',            hex: '#48B8C0', shimmer: '#7AD4DA', shape: 'bicone' },
+  { name: 'Atlantik Türkis matt',      hex: '#3D8880', shimmer: '#68AEA8', shape: 'bicone' },
+  { name: 'Lanzarote Türkis hell',     hex: '#7ACECE', shimmer: '#A8E0E0', shape: 'round'  },
+  // Grün
+  { name: 'El Golfo Grün',             hex: '#3A7828', shimmer: '#60A040', shape: 'bicone' },
+  { name: 'Zitrus Grün',               hex: '#B8D828', shimmer: '#D0EC60', shape: 'bicone' },
+  // Gelb
+  { name: 'Sonnenschein Matt',         hex: '#E0C030', shimmer: '#F0D870', shape: 'round'  },
+  // Gold & Braun
+  { name: 'Venus',                     hex: '#A87848', shimmer: '#D0A870', shape: 'round'  },
+  // Orange
+  { name: 'Manrique Orange',           hex: '#F07818', shimmer: '#F8A860', shape: 'bicone' },
+  { name: 'Glühende Lava',             hex: '#E05040', shimmer: '#F09078', shape: 'bicone' },
+  // Rosa & Pink
+  { name: 'Pink Safir Matt',           hex: '#E878C0', shimmer: '#F4AADA', shape: 'bicone' },
+  { name: 'Rosenwasser Opal',          hex: '#F5C8D0', shimmer: '#FFE0E8', shape: 'bicone' },
+  { name: 'Pinke Buganvilla',          hex: '#D42882', shimmer: '#F060B0', shape: 'bicone' },
+  { name: 'Pinke Buganvilla Matt',     hex: '#BE1F75', shimmer: '#E050A0', shape: 'bicone' },
+  // Grau & Weiß
+  { name: 'Bleistift Grau',            hex: '#585858', shimmer: '#909090', shape: 'bicone' },
+  { name: 'Opal Weiss',                hex: '#F0EAE0', shimmer: '#FFF8F0', shape: 'round'  },
+];
+
+const GREY       = { hex: '#c8c8c8', shimmer: '#e4e4e4' };
+const WA_NUMBER  = '34619890099';
+
+const state = {
+  design: null,      // 'dk' | 'energie'
+  count:  null,
+  slots:  [],
+  metal:  null,
+  ePos:   [0, 0, 1], // Energie: slot-Index für [Links, Mitte, Rechts] – default 2-farbig
+};
+
+// ── Hilfsfunktionen ────────────────────────────────────────────
+function metalColor() {
+  return state.metal === 'Gold'
+    ? { hex: '#c9a96e', shimmer: '#e8d49a' }
+    : { hex: '#a8b0b8', shimmer: '#d0d6da' };
+}
+
+function colorByName(name) {
+  const c = COLORS.find(c => c.name === name);
+  return c || GREY;
+}
+
+// ── Sequenz-Builder ────────────────────────────────────────────
+function buildSequence() {
+  return state.design === 'energie' ? buildEnergieSequence() : buildDKSequence();
+}
+
+function buildDKSequence() {
+  const n      = state.count || 2;
+  const metalC = metalColor();
+
+  function gc(i) {
+    const s = state.slots[i];
+    return s ? colorByName(s) : GREY;
+  }
+
+  let unit;
+  if (n <= 2) {
+    unit = [
+      { type: 'lava' },
+      { type: 'crystal', ...gc(0) },
+      { type: 'metal', ...metalC, small: true },
+      { type: 'crystal', ...gc(n === 2 ? 1 : 0) },
+    ];
+  } else {
+    unit = [
+      { type: 'lava' },
+      { type: 'crystal', ...gc(0) },
+      { type: 'metal', ...metalC, small: true },
+      { type: 'crystal', ...gc(1) },
+      { type: 'lava' },
+      { type: 'crystal', ...gc(2) },
+      { type: 'metal', ...metalC, small: true },
+      { type: 'crystal', ...gc(3) },
+    ];
+  }
+
+  const lavaPerUnit = unit.filter(b => b.type === 'lava').length;
+  const repeats     = Math.ceil(9 / lavaPerUnit);
+  const seq         = [];
+  for (let i = 0; i < repeats; i++) seq.push(...unit);
+
+  let lavaCount = 0;
+  const trimmed = [];
+  for (const b of seq) {
+    if (b.type === 'lava') lavaCount++;
+    if (lavaCount > 9) break;
+    trimmed.push(b);
+  }
+  return trimmed;
+}
+
+function buildEnergieSequence() {
+  const n      = state.count || 1;
+  const metalC = metalColor();
+
+  // Liefert die Perlenfarbe für Position pos (0=Links, 1=Mitte, 2=Rechts)
+  function gcPos(pos) {
+    let slotIdx;
+    if (n === 1)      slotIdx = 0;
+    else if (n === 2) slotIdx = state.ePos[pos];
+    else              slotIdx = pos;
+    const s = state.slots[slotIdx];
+    return s ? colorByName(s) : GREY;
+  }
+
+  // Rhythmus: Edelstahl-Mini · Lava · Edelstahl-Mini · Kristall(L) · Kristall(M) · Kristall(R)
+  const unit = [
+    { type: 'metal',   ...metalC, small: true },
+    { type: 'lava' },
+    { type: 'metal',   ...metalC, small: true },
+    { type: 'crystal', ...gcPos(0) },
+    { type: 'crystal', ...gcPos(1) },
+    { type: 'crystal', ...gcPos(2) },
+  ];
+
+  // 6 Lavaperlen (1 Lava pro Einheit → 6 Einheiten)
+  const seq = [];
+  for (let i = 0; i < 6; i++) seq.push(...unit);
+  return seq;
+}
+
+// ── Zeichnen ───────────────────────────────────────────────────
+function drawBracelet() {
+  const canvas = document.getElementById('bracelet-canvas');
+  const ctx    = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const seq = buildSequence();
+  const N   = seq.length;
+  const cx  = W / 2, cy = H / 2;
+
+  const R_LAVA    = 9;
+  const R_CRYSTAL = 9;
+  const R_METAL   = 4.5;
+
+  function calcRingRadius(beads) {
+    let r = 90;
+    for (let iter = 0; iter < 300; iter++) {
+      const total = beads.reduce((sum, b) => {
+        const pr = b.type === 'lava' ? R_LAVA : b.type === 'metal' ? R_METAL : R_CRYSTAL;
+        return sum + 2 * Math.asin(Math.min(pr / r, 0.9999));
+      }, 0);
+      r = r * total / (2 * Math.PI);
+    }
+    return r;
+  }
+  const ringR = Math.min(calcRingRadius(seq), (W / 2) - 12);
+
+  const angles = [];
+  let cur = -Math.PI / 2;
+  for (let i = 0; i < N; i++) {
+    const pr   = seq[i].type === 'lava' ? R_LAVA : seq[i].type === 'metal' ? R_METAL : R_CRYSTAL;
+    const half = Math.asin(Math.min(pr / ringR, 0.9999));
+    cur += half;
+    angles.push(cur);
+    cur += half;
+  }
+
+  // Faden
+  ctx.beginPath();
+  ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(120,110,100,0.12)';
+  ctx.lineWidth   = 1.5;
+  ctx.stroke();
+
+  for (let i = 0; i < N; i++) {
+    const x = cx + ringR * Math.cos(angles[i]);
+    const y = cy + ringR * Math.sin(angles[i]);
+    const b = seq[i];
+    if      (b.type === 'lava')                    drawLava(ctx, x, y, R_LAVA);
+    else if (b.type === 'metal')                   drawSphere(ctx, x, y, R_METAL,   b.hex, b.shimmer, 0.55);
+    else if (b.shape === 'bicone')                 drawBicone(ctx, x, y, R_CRYSTAL, b.hex, b.shimmer, 0.72, angles[i] + Math.PI / 2);
+    else                                           drawSphere(ctx, x, y, R_CRYSTAL, b.hex, b.shimmer, 0.65);
+  }
+
+  updateLabel();
+  updateButton();
+}
+
+// ── Label & Button ─────────────────────────────────────────────
+function updateLabel() {
+  const label       = document.getElementById('preview-label');
+  const filledSlots = state.slots.filter(Boolean);
+  const allFilled   = state.count && filledSlots.length === state.count;
+  const ready       = allFilled && state.metal;
+
+  if (!state.design) {
+    label.textContent = 'Wähle unten dein Design – das Armband füllt sich mit deinen Farben.';
+    label.className   = 'preview-label';
+  } else if (ready) {
+    const designName = state.design === 'dk' ? 'Doppel Kristall' : 'Energie';
+    if (state.design === 'energie' && state.count >= 2) {
+      const posNames = ['Links', 'Mitte', 'Rechts'];
+      const parts    = posNames.map((p, i) => {
+        const slotIdx = state.count === 3 ? i : state.ePos[i];
+        return `${p}: ${state.slots[slotIdx]}`;
+      });
+      label.textContent = `${designName} · ${parts.join(' · ')} · ${state.metal}`;
+    } else {
+      const colorNames  = [...new Set(state.slots)].join(' · ');
+      label.textContent = `${designName} · ${colorNames} · ${state.metal}`;
+    }
+    label.className = 'preview-label filled';
+  } else if (state.count) {
+    label.textContent = 'Wähle Farben und Edelstahl – das Armband passt sich an.';
+    label.className   = 'preview-label';
+  } else {
+    label.textContent = 'Wähle unten deine Optionen – das Armband füllt sich mit deinen Farben.';
+    label.className   = 'preview-label';
+  }
+}
+
+function isReady() {
+  return state.design &&
+         state.count &&
+         state.metal &&
+         state.slots.filter(Boolean).length === state.count;
+}
+
+function updateButton() {
+  const btn = document.getElementById('wa-btn');
+  if (isReady()) {
+    btn.className = 'wa-btn';
+    btn.href      = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(buildMessage())}`;
+    document.getElementById('summary-box').classList.add('visible');
+    document.getElementById('summary-text').textContent = buildSummary();
+    document.getElementById('shop-btn').classList.remove('hidden');
+  } else {
+    btn.className = 'wa-btn disabled';
+    btn.href      = '#';
+    document.getElementById('summary-box').classList.remove('visible');
+    document.getElementById('shop-btn').classList.add('hidden');
+  }
+}
+
+// ── Perlen-Render ──────────────────────────────────────────────
+function drawLava(ctx, x, y, r) {
+  const g = ctx.createRadialGradient(x - r * .3, y - r * .3, r * .05, x, y, r);
+  g.addColorStop(0, '#585858'); g.addColorStop(.45, '#252525'); g.addColorStop(1, '#0a0a0a');
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  [[-.28, -.18], [.22, .28], [-.1, .35], [.34, -.12], [.1, -.34], [-.34, .12]].forEach(([dx, dy]) => {
+    ctx.beginPath(); ctx.arc(x + dx * r, y + dy * r, r * .11, 0, Math.PI * 2); ctx.fill();
+  });
+}
+
+function drawSphere(ctx, x, y, r, base, shimmer, gloss) {
+  const g = ctx.createRadialGradient(x - r * .35, y - r * .38, r * .04, x + r * .1, y + r * .1, r * 1.05);
+  g.addColorStop(0, shimmer); g.addColorStop(.42, base); g.addColorStop(1, darken(base, .48));
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+  const sh = ctx.createRadialGradient(x - r * .28, y - r * .32, 0, x - r * .28, y - r * .32, r * .4);
+  sh.addColorStop(0, `rgba(255,255,255,${gloss})`); sh.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = sh; ctx.fill();
+}
+
+function darken(hex, f) {
+  return `rgb(${[1, 3, 5].map(i => Math.round(parseInt(hex.slice(i, i + 2), 16) * f)).join(',')})`;
+}
+
+function drawBicone(ctx, x, y, r, base, shimmer, gloss, angle) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle); // Ausrichtung entlang der Armband-Tangente
+
+  const w = r * 0.92; // halbe Breite am Äquator – breit wie auf dem Foto
+  const h = r * 1.10; // halbe Länge (Achse) – etwas länger als breit
+
+  // Bikonusform: sanft geschwungene Seiten, breite Mitte, spitze Enden
+  ctx.beginPath();
+  ctx.moveTo(0, -h);
+  ctx.bezierCurveTo( w * 0.3, -h * 0.55,  w,  -h * 0.15,  w, 0);
+  ctx.bezierCurveTo( w,        h * 0.15,   w * 0.3,  h * 0.55, 0, h);
+  ctx.bezierCurveTo(-w * 0.3,  h * 0.55,  -w,   h * 0.15, -w, 0);
+  ctx.bezierCurveTo(-w,       -h * 0.15,  -w * 0.3, -h * 0.55, 0, -h);
+  ctx.closePath();
+
+  // Farbverlauf
+  const g = ctx.createRadialGradient(-w * .38, -h * .36, h * .04, w * .1, h * .1, h);
+  g.addColorStop(0, shimmer); g.addColorStop(.42, base); g.addColorStop(1, darken(base, .48));
+  ctx.fillStyle = g; ctx.fill();
+
+  // Glanzfleck
+  const sh = ctx.createRadialGradient(-w * .3, -h * .3, 0, -w * .3, -h * .3, h * .42);
+  sh.addColorStop(0, `rgba(255,255,255,${gloss})`); sh.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = sh; ctx.fill();
+
+  ctx.restore();
+}
+
+// ── State-Setter ───────────────────────────────────────────────
+function setDesign(design, btn) {
+  state.design = design;
+  state.count  = null;
+  state.slots  = [];
+  state.metal  = null;
+  state.ePos   = [0, 0, 1];
+
+  document.querySelectorAll('.design-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.metal-btn').forEach(b => b.classList.remove('active'));
+
+  document.getElementById('dk-count-section').style.display = design === 'dk'      ? 'block' : 'none';
+  document.getElementById('en-count-section').style.display = design === 'energie' ? 'block' : 'none';
+  document.getElementById('color-section').style.display    = 'none';
+  document.getElementById('metal-section').style.display    = 'none';
+
+  drawBracelet();
+}
+
+function setCount(n, btn) {
+  state.count = n;
+  state.slots = Array(n).fill(null);
+  if (state.design === 'energie') state.ePos = [0, 0, 1];
+
+  document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  renderSlots();
+  document.getElementById('color-section').style.display = 'block';
+  document.getElementById('metal-section').style.display = 'block';
+  drawBracelet();
+}
+
+function renderSlots() {
+  const wrapper    = document.getElementById('slots-wrapper');
+  wrapper.innerHTML = '';
+  const isEnergie  = state.design === 'energie';
+  const n          = state.count;
+
+  // Slot-Beschriftungen
+  let labels;
+  if (isEnergie && n === 3)      labels = ['Links', 'Mitte', 'Rechts'];
+  else if (n === 1)              labels = ['Kristallfarbe'];
+  else                           labels = Array.from({ length: n }, (_, i) => `Farbe ${i + 1}`);
+
+  for (let i = 0; i < n; i++) {
+    const div = document.createElement('div');
+    div.className = 'color-slot';
+    div.innerHTML = `<div class="slot-label">${labels[i]}</div><div class="color-options" id="slot-${i}"></div>`;
+    wrapper.appendChild(div);
+    const container = document.getElementById(`slot-${i}`);
+    COLORS.forEach(c => {
+      const chip = document.createElement('button');
+      chip.className = 'color-chip';
+      chip.innerHTML = `<span class="color-dot" style="background:${c.hex}"></span>${c.name}`;
+      chip.onclick = () => {
+        state.slots[i] = c.name;
+        container.querySelectorAll('.color-chip').forEach(b => b.classList.remove('active'));
+        chip.classList.add('active');
+        if (isEnergie && n === 2) renderPositionTable();
+        drawBracelet();
+      };
+      container.appendChild(chip);
+    });
+  }
+
+  // Positions-Tabelle für Energie 2-farbig
+  const posSection = document.getElementById('position-section');
+  if (isEnergie && n === 2) {
+    posSection.style.display = 'block';
+    renderPositionTable();
+  } else {
+    posSection.style.display = 'none';
+  }
+}
+
+function renderPositionTable() {
+  const table       = document.getElementById('position-table');
+  table.innerHTML   = '';
+  const posNames    = ['Links', 'Mitte', 'Rechts'];
+
+  posNames.forEach((posName, posIdx) => {
+    const row = document.createElement('div');
+    row.className = 'position-row';
+
+    const nameEl = document.createElement('div');
+    nameEl.className   = 'position-name';
+    nameEl.textContent = posName;
+    row.appendChild(nameEl);
+
+    const toggleEl = document.createElement('div');
+    toggleEl.className = 'position-toggle';
+
+    [0, 1].forEach(slotIdx => {
+      const colorName = state.slots[slotIdx];
+      const colorHex  = colorName ? (COLORS.find(c => c.name === colorName)?.hex || '#ccc') : '#ccc';
+      const label     = colorName ? colorName : `Farbe ${slotIdx + 1}`;
+      const btn       = document.createElement('button');
+      btn.className   = 'pos-btn' + (state.ePos[posIdx] === slotIdx ? ' active' : '');
+      btn.innerHTML   = `<span class="pos-dot" style="background:${colorHex}"></span>${label}`;
+      btn.onclick     = () => {
+        state.ePos[posIdx] = slotIdx;
+        renderPositionTable();
+        drawBracelet();
+      };
+      toggleEl.appendChild(btn);
+    });
+
+    row.appendChild(toggleEl);
+    table.appendChild(row);
+  });
+}
+
+function setMetal(metal, btn) {
+  state.metal = metal;
+  document.querySelectorAll('.metal-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  drawBracelet();
+}
+
+// ── Nachrichten-Builder ────────────────────────────────────────
+function getEnergieColorAtPos(pos) {
+  const slotIdx = state.count === 1 ? 0 : state.count === 2 ? state.ePos[pos] : pos;
+  return state.slots[slotIdx] || '';
+}
+
+function buildMessage() {
+  if (state.design === 'dk') {
+    return `Hola, ich möchte gerne ein Doppel Kristall Armband bestellen:\n\nMaterial: Schwarze Lavaperlen 6 mm + Kristallperlen 6 mm\nFarben: ${state.slots.join(', ')}\nEdelstahl: ${state.metal}\nPreis: 45 €\n\nWäre das möglich? Danke!`;
+  } else {
+    const posNames   = ['Links', 'Mitte', 'Rechts'];
+    const colorLines = posNames.map((p, i) => `${p}: ${getEnergieColorAtPos(i)}`).join('\n');
+    return `Hola, ich möchte gerne ein Energie Armband bestellen:\n\nMaterial: Schwarze Lavaperlen 6 mm + Kristallperlen 6 mm\nKristallfarben:\n${colorLines}\nEdelstahl: ${state.metal}\nPreis: 45 €\n\nWäre das möglich? Danke!`;
+  }
+}
+
+function buildSummary() {
+  if (state.design === 'dk') {
+    return `Doppel Kristall Armband\n\nMaterial: Schwarze Lavaperlen 6 mm + Kristallperlen 6 mm\nFarben: ${state.slots.join(', ')}\nEdelstahl: ${state.metal}\nPreis: 45 €`;
+  } else {
+    const posNames   = ['Links', 'Mitte', 'Rechts'];
+    const colorLines = posNames.map((p, i) => `${p}: ${getEnergieColorAtPos(i)}`).join('\n');
+    return `Energie Armband\n\nMaterial: Schwarze Lavaperlen 6 mm + Kristallperlen 6 mm\nKristallfarben:\n${colorLines}\nEdelstahl: ${state.metal}\nPreis: 45 €`;
+  }
+}
+
+function copyText() {
+  const text = document.getElementById('summary-text').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Kopiert!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Text kopieren'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// Initiales Grau-Armband
+drawBracelet();
+</script>
+</body>
+</html>
