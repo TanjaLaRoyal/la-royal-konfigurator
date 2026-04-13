@@ -153,9 +153,9 @@ header { text-align: center; margin-bottom: 36px; }
 <button class="copy-btn" id="copy-btn" onclick="copyText()">Text kopieren</button>
 </div>
 
-<a id="shop-btn" class="shop-btn hidden" href="https://laroyallanzarote.com/products/wunschanfertigungen" target="_top">
+<button id="shop-btn" class="shop-btn hidden" onclick="window.open('https://laroyallanzarote.com/products/wunschanfertigungen')">
 Als Wunschanfertigung bestellen
-</a>
+</button>
 <a id="wa-btn" class="wa-btn disabled" href="#" target="_top">
 Wunscharmband per WhatsApp anfragen
 </a>
@@ -367,18 +367,15 @@ state.count &&
 state.metal &&
 state.slots.filter(Boolean).length === state.count;
 }
-
 function updateButton() {
 const btn = document.getElementById('wa-btn');
 if (isReady()) {
 btn.className = 'wa-btn';
-btn.href      = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(buildMessage())}`;
-document.getElementById('summary-box').classList.add('visible');
+btn.onclick = () => window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(buildMessage())}`);document.getElementById('summary-box').classList.add('visible');
 document.getElementById('summary-text').textContent = buildSummary();
 document.getElementById('shop-btn').classList.remove('hidden');
 } else {
 btn.className = 'wa-btn disabled';
-btn.href      = '#';
 document.getElementById('summary-box').classList.remove('visible');
 document.getElementById('shop-btn').classList.add('hidden');
 }
