@@ -152,7 +152,7 @@ header { text-align: center; margin-bottom: 36px; }
 
 <div class="next-step" id="next-step">
 <div class="next-step-label">Schritt 5</div>
-<div class="next-step-text">Kopiere den Text. Bestelle dein Wunscharmband direkt oder schreib mir per WhatsApp, wenn du Fragen hast.</div>
+<div class="next-step-text">Kopiere den Text. Bestelle dein Wunscharmband direkt oder schreibe mir per WhatsApp, wenn du Fragen hast.</div>
 </div>
 
 </div>
@@ -328,7 +328,7 @@ const filledSlots = state.slots.filter(Boolean);
 const allFilled   = state.count && filledSlots.length === state.count;
 const ready       = allFilled && state.metal;
 if (!state.design) {
-label.textContent = 'Wähle unten dein Design – das Armband füllt sich mit deinen Farben.';
+label.textContent = 'Wähle dein Design & Wunschkristalle – das Armband füllt sich mit deinen Farben.';
 label.className   = 'preview-label';
 } else if (ready) {
 const designName = state.design === 'dk' ? 'Doppel Kristall' : 'Energie';
