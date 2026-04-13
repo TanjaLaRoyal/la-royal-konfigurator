@@ -175,10 +175,10 @@
     <button class="copy-btn" id="copy-btn" onclick="copyText()">Text kopieren</button>
   </div>
 
-  <a id="shop-btn" class="shop-btn hidden" href="https://laroyallanzarote.com/products/wunschanfertigungen" target="_blank">
+  <a id="shop-btn" class="shop-btn hidden" href="https://laroyallanzarote.com/products/wunschanfertigungen" target="_blank" rel="noopener">
     Als Wunschanfertigung bestellen
   </a>
-  <a id="wa-btn" class="wa-btn disabled" href="#">
+  <a id="wa-btn" class="wa-btn disabled" href="#" target="_blank" rel="noopener">
     Wunscharmband per WhatsApp anfragen
   </a>
   <div class="hint">Du wirst direkt zu WhatsApp weitergeleitet.</div>
@@ -466,16 +466,16 @@ function drawBicone(ctx, x, y, r, base, shimmer, gloss, angle) {
   ctx.translate(x, y);
   ctx.rotate(angle); // Ausrichtung entlang der Armband-Tangente
 
-  const w = r * 0.92; // halbe Breite am Äquator – breit wie auf dem Foto
-  const h = r * 1.10; // halbe Länge (Achse) – etwas länger als breit
+  const w = r * 0.96; // halbe Breite – gleich breit wie runde Perle, etwas voller
+  const h = r;        // halbe Länge – gleiche Größe wie runde Perle
 
-  // Bikonusform: sanft geschwungene Seiten, breite Mitte, spitze Enden
+  // Bikonusform: weiche Enden, breite Mitte
   ctx.beginPath();
   ctx.moveTo(0, -h);
-  ctx.bezierCurveTo( w * 0.3, -h * 0.55,  w,  -h * 0.15,  w, 0);
-  ctx.bezierCurveTo( w,        h * 0.15,   w * 0.3,  h * 0.55, 0, h);
-  ctx.bezierCurveTo(-w * 0.3,  h * 0.55,  -w,   h * 0.15, -w, 0);
-  ctx.bezierCurveTo(-w,       -h * 0.15,  -w * 0.3, -h * 0.55, 0, -h);
+  ctx.bezierCurveTo( w * 0.45, -h * 0.70,  w, -h * 0.12,  w,  0);
+  ctx.bezierCurveTo( w,         h * 0.12,   w * 0.45,  h * 0.70, 0,  h);
+  ctx.bezierCurveTo(-w * 0.45,  h * 0.70,  -w,  h * 0.12, -w,  0);
+  ctx.bezierCurveTo(-w,        -h * 0.12,  -w * 0.45, -h * 0.70, 0, -h);
   ctx.closePath();
 
   // Farbverlauf
