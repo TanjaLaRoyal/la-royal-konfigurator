@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Royal – Wunsch Charm</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --sand: #faf9f6; --lava: #1a1a1a; --gold: #c9a96e;
+  --soft: #f4f3ef; --text: #111;
+}
+body { background: var(--sand); color: var(--text); font-family: 'Jost', sans-serif; font-weight: 300; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px 60px; }
+header { text-align: center; margin-bottom: 36px; }
+.brand { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(2.2rem, 6vw, 3.6rem); letter-spacing: 0.18em; color: var(--lava); line-height: 1; }
+.tagline { font-size: 16px; letter-spacing: 0.2em; text-transform: uppercase; color: #111; margin-top: 8px; }
+.divider { width: 48px; height: 1px; background: var(--gold); margin: 20px auto 0; }
+.card { background: #fff; border-radius: 2px; padding: 32px 28px; width: 100%; max-width: 580px; min-height: 720px; box-shadow: 0 2px 24px rgba(0,0,0,0.06); }
+.charm-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; background: var(--soft); padding: 24px 20px 18px; border-radius: 1px; margin-bottom: 28px; }
+.preview-label { font-family: 'Cormorant Garamond', serif; font-size: 15px; color: #111; font-style: italic; text-align: center; min-height: 1.4em; }
+.preview-label.filled { font-style: normal; font-size: 16px; }
+.section-label { font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; margin-bottom: 12px; font-weight: 500; }
+.section { margin-bottom: 28px; }
+.option-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.option-btn { border: 1px solid #ddd; background: transparent; padding: 10px 20px; border-radius: 1px; cursor: pointer; font-family: 'Jost', sans-serif; font-size: 15px; font-weight: 300; color: var(--text); transition: all 0.2s; }
+.option-btn:hover:not(.active) { border-color: #111; }
+.option-btn.active { border-color: #111; background: var(--gold); color: #fff; }
+.option-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.count-options { display: flex; gap: 10px; flex-wrap: wrap; }
+.count-btn { border: 1px solid #ddd; background: transparent; padding: 10px 20px; border-radius: 1px; cursor: pointer; font-family: 'Jost', sans-serif; font-size: 15px; font-weight: 300; color: var(--text); transition: all 0.2s; }
+.count-btn.active { border-color: #111; background: var(--gold); color: #fff; }
+.count-btn:hover:not(.active) { border-color: #111; }
+.color-slot { margin-bottom: 16px; }
+.slot-label { font-size: 14px; letter-spacing: 0.15em; text-transform: uppercase; color: #111; margin-bottom: 8px; font-weight: 500; }
+.color-options { display: flex; flex-wrap: wrap; gap: 7px; }
+.color-chip { display: flex; align-items: center; gap: 7px; border: 1px solid #ddd; padding: 6px 10px; border-radius: 1px; cursor: pointer; font-size: 15px; transition: all 0.2s; background: transparent; font-family: 'Jost', sans-serif; font-weight: 300; color: var(--text); }
+.color-chip:hover { border-color: #111; }
+.color-chip.active { border-color: #111; background: #111; color: #fff; }
+.color-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.1); }
+.summary-box { display: none; border: 1px solid #ddd; border-radius: 1px; padding: 24px; margin-bottom: 20px; }
+.summary-box.visible { display: block; }
+.summary-title { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 12px; }
+.summary-text { font-size: 15px; line-height: 1.8; white-space: pre-line; margin-bottom: 16px; }
+.copy-btn { border: 1px solid #111; background: transparent; padding: 10px 24px; border-radius: 1px; cursor: pointer; font-family: 'Jost', sans-serif; font-size: 14px; letter-spacing: 0.1em; color: #111; transition: all 0.2s; }
+.copy-btn:hover { background: #111; color: #fff; }
+.next-step { display: none; background: #fff; color: #111; border: 1px solid #ddd; border-radius: 1px; padding: 18px 20px; text-align: center; }
+.next-step.visible { display: block; }
+.next-step-label { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #111; margin-bottom: 6px; }
+.next-step-text { font-size: 15px; letter-spacing: 0.06em; line-height: 1.6; color: #111; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">La Royal</div>
+  <div class="tagline">Wunsch Charm</div>
+  <div class="divider"></div>
+</header>
+
+<div class="card">
+  <div class="charm-wrap">
+    <canvas id="charm-canvas" width="300" height="260"></canvas>
+    <div class="preview-label" id="preview-label">Wähle dein Edelstahl und deine Kristallfarben.</div>
+  </div>
+
+  <!-- 1: Edelstahl -->
+  <div class="section">
+    <div class="section-label">1 · Edelstahl</div>
+    <div class="option-row" id="metal-row">
+      <button class="option-btn" onclick="setMetal('Silber', this)">Silber</button>
+      <button class="option-btn" onclick="setMetal('Gold', this)">Gold</button>
+    </div>
+  </div>
+
+  <!-- 2: Anzahl Farben -->
+  <div class="section">
+    <div class="section-label">2 · Wie viele Kristallfarben?</div>
+    <div class="count-options">
+      <button class="count-btn" onclick="setCount(1, this)">Einfarbig</button>
+      <button class="count-btn" onclick="setCount(2, this)">2 Farben</button>
+      <button class="count-btn" onclick="setCount(3, this)">3 Farben + Lava</button>
+      <button class="count-btn" onclick="setCount(4, this)">4 Farben</button>
+    </div>
+  </div>
+
+  <!-- 3: Mix oder Farbverlauf -->
+  <div class="section" id="mode-section" style="display:none">
+    <div class="section-label">3 · Anordnung</div>
+    <div class="option-row" id="mode-row">
+      <button class="option-btn" onclick="setMode('mix', this)">Mix</button>
+      <button class="option-btn" onclick="setMode('verlauf', this)">Farbverlauf</button>
+    </div>
+  </div>
+
+  <!-- 4: Farben -->
+  <div class="section" id="color-section" style="display:none">
+    <div class="section-label">4 · Kristallfarben wählen</div>
+    <div id="slots-wrapper"></div>
+  </div>
+
+  <div class="summary-box" id="summary-box">
+    <div class="summary-title">Deine Auswahl</div>
+    <div class="summary-text" id="summary-text"></div>
+    <button class="copy-btn" id="copy-btn" onclick="copyText()">Text kopieren</button>
+  </div>
+
+  <div class="next-step" id="next-step">
+    <div class="next-step-label">Schritt 5</div>
+    <div class="next-step-text">Kopiere den Text. Bestelle deinen Wunsch Charm direkt oder schreibe mir per WhatsApp, wenn du Fragen hast.</div>
+  </div>
+
+</div>
+
+<script>
+const COLORS = [
+  { name: 'Capri Blau',                hex: '#1a6bb5', shimmer: '#5aaae8', shape: 'round'  },
+  { name: 'Himmelblau',                hex: '#6CB8D8', shimmer: '#A0D4EC', shape: 'bicone' },
+  { name: 'Luft · ein Hauch von Blau', hex: '#C0D8EE', shimmer: '#E0F0FF', shape: 'bicone' },
+  { name: 'Meeresblau',                hex: '#1A508C', shimmer: '#3A78B8', shape: 'bicone' },
+  { name: 'Montana Blau',              hex: '#1A3D78', shimmer: '#3060A8', shape: 'round'  },
+  { name: 'Türkise Lagune',            hex: '#48B8C0', shimmer: '#7AD4DA', shape: 'bicone' },
+  { name: 'Atlantik Türkis matt',      hex: '#3D8880', shimmer: '#68AEA8', shape: 'bicone' },
+  { name: 'Lanzarote Türkis hell',     hex: '#7ACECE', shimmer: '#A8E0E0', shape: 'round'  },
+  { name: 'El Golfo Grün',             hex: '#3A7828', shimmer: '#60A040', shape: 'bicone' },
+  { name: 'Zitrus Grün',               hex: '#B8D828', shimmer: '#D0EC60', shape: 'bicone' },
+  { name: 'Sonnenschein Matt',         hex: '#f5eb79', shimmer: '#faf4a8', shape: 'round'  },
+  { name: 'Venus',                     hex: '#A87848', shimmer: '#D0A870', shape: 'round'  },
+  { name: 'Manrique Orange',           hex: '#F07818', shimmer: '#F8A860', shape: 'bicone' },
+  { name: 'Glühende Lava',             hex: '#E05040', shimmer: '#F09078', shape: 'bicone' },
+  { name: 'Pink Safir Matt',           hex: '#E878C0', shimmer: '#F4AADA', shape: 'bicone' },
+  { name: 'Rosenwasser Opal',          hex: '#F5C8D0', shimmer: '#FFE0E8', shape: 'bicone' },
+  { name: 'Pinke Buganvilla',          hex: '#D42882', shimmer: '#F060B0', shape: 'bicone' },
+  { name: 'Pinke Buganvilla Matt',     hex: '#BE1F75', shimmer: '#E050A0', shape: 'bicone' },
+  { name: 'Opal Weiss',                hex: '#F0EAE0', shimmer: '#FFF8F0', shape: 'round'  },
+];
+
+const EMPTY = { hex: '#d4d0c8', shimmer: '#e8e4dc', shape: 'round' };
+const LAVA  = { hex: '#1a1a1a', shimmer: '#585858', shape: 'lava'  };
+
+const state = {
+  metal: null,
+  count: null,
+  mode:  null,  // 'mix' | 'verlauf'
+  slots: [],
+};
+
+function getMetalColor() {
+  if (state.metal === 'Gold') return { hex: '#c9a96e', shimmer: '#e8d49a' };
+  return { hex: '#a8b0b8', shimmer: '#d0d6da' };
+}
+
+function getCrystalAt(pos) {
+  if (!state.count || !state.mode) return EMPTY;
+  let slotIdx;
+
+  if (state.mode === 'verlauf') {
+    if (state.count === 1) {
+      slotIdx = 0;
+    } else if (state.count === 2) {
+      slotIdx = pos < 4 ? 0 : 1;                    // 1-4 = Farbe 1, 5-8 = Farbe 2
+    } else if (state.count === 3) {
+      if (pos === 0 || pos === 1) return LAVA;       // Position 1+2 = Lava
+      slotIdx = Math.floor((pos - 2) / 2);           // 3+4=0, 5+6=1, 7+8=2
+    } else {
+      slotIdx = Math.floor(pos / 2);                 // 1+2=0, 3+4=1, 5+6=2, 7+8=3
+    }
+  } else {
+    // Mix (bisherige Logik)
+    if (state.count === 1) {
+      slotIdx = 0;
+    } else if (state.count === 2) {
+      slotIdx = pos % 2;
+    } else if (state.count === 3) {
+      if (pos === 0 || pos === 4) return LAVA;
+      slotIdx = [1,2,3,5,6,7].indexOf(pos) % 3;
+    } else {
+      slotIdx = pos % 4;
+    }
+  }
+
+  const name = state.slots[slotIdx];
+  if (!name) return EMPTY;
+  return COLORS.find(c => c.name === name) || EMPTY;
+}
+
+function drawLava(ctx, x, y, r) {
+  const g = ctx.createRadialGradient(x-r*.3, y-r*.3, r*.05, x, y, r);
+  g.addColorStop(0,'#585858'); g.addColorStop(.45,'#252525'); g.addColorStop(1,'#0a0a0a');
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,0.4)';
+  [[-.28,-.18],[.22,.28],[-.1,.35],[.34,-.12],[.1,-.34],[-.34,.12]].forEach(([dx,dy])=>{
+    ctx.beginPath(); ctx.arc(x+dx*r,y+dy*r,r*.11,0,Math.PI*2); ctx.fill();
+  });
+}
+
+function darken(hex, f) {
+  return `rgb(${[1,3,5].map(i => Math.round(parseInt(hex.slice(i,i+2),16)*f)).join(',')})`;
+}
+
+function drawSphere(ctx, x, y, r, base, shimmer, gloss) {
+  const g = ctx.createRadialGradient(x-r*.35,y-r*.38,r*.04,x+r*.1,y+r*.1,r*1.05);
+  g.addColorStop(0,shimmer); g.addColorStop(.42,base); g.addColorStop(1,darken(base,.48));
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
+  const sh = ctx.createRadialGradient(x-r*.28,y-r*.32,0,x-r*.28,y-r*.32,r*.4);
+  sh.addColorStop(0,`rgba(255,255,255,${gloss})`); sh.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=sh; ctx.fill();
+}
+
+function drawBicone(ctx, x, y, r, base, shimmer, gloss) {
+  const w = r * 0.96, h = r;
+  ctx.beginPath();
+  ctx.moveTo(x, y-h);
+  ctx.bezierCurveTo(x+w*.45,y-h*.70, x+w,y-h*.12, x+w,y);
+  ctx.bezierCurveTo(x+w,y+h*.12, x+w*.45,y+h*.70, x,y+h);
+  ctx.bezierCurveTo(x-w*.45,y+h*.70, x-w,y+h*.12, x-w,y);
+  ctx.bezierCurveTo(x-w,y-h*.12, x-w*.45,y-h*.70, x,y-h);
+  ctx.closePath();
+  const g = ctx.createRadialGradient(x-w*.38,y-h*.36,h*.04,x+w*.1,y+h*.1,h);
+  g.addColorStop(0,shimmer); g.addColorStop(.42,base); g.addColorStop(1,darken(base,.48));
+  ctx.fillStyle=g; ctx.fill();
+  const sh = ctx.createRadialGradient(x-w*.3,y-h*.3,0,x-w*.3,y-h*.3,h*.42);
+  sh.addColorStop(0,`rgba(255,255,255,${gloss})`); sh.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=sh; ctx.fill();
+}
+
+// ── Karabiner ────────────────────────────────────────────────
+
+function drawKarabiner(ctx, cx, startY, mc) {
+  ctx.save();
+  ctx.strokeStyle = mc.hex;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // Form: Halbkreis oben + Dreieck unten + Ösenring ganz unten
+  // Links: Halbkreis & Dreieck berühren sich fast | Rechts: Federhebel
+
+  const scR  = 12;            // Kreis-Radius
+  const scCY = startY + scR;  // Halbkreis-Mittelpunkt Y
+  const triH = 26;            // Dreieck-Höhe
+  const tipY = scCY + triH;   // Dreieckspitze (unten)
+
+  // Kreis 60% geschlossen / 40% offen (144° Lücke unten)
+  const gapAngle  = 0.28 * Math.PI;              // ~50° je Seite
+  const arcStart  = Math.PI / 2 + gapAngle;      // 0.9π – untere-links Lücke
+  const arcEnd    = Math.PI / 2 - gapAngle;      // 0.1π – untere-rechts Lücke
+  const gapLX = cx + scR * Math.cos(arcStart);   // x links Lücke
+  const gapLY = scCY + scR * Math.sin(arcStart); // y links Lücke
+  const gapRX = cx + scR * Math.cos(arcEnd);     // x rechts Lücke
+  const gapRY = scCY + scR * Math.sin(arcEnd);   // y rechts Lücke
+
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.arc(cx, scCY, scR, arcStart, arcEnd, false); // Bogen durch oben
+  ctx.stroke();
+
+  // Dreieck – Metallfarbe, geschlossen
+  // Ecken passen zu den Lückenrändern des Kreises
+  ctx.beginPath();
+  ctx.moveTo(gapLX + 1, gapLY - 1);   // oben links (1px Spalt = fast-Berührung)
+  ctx.lineTo(cx, tipY);                 // Spitze unten
+  ctx.lineTo(gapRX - 1, gapRY - 1);   // oben rechts
+  ctx.closePath();
+  ctx.fillStyle = mc.hex;
+  ctx.fill();
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Federschnapper – diagonal von Bogen-Rechts nach unten-außen
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(gapRX, gapRY);
+  ctx.lineTo(gapRX + 5, gapRY - 9);
+  ctx.stroke();
+
+  // Ösenring unten
+  const ringR = 5;
+  const ringY = tipY + ringR;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, ringY, ringR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.restore();
+  return ringY + ringR + 2;
+}
+
+// ── Bündel Cluster ───────────────────────────────────────────
+
+const BUENDEL_POS = [
+  [-17,  0], [17,  0],
+  [  0, 11],
+  [-15, 24], [15, 24],
+  [-10, 40], [10, 40],
+  [  0, 58],
+];
+
+const BUENDEL_CONNECTIONS = [
+  [0, 2], [1, 2],
+  [2, 3], [2, 4],
+  [3, 5], [4, 6],
+  [5, 7], [6, 7],
+];
+
+function drawCharmRings(ctx, cx, clusterTop) {
+  const mc = getMetalColor();
+  ctx.save();
+  ctx.strokeStyle = mc.hex;
+  ctx.lineWidth = 2;
+
+  BUENDEL_CONNECTIONS.forEach(([a, b]) => {
+    const ax = cx + BUENDEL_POS[a][0], ay = clusterTop + BUENDEL_POS[a][1];
+    const bx = cx + BUENDEL_POS[b][0], by = clusterTop + BUENDEL_POS[b][1];
+    ctx.beginPath();
+    ctx.arc((ax+bx)/2, (ay+by)/2, 4, 0, Math.PI * 2);
+    ctx.stroke();
+  });
+
+  // Mittelring zwischen Perlen 4+5
+  const midX = cx + (BUENDEL_POS[3][0] + BUENDEL_POS[4][0]) / 2;
+  const midY = clusterTop + (BUENDEL_POS[3][1] + BUENDEL_POS[4][1]) / 2 + 5;
+  ctx.beginPath();
+  ctx.arc(midX, midY, 7, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawCharm(ctx, cx, startY) {
+  const mc = getMetalColor();
+  const R_CRYSTAL = 10;
+
+  let y = drawKarabiner(ctx, cx, startY, mc);
+
+  // Verbindungsring Karabiner → Cluster
+  const bigR = 8;
+  ctx.beginPath();
+  ctx.arc(cx, y + bigR, bigR, 0, Math.PI * 2);
+  ctx.strokeStyle = mc.hex; ctx.lineWidth = 2; ctx.stroke();
+  y -= 6; // Ring überlappt leicht mit Öse
+
+  const clusterTop = y + R_CRYSTAL;
+
+  drawCharmRings(ctx, cx, clusterTop);
+
+  BUENDEL_POS.forEach((pos, i) => {
+    const c  = getCrystalAt(i);
+    const bx = cx + pos[0];
+    const by = clusterTop + pos[1];
+    if (c.shape === 'lava') {
+      drawLava(ctx, bx, by, R_CRYSTAL);
+    } else if (c.shape === 'bicone') {
+      drawBicone(ctx, bx, by, R_CRYSTAL * 1.1, c.hex, c.shimmer, 0.72);
+    } else {
+      drawSphere(ctx, bx, by, R_CRYSTAL, c.hex, c.shimmer, 0.65);
+    }
+  });
+}
+
+function drawCanvas() {
+  const canvas = document.getElementById('charm-canvas');
+  const ctx    = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const s = 1.3;
+  const cx = 150;
+  ctx.save();
+  ctx.translate(cx, 0);
+  ctx.scale(s, s);
+  ctx.translate(-cx, 0);
+  drawCharm(ctx, 150, 14);
+  ctx.restore();
+  updateLabel();
+  updateSummary();
+}
+
+// ── UI-Logik ─────────────────────────────────────────────────
+
+function setMetal(metal, btn) {
+  state.metal = metal;
+  document.querySelectorAll('#metal-row .option-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  drawCanvas();
+}
+
+function setCount(n, btn) {
+  state.count = n;
+  state.mode  = null;
+  state.slots = [];
+  document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#mode-row .option-btn').forEach(b => b.classList.remove('active'));
+  // Mode-Schritt nur bei count > 1 zeigen
+  document.getElementById('mode-section').style.display = n === 1 ? 'none' : 'block';
+  document.getElementById('color-section').style.display = 'none';
+  if (n === 1) {
+    // Einfarbig braucht kein Mode
+    state.mode  = 'mix';
+    state.slots = [null];
+    renderSlots();
+    document.getElementById('color-section').style.display = 'block';
+  }
+  drawCanvas();
+}
+
+function setMode(mode, btn) {
+  state.mode  = mode;
+  const numSlots = state.count === 3 ? 3 : state.count;
+  state.slots = Array(numSlots).fill(null);
+  document.querySelectorAll('#mode-row .option-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSlots();
+  document.getElementById('color-section').style.display = 'block';
+  drawCanvas();
+}
+
+function renderSlots() {
+  const wrapper = document.getElementById('slots-wrapper');
+  wrapper.innerHTML = '';
+  let labels;
+  const v = state.mode === 'verlauf';
+  if (state.count === 1) {
+    labels = ['Kristallfarbe'];
+  } else if (state.count === 2) {
+    labels = v
+      ? ['Farbe 1 · Kristall 1–4', 'Farbe 2 · Kristall 5–8']
+      : ['Farbe A · Kristalle 1, 3, 5, 7', 'Farbe B · Kristalle 2, 4, 6, 8'];
+  } else if (state.count === 3) {
+    const hint = document.createElement('div');
+    hint.style.cssText = 'font-size:13px;color:#888;margin-bottom:14px;letter-spacing:0.05em;';
+    hint.textContent = v
+      ? 'Kristall 1 & 2 · Schwarze Lavaperlen (fix)'
+      : 'Kristall 1 & 5 · Schwarze Lavaperlen (fix)';
+    wrapper.appendChild(hint);
+    labels = v
+      ? ['Farbe 1 · Kristall 3 & 4', 'Farbe 2 · Kristall 5 & 6', 'Farbe 3 · Kristall 7 & 8']
+      : ['Farbe 1 · Kristall 2 & 6', 'Farbe 2 · Kristall 3 & 7', 'Farbe 3 · Kristall 4 & 8'];
+  } else {
+    labels = v
+      ? ['Farbe 1 · Kristall 1 & 2', 'Farbe 2 · Kristall 3 & 4', 'Farbe 3 · Kristall 5 & 6', 'Farbe 4 · Kristall 7 & 8']
+      : ['Farbe 1 · Kristall 1 & 5', 'Farbe 2 · Kristall 2 & 6', 'Farbe 3 · Kristall 3 & 7', 'Farbe 4 · Kristall 4 & 8'];
+  }
+  for (let i = 0; i < state.count; i++) {
+    const div = document.createElement('div');
+    div.className = 'color-slot';
+    div.innerHTML = `<div class="slot-label">${labels[i]}</div><div class="color-options" id="slot-${i}"></div>`;
+    wrapper.appendChild(div);
+    const container = document.getElementById(`slot-${i}`);
+    COLORS.forEach(c => {
+      const chip = document.createElement('button');
+      chip.className = 'color-chip';
+      chip.innerHTML = `<span class="color-dot" style="background:${c.hex}"></span>${c.name}`;
+      chip.onclick = () => {
+        state.slots[i] = c.name;
+        container.querySelectorAll('.color-chip').forEach(b => b.classList.remove('active'));
+        chip.classList.add('active');
+        drawCanvas();
+      };
+      container.appendChild(chip);
+    });
+  }
+}
+
+function isReady() {
+  return state.metal && state.count && state.mode &&
+         state.slots.filter(Boolean).length === state.slots.length && state.slots.length > 0;
+}
+
+function updateLabel() {
+  const label = document.getElementById('preview-label');
+  if (isReady()) {
+    const colorStr = state.count === 1 ? state.slots[0] : state.slots.join(' · ');
+    label.textContent = `Bündel Charm · ${colorStr} · ${state.metal}`;
+    label.className = 'preview-label filled';
+  } else {
+    label.textContent = 'Wähle dein Edelstahl und deine Kristallfarben.';
+    label.className = 'preview-label';
+  }
+}
+
+function updateSummary() {
+  if (isReady()) {
+    document.getElementById('summary-box').classList.add('visible');
+    const s = buildSummary();
+    document.getElementById('summary-text').innerHTML = '<strong>' + s.split('\n')[0] + '</strong>\n' + s.split('\n').slice(1).join('\n');
+    document.getElementById('next-step').classList.add('visible');
+  } else {
+    document.getElementById('summary-box').classList.remove('visible');
+    document.getElementById('next-step').classList.remove('visible');
+  }
+}
+
+function buildSummary() {
+  let colorLines;
+  const v = state.mode === 'verlauf';
+  if (state.count === 1) {
+    colorLines = `Kristallfarbe: ${state.slots[0]}`;
+  } else if (state.count === 2) {
+    colorLines = v
+      ? `Farbe 1 (Kristall 1–4): ${state.slots[0]}\nFarbe 2 (Kristall 5–8): ${state.slots[1]}`
+      : `Farbe A: ${state.slots[0]}\nFarbe B: ${state.slots[1]}`;
+  } else if (state.count === 3) {
+    colorLines = v
+      ? `Lava\nFarbe 1: ${state.slots[0]}\nFarbe 2: ${state.slots[1]}\nFarbe 3: ${state.slots[2]}`
+      : `Lava\nFarbe 1: ${state.slots[0]}\nFarbe 2: ${state.slots[1]}\nFarbe 3: ${state.slots[2]}`;
+  } else {
+    colorLines = state.slots.map((s, i) => `Farbe ${i+1}: ${s}`).join('\n');
+  }
+  const modeLine = state.count > 1 ? `\nAnordnung: ${v ? 'Farbverlauf' : 'Mix'}` : '';
+  return `Bündel Charm\n${colorLines}${modeLine}\nEdelstahl: ${state.metal}\nPreis: 35 €`;
+}
+
+function copyText() {
+  const text = document.getElementById('summary-text').innerText;
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.top = '-9999px';
+  ta.style.left = '-9999px'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+  const btn = document.getElementById('copy-btn');
+  btn.textContent = 'Kopiert ✓';
+  setTimeout(() => { btn.textContent = 'Text kopieren'; }, 2000);
+}
+
+// Initial draw
+drawCanvas();
+</script>
+</body>
+</html>
