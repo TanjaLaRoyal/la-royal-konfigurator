@@ -16,7 +16,7 @@ header { text-align: center; margin-bottom: 36px; }
 .brand { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(2.2rem, 6vw, 3.6rem); letter-spacing: 0.18em; color: var(--lava); line-height: 1; }
 .tagline { font-size: 16px; letter-spacing: 0.2em; text-transform: uppercase; color: #111; margin-top: 8px; }
 .divider { width: 48px; height: 1px; background: var(--gold); margin: 20px auto 0; }
-.card { background: #fff; border-radius: 2px; padding: 32px 28px; width: 100%; max-width: 760px; box-shadow: 0 2px 24px rgba(0,0,0,0.06); }
+.card { background: #fff; border-radius: 2px; padding: 32px 28px; width: 100%; max-width: 580px; box-shadow: 0 2px 24px rgba(0,0,0,0.06); }
 
 /* Canvas immer oben, einspaltig */
 .bracelet-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; background: var(--soft); padding: 24px 20px 18px; border-radius: 1px; margin-bottom: 28px; }
@@ -174,7 +174,7 @@ const COLORS = [
   { name: 'El Golfo Grün',             hex: '#3A7828', shimmer: '#60A040', shape: 'bicone' },
   { name: 'Zitrus Grün',               hex: '#B8D828', shimmer: '#D0EC60', shape: 'bicone' },
   // Gelb
-  { name: 'Sonnenschein Matt',         hex: '#fcf382', shimmer: '#F0D870', shape: 'round'  },
+  { name: 'Sonnenschein Matt',         hex: '#E0C030', shimmer: '#F0D870', shape: 'round'  },
   // Gold & Braun
   { name: 'Venus',                     hex: '#A87848', shimmer: '#D0A870', shape: 'round'  },
   // Orange
@@ -537,11 +537,11 @@ function getEnergieColorAtPos(pos) {
 
 function buildSummary() {
   if (state.design === 'dk') {
-    return `Doppel Kristall Armband\n\nMaterial: Schwarze Lavaperlen 6 mm + Kristallperlen 6 mm\nFarben: ${state.slots.join(', ')}\nEdelstahl: ${state.metal}\nPreis: 45 €`;
+    return `Doppel Kristall Armband\n\nFarben: ${state.slots.join(', ')}\nEdelstahl: ${state.metal}\nPreis: 45 €`;
   } else {
     const posNames   = ['Links', 'Mitte', 'Rechts'];
     const colorLines = posNames.map((p, i) => `${p}: ${getEnergieColorAtPos(i)}`).join('\n');
-    return `Energie Armband\n\nMaterial: Schwarze Lavaperlen 6 mm + Kristallperlen 6 mm\nKristallfarben:\n${colorLines}\nEdelstahl: ${state.metal}\nPreis: 45 €`;
+    return `Energie Armband\n\nKristallfarben:\n${colorLines}\nEdelstahl: ${state.metal}\nPreis: 45 €`;
   }
 }
 
