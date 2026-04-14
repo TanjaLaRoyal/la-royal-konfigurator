@@ -60,7 +60,7 @@ header { text-align: center; margin-bottom: 36px; }
 
 <div class="card">
   <div class="charm-wrap">
-    <canvas id="charm-canvas" width="300" height="260"></canvas>
+    <canvas id="charm-canvas" width="300" height="205"></canvas>
     <div class="preview-label" id="preview-label">Wähle dein Edelstahl und deine Kristallfarben.</div>
   </div>
 
@@ -367,7 +367,7 @@ function drawCanvas() {
   ctx.translate(cx, 0);
   ctx.scale(s, s);
   ctx.translate(-cx, 0);
-  drawCharm(ctx, 150, 14);
+  drawCharm(ctx, 150, 20);
   ctx.restore();
   updateLabel();
   updateSummary();
