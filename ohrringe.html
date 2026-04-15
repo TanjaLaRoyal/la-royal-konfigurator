@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Royal – Wunschohrringe</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --sand: #faf9f6; --lava: #1a1a1a; --gold: #c9a96e;
+  --soft: #f4f3ef; --text: #111;
+}
+body { background: var(--sand); color: var(--text); font-family: 'Jost', sans-serif; font-weight: 300; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px 60px; }
+header { text-align: center; margin-bottom: 36px; }
+.brand { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(2.2rem, 6vw, 3.6rem); letter-spacing: 0.18em; color: var(--lava); line-height: 1; }
+.tagline { font-size: 16px; letter-spacing: 0.2em; text-transform: uppercase; color: #111; margin-top: 8px; }
+.divider { width: 48px; height: 1px; background: var(--gold); margin: 20px auto 0; }
+.card { background: #fff; border-radius: 2px; padding: 32px 28px; width: 100%; max-width: 580px; min-height: 720px; box-shadow: 0 2px 24px rgba(0,0,0,0.06); }
+.earring-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; background: var(--soft); padding: 24px 20px 18px; border-radius: 1px; margin-bottom: 28px; }
+.preview-label { font-family: 'Cormorant Garamond', serif; font-size: 15px; color: #111; font-style: italic; text-align: center; min-height: 1.4em; }
+.preview-label.filled { font-style: normal; font-size: 16px; }
+.section-label { font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; margin-bottom: 12px; font-weight: 500; }
+.section { margin-bottom: 28px; }
+.design-options { display: flex; flex-direction: column; gap: 10px; }
+.design-btn { border: 1px solid #ddd; background: transparent; padding: 16px 20px; cursor: pointer; border-radius: 1px; font-family: 'Jost', sans-serif; font-weight: 300; letter-spacing: 0.04em; transition: all 0.2s; text-align: left; color: var(--text); display: flex; flex-direction: column; gap: 4px; width: 100%; }
+.design-btn.active { border-color: #111; background: #f4f3ef; }
+.design-btn:hover:not(.active) { border-color: #111; }
+.design-btn-name { font-size: 17px; font-weight: 400; }
+.design-btn-desc { font-size: 13px; color: #555; }
+.option-row { display: flex; gap: 10px; }
+.option-btn { flex: 1; border: 1px solid #ddd; background: transparent; padding: 13px 8px; cursor: pointer; border-radius: 1px; font-family: 'Jost', sans-serif; font-weight: 300; font-size: 15px; letter-spacing: 0.04em; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text); }
+.option-btn.active { border-color: #111; background: #f4f3ef; }
+.option-btn:hover:not(.active) { border-color: #111; }
+.option-btn:disabled { opacity: 0.35; cursor: not-allowed; border-color: #eee; }
+.option-btn:disabled:hover { border-color: #eee; }
+.metal-swatch { width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0; }
+.metal-swatch.silber   { background: linear-gradient(135deg, #d4d8dc, #8a9299); }
+.metal-swatch.gold     { background: linear-gradient(135deg, #e8c97e, #b8863a); }
+.metal-swatch.rosegold { background: linear-gradient(135deg, #e8b09a, #c9816e); }
+.count-options { display: flex; gap: 10px; }
+.count-btn { flex: 1; border: 1px solid #ddd; background: transparent; padding: 12px 6px; font-family: 'Cormorant Garamond', serif; font-size: 17px; color: var(--text); cursor: pointer; border-radius: 1px; transition: all 0.2s; text-align: center; }
+.count-btn.active { border-color: #111; background: var(--gold); color: #fff; }
+.count-btn:hover:not(.active) { border-color: #111; }
+.color-slot { margin-bottom: 16px; }
+.slot-label { font-size: 14px; letter-spacing: 0.15em; text-transform: uppercase; color: #111; margin-bottom: 8px; font-weight: 500; }
+.color-options { display: flex; flex-wrap: wrap; gap: 7px; }
+.color-chip { display: flex; align-items: center; gap: 7px; border: 1px solid #ddd; padding: 6px 10px; border-radius: 1px; cursor: pointer; font-size: 15px; transition: all 0.2s; background: transparent; font-family: 'Jost', sans-serif; font-weight: 300; color: var(--text); }
+.color-chip:hover:not(.active) { border-color: #111; }
+.color-chip.active { border-color: #111; background: #f4f3ef; }
+.color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.1); }
+.summary-box { display: none; background: #f4f3ef; border: 1px solid #e8e5df; border-radius: 1px; padding: 18px 20px; margin-bottom: 20px; }
+.summary-box.visible { display: block; }
+.summary-title { font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; font-weight: 500; margin-bottom: 10px; }
+.summary-text { font-size: 16px; color: #111; line-height: 1.7; white-space: pre-line; font-family: 'Jost', sans-serif; }
+.copy-btn { margin-top: 14px; display: inline-block; border: 1px solid #111; background: transparent; padding: 9px 18px; font-family: 'Jost', sans-serif; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; color: #111; transition: all 0.2s; border-radius: 1px; }
+.copy-btn:hover { background: #111; color: #fff; }
+.copy-btn.copied { background: #111; color: #fff; }
+.next-step { display: none; background: #fff; color: #111; border: 1px solid #ddd; border-radius: 1px; padding: 18px 20px; text-align: center; }
+.next-step.visible { display: block; }
+.next-step-label { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #111; margin-bottom: 6px; }
+.next-step-text { font-size: 15px; letter-spacing: 0.06em; line-height: 1.6; color: #111; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">La Royal</div>
+  <div class="tagline">Gestalte deine Wunschohrringe</div>
+  <div class="divider"></div>
+</header>
+
+<div class="card">
+
+  <div class="earring-wrap">
+    <canvas id="earring-canvas" width="300" height="240"></canvas>
+    <div class="preview-label" id="preview-label">Wähle dein Design – die Ohrringe füllen sich mit deinen Farben.</div>
+  </div>
+
+  <!-- 1: Design -->
+  <div class="section">
+    <div class="section-label">1 · Design wählen</div>
+    <div class="design-options">
+      <button class="design-btn" onclick="setDesign('kristall', this)">
+        <span class="design-btn-name">Stab Ohrringe</span>
+        <span class="design-btn-desc">Lavaperle · 4 Kristalle – erhältlich in Silber, Gold & Roségold</span>
+      </button>
+      <button class="design-btn" onclick="setDesign('buendel', this)">
+        <span class="design-btn-name">Bündel Ohrringe</span>
+        <span class="design-btn-desc">8 Kristalle als Bündel – erhältlich in Silber & Gold</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 2: Edelstahl -->
+  <div class="section">
+    <div class="section-label">2 · Edelstahl</div>
+    <div class="option-row" id="metal-row">
+      <button class="option-btn" onclick="setMetal('Silber', this)">
+        <span class="metal-swatch silber"></span> Silber
+      </button>
+      <button class="option-btn" onclick="setMetal('Gold', this)">
+        <span class="metal-swatch gold"></span> Gold
+      </button>
+      <button class="option-btn" id="rosegold-btn" onclick="setMetal('Roségold', this)">
+        <span class="metal-swatch rosegold"></span> Roségold
+      </button>
+    </div>
+  </div>
+
+  <!-- 3: Verschluss -->
+  <div class="section">
+    <div class="section-label">3 · Verschluss</div>
+    <div class="option-row" id="clasp-row">
+      <button class="option-btn" onclick="setClasp('klapp', this)">Klapp-Verschluss</button>
+      <button class="option-btn" onclick="setClasp('haken', this)">Ohrhaken</button>
+    </div>
+  </div>
+
+  <!-- 4: Anzahl Farben -->
+  <div class="section">
+    <div class="section-label">4 · Wie viele Kristallfarben?</div>
+    <div class="count-options">
+      <button class="count-btn" onclick="setCount(1, this)">Einfarbig</button>
+      <button class="count-btn" onclick="setCount(2, this)">Zweifarbig</button>
+      <button class="count-btn" onclick="setCount(4, this)">Vierfarbig</button>
+    </div>
+  </div>
+
+  <!-- 5: Farben -->
+  <div class="section" id="color-section" style="display:none">
+    <div class="section-label">5 · Kristallfarben wählen</div>
+    <div id="slots-wrapper"></div>
+  </div>
+
+  <div class="summary-box" id="summary-box">
+    <div class="summary-title">Deine Auswahl</div>
+    <div class="summary-text" id="summary-text"></div>
+    <button class="copy-btn" id="copy-btn" onclick="copyText()">Text kopieren</button>
+  </div>
+
+  <div class="next-step" id="next-step">
+    <div class="next-step-label">Schritt 6</div>
+    <div class="next-step-text">Kopiere den Text. Bestelle deine Wunschohrringe direkt oder schreibe mir per WhatsApp, wenn du Fragen hast.</div>
+  </div>
+
+</div>
+
+<script>
+const COLORS = [
+  { name: 'Capri Blau',                hex: '#1a6bb5', shimmer: '#5aaae8', shape: 'round'  },
+  { name: 'Himmelblau',                hex: '#6CB8D8', shimmer: '#A0D4EC', shape: 'bicone' },
+  { name: 'Luft · ein Hauch von Blau', hex: '#C0D8EE', shimmer: '#E0F0FF', shape: 'bicone' },
+  { name: 'Meeresblau',                hex: '#1A508C', shimmer: '#3A78B8', shape: 'bicone' },
+  { name: 'Montana Blau',              hex: '#1A3D78', shimmer: '#3060A8', shape: 'round'  },
+  { name: 'Türkise Lagune',            hex: '#48B8C0', shimmer: '#7AD4DA', shape: 'bicone' },
+  { name: 'Atlantik Türkis matt',      hex: '#3D8880', shimmer: '#68AEA8', shape: 'bicone' },
+  { name: 'Lanzarote Türkis hell',     hex: '#7ACECE', shimmer: '#A8E0E0', shape: 'round'  },
+  { name: 'El Golfo Grün',             hex: '#3A7828', shimmer: '#60A040', shape: 'bicone' },
+  { name: 'Zitrus Grün',               hex: '#B8D828', shimmer: '#D0EC60', shape: 'bicone' },
+  { name: 'Sonnenschein Matt',         hex: '#f5eb79', shimmer: '#faf4a8', shape: 'round'  },
+  { name: 'Venus',                     hex: '#A87848', shimmer: '#D0A870', shape: 'round'  },
+  { name: 'Manrique Orange',           hex: '#F07818', shimmer: '#F8A860', shape: 'bicone' },
+  { name: 'Glühende Lava',             hex: '#E05040', shimmer: '#F09078', shape: 'bicone' },
+  { name: 'Pink Safir Matt',           hex: '#E878C0', shimmer: '#F4AADA', shape: 'bicone' },
+  { name: 'Rosenwasser Opal',          hex: '#F5C8D0', shimmer: '#FFE0E8', shape: 'bicone' },
+  { name: 'Pinke Buganvilla',          hex: '#D42882', shimmer: '#F060B0', shape: 'bicone' },
+  { name: 'Pinke Buganvilla Matt',     hex: '#BE1F75', shimmer: '#E050A0', shape: 'bicone' },
+  { name: 'Opal Weiss',                hex: '#F0EAE0', shimmer: '#FFF8F0', shape: 'round'  },
+];
+
+const EMPTY = { hex: '#d4d0c8', shimmer: '#e8e4dc', shape: 'round' };
+
+const state = {
+  design: null,   // 'kristall' | 'buendel'
+  metal:  null,
+  clasp:  null,
+  count:  null,
+  slots:  [],
+};
+
+function getMetalColor() {
+  if (state.metal === 'Gold')     return { hex: '#c9a96e', shimmer: '#e8d49a' };
+  if (state.metal === 'Roségold') return { hex: '#c9816e', shimmer: '#e8b09a' };
+  return { hex: '#a8b0b8', shimmer: '#d0d6da' };
+}
+
+function getCrystalAt(pos, total) {
+  // total: 4 for Kristall, 8 for Bündel
+  if (!state.count) return EMPTY;
+  let slotIdx;
+  if (state.count === 1) {
+    slotIdx = 0;
+  } else if (state.count === 2) {
+    slotIdx = pos % 2;
+  } else {
+    // 4 slots
+    if (total === 4) slotIdx = pos;       // Kristall: 1 Farbe pro Kristall
+    else             slotIdx = pos % 4;  // Bündel: 1+5, 2+6, 3+7, 4+8
+  }
+  const name = state.slots[slotIdx];
+  if (!name) return EMPTY;
+  return COLORS.find(c => c.name === name) || EMPTY;
+}
+
+function darken(hex, f) {
+  return `rgb(${[1,3,5].map(i => Math.round(parseInt(hex.slice(i,i+2),16)*f)).join(',')})`;
+}
+
+function drawLava(ctx, x, y, r) {
+  const g = ctx.createRadialGradient(x-r*.3, y-r*.3, r*.05, x, y, r);
+  g.addColorStop(0,'#585858'); g.addColorStop(.45,'#252525'); g.addColorStop(1,'#0a0a0a');
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,0.4)';
+  [[-.28,-.18],[.22,.28],[-.1,.35],[.34,-.12],[.1,-.34],[-.34,.12]].forEach(([dx,dy])=>{
+    ctx.beginPath(); ctx.arc(x+dx*r,y+dy*r,r*.11,0,Math.PI*2); ctx.fill();
+  });
+}
+
+function drawSphere(ctx, x, y, r, base, shimmer, gloss) {
+  const g = ctx.createRadialGradient(x-r*.35,y-r*.38,r*.04,x+r*.1,y+r*.1,r*1.05);
+  g.addColorStop(0,shimmer); g.addColorStop(.42,base); g.addColorStop(1,darken(base,.48));
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
+  const sh = ctx.createRadialGradient(x-r*.28,y-r*.32,0,x-r*.28,y-r*.32,r*.4);
+  sh.addColorStop(0,`rgba(255,255,255,${gloss})`); sh.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=sh; ctx.fill();
+}
+
+function drawBicone(ctx, x, y, r, base, shimmer, gloss) {
+  const w = r * 0.96, h = r;
+  ctx.beginPath();
+  ctx.moveTo(x, y-h);
+  ctx.bezierCurveTo(x+w*.45,y-h*.70, x+w,y-h*.12, x+w,y);
+  ctx.bezierCurveTo(x+w,y+h*.12, x+w*.45,y+h*.70, x,y+h);
+  ctx.bezierCurveTo(x-w*.45,y+h*.70, x-w,y+h*.12, x-w,y);
+  ctx.bezierCurveTo(x-w,y-h*.12, x-w*.45,y-h*.70, x,y-h);
+  ctx.closePath();
+  const g = ctx.createRadialGradient(x-w*.38,y-h*.36,h*.04,x+w*.1,y+h*.1,h);
+  g.addColorStop(0,shimmer); g.addColorStop(.42,base); g.addColorStop(1,darken(base,.48));
+  ctx.fillStyle=g; ctx.fill();
+  const sh = ctx.createRadialGradient(x-w*.3,y-h*.3,0,x-w*.3,y-h*.3,h*.42);
+  sh.addColorStop(0,`rgba(255,255,255,${gloss})`); sh.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=sh; ctx.fill();
+}
+
+// ── Verschlüsse ──────────────────────────────────────────────
+
+function drawKlappVerschluss(ctx, cx, startY, mc) {
+  const R = 13, cy = startY + R;
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0.45, Math.PI * 2 - 0.1, false);
+  ctx.strokeStyle = mc.hex; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy + R, 2.5, 0, Math.PI * 2);
+  ctx.fillStyle = darken(mc.hex, 0.75); ctx.fill();
+  return cy + R + 2;
+}
+
+function drawOhrhaken(ctx, cx, startY, mc) {
+  ctx.save();
+  ctx.strokeStyle = mc.hex; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = 2;
+  const loopR = 4, loopCY = startY + 50, straightTop = startY + 24, arcR = 14, arcCX = cx + arcR;
+  ctx.beginPath();
+  ctx.moveTo(cx, loopCY - loopR);
+  ctx.lineTo(cx, straightTop);
+  ctx.arc(arcCX, straightTop, arcR, Math.PI, 0, false);
+  ctx.lineTo(cx + 2 * arcR, straightTop + 20);
+  ctx.stroke();
+  ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.arc(cx, loopCY, loopR, 0.35, Math.PI * 2 - 0.35); ctx.stroke();
+  ctx.restore();
+  return loopCY + loopR + 3;
+}
+
+// ── Stab Ohrringe ────────────────────────────────────────
+
+function drawKristallEarring(ctx, cx, startY) {
+  const mc = getMetalColor();
+  const R_LAVA = 10, R_CRYSTAL = 10, R_SPACER = 4;
+  let y = state.clasp === 'haken'
+    ? drawOhrhaken(ctx, cx, startY, mc)
+    : drawKlappVerschluss(ctx, cx, startY, mc);
+  y += R_SPACER; drawSphere(ctx, cx, y, R_SPACER, mc.hex, mc.shimmer, 0.55); y += R_SPACER;
+  y += R_LAVA;   drawLava(ctx, cx, y, R_LAVA);                                y += R_LAVA;
+  y += R_SPACER; drawSphere(ctx, cx, y, R_SPACER, mc.hex, mc.shimmer, 0.55); y += R_SPACER;
+  for (let i = 0; i < 4; i++) {
+    const c = getCrystalAt(i, 4);
+    y += R_CRYSTAL;
+    c.shape === 'bicone'
+      ? drawBicone(ctx, cx, y, R_CRYSTAL, c.hex, c.shimmer, 0.72)
+      : drawSphere(ctx, cx, y, R_CRYSTAL, c.hex, c.shimmer, 0.65);
+    y += R_CRYSTAL;
+  }
+  y += R_SPACER; drawSphere(ctx, cx, y, R_SPACER, mc.hex, mc.shimmer, 0.55);
+}
+
+// ── Bündel Ohrringe ──────────────────────────────────────────
+
+// Cluster-Positionen: 2 · 1 · 2 · 2 · 1 (von oben nach unten)
+// Unten: 1 Perle → darüber 2 → darüber 2 (V-Form) → 1 Mitte → oben 2
+const BUENDEL_POS = [
+  [-17,  0], [17,  0],    // Reihe 1 (ganz oben): 2 Perlen – weiter auseinander
+  [  0, 16],              // Reihe 2: 1 Perle – etwas höher
+  [-15, 33], [15, 33],    // Reihe 3: 2 Perlen – nach oben gerückt
+  [-10, 53], [10, 53],    // Reihe 4: 2 Perlen – enger
+  [  0, 73],              // Reihe 5 (ganz unten): 1 Perle – bleibt
+];
+
+// Verbindungsringe zwischen den Bündel-Perlen
+const BUENDEL_CONNECTIONS = [
+  [0, 2], [1, 2],   // oben-links/rechts → Mitte
+  [2, 3], [2, 4],   // Mitte → V oben
+  [3, 5], [4, 6],   // V oben → V unten
+  [5, 7], [6, 7],   // V unten → unten
+];
+
+function drawBuendelRings(ctx, cx, clusterTop) {
+  const mc = getMetalColor();
+  ctx.save();
+  ctx.strokeStyle = mc.hex;
+  ctx.lineWidth = 2;
+
+  BUENDEL_CONNECTIONS.forEach(([a, b]) => {
+    const ax = cx + BUENDEL_POS[a][0], ay = clusterTop + BUENDEL_POS[a][1];
+    const bx = cx + BUENDEL_POS[b][0], by = clusterTop + BUENDEL_POS[b][1];
+    const mx = (ax + bx) / 2;
+    const my = (ay + by) / 2;
+
+    ctx.beginPath();
+    ctx.arc(mx, my, 4, 0, Math.PI * 2);
+    ctx.stroke();
+  });
+
+  // Großer Mittelring zwischen Perlen 4+5, berührt auch 6+7 (r=13)
+  const midX = cx + (BUENDEL_POS[3][0] + BUENDEL_POS[4][0]) / 2;
+  const midY = clusterTop + (BUENDEL_POS[3][1] + BUENDEL_POS[4][1]) / 2 + 5;
+  ctx.beginPath();
+  ctx.arc(midX, midY, 7, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawBuendelEarring(ctx, cx, startY) {
+  const mc = getMetalColor();
+  const R_CRYSTAL = 10; // gleiche Größe wie Stab Ohrringe
+
+  let y = state.clasp === 'haken'
+    ? drawOhrhaken(ctx, cx, startY, mc)
+    : drawKlappVerschluss(ctx, cx, startY, mc);
+
+  // Verbindungsring – Mittelpunkt so berechnet, dass er die obersten 2 Perlen (±17px) genau berührt
+  // Geometrie: sqrt(17² + dy²) = bigR + R_CRYSTAL → dy = sqrt((bigR+R_CRYSTAL)² - 17²) ≈ 6
+  const bigR = 8;
+  ctx.beginPath();
+  ctx.arc(cx, y + bigR, bigR, 0, Math.PI * 2);
+  ctx.strokeStyle = mc.hex; ctx.lineWidth = 2; ctx.stroke();
+  y += 4; // Ring-Mitte bei y+8, clusterTop bei y+14 → Abstand 6 → berührt Perlen exakt
+
+  const clusterTop = y + R_CRYSTAL;
+
+  // Verbindungsringe zuerst (im Hintergrund)
+  drawBuendelRings(ctx, cx, clusterTop);
+
+  // 8 Kristalle als Bündel – mit korrekter Form (round/bicone)
+  BUENDEL_POS.forEach((pos, i) => {
+    const c  = getCrystalAt(i, 8);
+    const bx = cx + pos[0];
+    const by = clusterTop + pos[1];
+    if (c.shape === 'bicone') {
+      drawBicone(ctx, bx, by, R_CRYSTAL, c.hex, c.shimmer, 0.72);
+    } else {
+      drawSphere(ctx, bx, by, R_CRYSTAL, c.hex, c.shimmer, 0.65);
+    }
+  });
+}
+
+// ── Zeichnen ─────────────────────────────────────────────────
+
+function getEarringHeight() {
+  const claspH = state.clasp === 'haken' ? 57 : 28;
+  if (state.design === 'buendel') {
+    return claspH + 97;  // y-offset(4) + clusterTop-R(10) + pos[7].y(73) + R_CRYSTAL(10)
+  } else {
+    return claspH + 124; // spacers + lava + 4 Kristalle + letzter Spacer
+  }
+}
+
+function drawEarrings() {
+  const canvas = document.getElementById('earring-canvas');
+  const ctx    = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const SCALE        = 1.15;
+  const FIXED_BOTTOM = canvas.height - 30;
+  const startY       = FIXED_BOTTOM / SCALE - getEarringHeight();
+  const drawFn       = state.design === 'buendel' ? drawBuendelEarring : drawKristallEarring;
+
+  ctx.save();
+  ctx.translate(150, 0);
+  ctx.scale(SCALE, SCALE);
+  ctx.translate(-150, 0);
+  drawFn(ctx, 105, startY);
+  drawFn(ctx, 195, startY);
+  ctx.restore();
+
+  updateLabel();
+  updateSummary();
+}
+
+// ── UI-Logik ─────────────────────────────────────────────────
+
+function setDesign(design, btn) {
+  state.design = design;
+  state.count  = null;
+  state.slots  = [];
+  document.querySelectorAll('.design-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // Roségold nur bei Stab Ohrringe verfügbar
+  const rg = document.getElementById('rosegold-btn');
+  if (design === 'buendel') {
+    rg.disabled = true;
+    if (state.metal === 'Roségold') { state.metal = null; updateMetalButtons(); }
+  } else {
+    rg.disabled = false;
+  }
+  document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('color-section').style.display = 'none';
+  drawEarrings();
+}
+
+function updateMetalButtons() {
+  document.querySelectorAll('#metal-row .option-btn').forEach(b => b.classList.remove('active'));
+}
+
+function setMetal(metal, btn) {
+  state.metal = metal;
+  document.querySelectorAll('#metal-row .option-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  drawEarrings();
+}
+
+function setClasp(clasp, btn) {
+  state.clasp = clasp;
+  document.querySelectorAll('#clasp-row .option-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  drawEarrings();
+}
+
+function setCount(n, btn) {
+  state.count = n;
+  state.slots = Array(n).fill(null);
+  document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSlots();
+  document.getElementById('color-section').style.display = 'block';
+  drawEarrings();
+}
+
+function renderSlots() {
+  const wrapper = document.getElementById('slots-wrapper');
+  wrapper.innerHTML = '';
+  const isBuendel = state.design === 'buendel';
+  let labels;
+  if (state.count === 1) {
+    labels = ['Kristallfarbe'];
+  } else if (state.count === 2) {
+    labels = isBuendel
+      ? ['Farbe A · Kristalle 1, 3, 5, 7', 'Farbe B · Kristalle 2, 4, 6, 8']
+      : ['Farbe A · Kristall 1 & 3', 'Farbe B · Kristall 2 & 4'];
+  } else {
+    labels = isBuendel
+      ? ['Farbe 1 · Kristall 1 & 5', 'Farbe 2 · Kristall 2 & 6', 'Farbe 3 · Kristall 3 & 7', 'Farbe 4 · Kristall 4 & 8']
+      : ['Kristall 1', 'Kristall 2', 'Kristall 3', 'Kristall 4'];
+  }
+  for (let i = 0; i < state.count; i++) {
+    const div = document.createElement('div');
+    div.className = 'color-slot';
+    div.innerHTML = `<div class="slot-label">${labels[i]}</div><div class="color-options" id="slot-${i}"></div>`;
+    wrapper.appendChild(div);
+    const container = document.getElementById(`slot-${i}`);
+    COLORS.forEach(c => {
+      const chip = document.createElement('button');
+      chip.className = 'color-chip';
+      chip.innerHTML = `<span class="color-dot" style="background:${c.hex}"></span>${c.name}`;
+      chip.onclick = () => {
+        state.slots[i] = c.name;
+        container.querySelectorAll('.color-chip').forEach(b => b.classList.remove('active'));
+        chip.classList.add('active');
+        drawEarrings();
+      };
+      container.appendChild(chip);
+    });
+  }
+}
+
+function isReady() {
+  return state.design && state.metal && state.clasp && state.count &&
+         state.slots.filter(Boolean).length === state.count;
+}
+
+function updateLabel() {
+  const label = document.getElementById('preview-label');
+  if (isReady()) {
+    const colorStr = state.count === 1
+      ? state.slots[0]
+      : state.slots.join(' · ');
+    const claspName = state.clasp === 'haken' ? 'Ohrhaken' : 'Klapp-Verschluss';
+    const designName = state.design === 'buendel' ? 'Bündel Ohrringe' : 'Stab Ohrringe';
+    label.textContent = `${designName} · ${colorStr} · ${state.metal} · ${claspName}`;
+    label.className = 'preview-label filled';
+  } else {
+    label.textContent = 'Wähle dein Design – die Ohrringe füllen sich mit deinen Farben.';
+    label.className = 'preview-label';
+  }
+}
+
+function updateSummary() {
+  if (isReady()) {
+    document.getElementById('summary-box').classList.add('visible');
+    const s = buildSummary();
+    document.getElementById('summary-text').innerHTML = '<strong>' + s.split('\n')[0] + '</strong>\n' + s.split('\n').slice(1).join('\n');
+    document.getElementById('next-step').classList.add('visible');
+  } else {
+    document.getElementById('summary-box').classList.remove('visible');
+    document.getElementById('next-step').classList.remove('visible');
+  }
+}
+
+function buildSummary() {
+  const claspName  = state.clasp === 'haken' ? 'Ohrhaken' : 'Klapp-Verschluss';
+  const designName = state.design === 'buendel' ? 'Bündel Ohrringe' : 'Stab Ohrringe';
+  let colorLines;
+  if (state.count === 1) {
+    colorLines = `Kristallfarbe: ${state.slots[0]}`;
+  } else if (state.count === 2) {
+    colorLines = `Farbe A: ${state.slots[0]}\nFarbe B: ${state.slots[1]}`;
+  } else {
+    colorLines = state.slots.map((s, i) => `Farbe ${i+1}: ${s}`).join('\n');
+  }
+  const price = state.design === 'buendel' ? '50 €' : '35 €';
+  return `${designName}\n${colorLines}\nEdelstahl: ${state.metal}\nVerschluss: ${claspName}\nPreis: ${price}`;
+}
+
+function copyText() {
+  const text = document.getElementById('summary-text').innerText;
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.top = '-9999px';
+  ta.style.left = '-9999px'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+  const btn = document.getElementById('copy-btn');
+  btn.textContent = 'Kopiert!'; btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'Text kopieren'; btn.classList.remove('copied'); }, 2000);
+}
+
+drawEarrings();
+</script>
+</body>
+</html>
