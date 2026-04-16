@@ -332,7 +332,7 @@ function updateLabel() {
     label.textContent = `Kristall Pur · ${colorStr} · ${state.metal}`;
     label.className = 'preview-label filled';
   } else {
-    label.textContent = 'Wähle dein Edelstahl und deine Kristallfarben.';
+    label.textContent = 'Wähle die Edelstahl Perle und deine Kristallfarben.';
     label.className = 'preview-label';
   }
 }
@@ -366,15 +366,22 @@ function buildSummary() {
 
 function copyText() {
   const text = document.getElementById('summary-text').innerText;
-  const ta = document.createElement('textarea');
-  ta.value = text; ta.style.position = 'fixed'; ta.style.top = '-9999px';
-  ta.style.left = '-9999px'; ta.style.opacity = '0';
-  document.body.appendChild(ta); ta.focus(); ta.select();
-  try { document.execCommand('copy'); } catch(e) {}
-  document.body.removeChild(ta);
   const btn = document.getElementById('copy-btn');
-  btn.textContent = 'Kopiert ✓';
-  setTimeout(() => { btn.textContent = 'Text kopieren'; }, 2000);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Kopiert ✓';
+      setTimeout(() => { btn.textContent = 'Text kopieren'; }, 2000);
+    });
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.top = '-9999px';
+    ta.style.left = '-9999px'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch(e) {}
+    document.body.removeChild(ta);
+    btn.textContent = 'Kopiert ✓';
+    setTimeout(() => { btn.textContent = 'Text kopieren'; }, 2000);
+  }
 }
 
 // Initial draw
