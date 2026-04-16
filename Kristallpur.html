@@ -16,7 +16,7 @@ header { text-align: center; margin-bottom: 36px; }
 .brand { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(2.2rem, 6vw, 3.6rem); letter-spacing: 0.18em; color: var(--lava); line-height: 1; }
 .tagline { font-size: 16px; letter-spacing: 0.2em; text-transform: uppercase; color: #111; margin-top: 8px; }
 .divider { width: 48px; height: 1px; background: var(--gold); margin: 20px auto 0; }
-.card { background: transparent; padding: 20px 28px; width: 100%; max-width: 580px; }
+.card { background: transparent; padding: 20px 28px; width: 100%; max-width: 720px; }
 .bracelet-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; background: var(--soft); padding: 24px 20px 18px; border-radius: 1px; margin-bottom: 28px; }
 .preview-label { font-family: 'Cormorant Garamond', serif; font-size: 15px; color: #111; font-style: italic; text-align: center; min-height: 1.4em; }
 .preview-label.filled { font-style: normal; font-size: 16px; }
@@ -53,10 +53,12 @@ header { text-align: center; margin-bottom: 36px; }
 <body>
 
 
+<h2 style="font-family:'Cormorant Garamond',serif; font-weight:300; font-size:clamp(1.6rem,4vw,2.4rem); letter-spacing:0.12em; text-align:center; color:#111; margin-bottom:24px;">Kristall Pur Armband Design</h2>
+
 <div class="card">
   <div class="bracelet-wrap">
     <canvas id="bracelet-canvas" width="300" height="300"></canvas>
-    <div class="preview-label" id="preview-label">Wähle dein Edelstahl und deine Kristallfarben.</div>
+    <div class="preview-label" id="preview-label">Wähle deine Kristallfarben und Edelstahl Perle.</div>
   </div>
 
   <!-- 1: Edelstahl -->
@@ -87,14 +89,14 @@ header { text-align: center; margin-bottom: 36px; }
   </div>
 
   <div class="summary-box" id="summary-box">
-    <div class="summary-title">Deine Auswahl</div>
+    <div class="summary-title">Deine Reihenfolge</div>
     <div class="summary-text" id="summary-text"></div>
     <button class="copy-btn" id="copy-btn" onclick="copyText()">Text kopieren</button>
   </div>
 
   <div class="next-step" id="next-step">
     <div class="next-step-label">Schritt 4</div>
-    <div class="next-step-text">Kopiere den Text. Bestelle dein Wunsch-Armband direkt oder schreibe mir per WhatsApp, wenn du Fragen hast.</div>
+    <div class="next-step-text">Kopiere den Text. Bestelle dein Kristall Pur Wunsch-Armband direkt oder schreibe mir per WhatsApp, wenn du Fragen hast.</div>
   </div>
 </div>
 
