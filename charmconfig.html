@@ -11,12 +11,12 @@
   --sand: #faf9f6; --lava: #1a1a1a; --gold: #c9a96e;
   --soft: #f4f3ef; --text: #111;
 }
-body { background: var(--sand); color: var(--text); font-family: 'Jost', sans-serif; font-weight: 300; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px 60px; }
+body { background: transparent; color: var(--text); font-family: 'Jost', sans-serif; font-weight: 300; display: flex; flex-direction: column; align-items: center; padding: 0; }
 header { text-align: center; margin-bottom: 36px; }
 .brand { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(2.2rem, 6vw, 3.6rem); letter-spacing: 0.18em; color: var(--lava); line-height: 1; }
 .tagline { font-size: 16px; letter-spacing: 0.2em; text-transform: uppercase; color: #111; margin-top: 8px; }
 .divider { width: 48px; height: 1px; background: var(--gold); margin: 20px auto 0; }
-.card { background: #fff; border-radius: 2px; padding: 32px 28px; width: 100%; max-width: 720px; min-height: 720px; box-shadow: 0 2px 24px rgba(0,0,0,0.06); }
+.card { background: transparent; padding: 20px 28px; width: 100%; max-width: 720px; }
 .charm-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; background: var(--soft); padding: 24px 20px 18px; border-radius: 1px; margin-bottom: 28px; }
 .preview-label { font-family: 'Cormorant Garamond', serif; font-size: 15px; color: #111; font-style: italic; text-align: center; min-height: 1.4em; }
 .preview-label.filled { font-style: normal; font-size: 16px; }
@@ -36,12 +36,12 @@ header { text-align: center; margin-bottom: 36px; }
 .color-options { display: flex; flex-wrap: wrap; gap: 7px; }
 .color-chip { display: flex; align-items: center; gap: 7px; border: 1px solid #ddd; padding: 6px 10px; border-radius: 1px; cursor: pointer; font-size: 15px; transition: all 0.2s; background: transparent; font-family: 'Jost', sans-serif; font-weight: 300; color: var(--text); }
 .color-chip:hover { border-color: #111; }
-.color-chip.active { border-color: #111; background: #111; color: #fff; }
+.color-chip.active { border-color: #111; background: #f4f3ef; }
 .color-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.1); }
-.summary-box { display: none; border: 1px solid #ddd; border-radius: 1px; padding: 24px; margin-bottom: 20px; }
+.summary-box { display: none; background: #f4f3ef; border: 1px solid #e8e5df; border-radius: 1px; padding: 24px; margin-bottom: 20px; }
 .summary-box.visible { display: block; }
-.summary-title { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 12px; }
-.summary-text { font-size: 15px; line-height: 1.8; white-space: pre-line; margin-bottom: 16px; }
+.summary-title { font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; font-weight: 500; margin-bottom: 10px; }
+.summary-text { font-size: 16px; color: #111; line-height: 1.7; white-space: pre-line; margin-bottom: 16px; font-family: 'Jost', sans-serif; }
 .copy-btn { border: 1px solid #111; background: transparent; padding: 10px 24px; border-radius: 1px; cursor: pointer; font-family: 'Jost', sans-serif; font-size: 14px; letter-spacing: 0.1em; color: #111; transition: all 0.2s; }
 .copy-btn:hover { background: #111; color: #fff; }
 .next-step { display: none; background: #fff; color: #111; border: 1px solid #ddd; border-radius: 1px; padding: 18px 20px; text-align: center; }
@@ -52,11 +52,8 @@ header { text-align: center; margin-bottom: 36px; }
 </head>
 <body>
 
-<header>
-  <div class="brand">La Royal</div>
-  <div class="tagline">Wunsch Charm</div>
-  <div class="divider"></div>
-</header>
+<div style="width:48px; height:1px; background:#c9a96e; margin:60px auto 16px;"></div>
+<h2 style="font-family:'Jost',sans-serif; font-weight:300; font-size:clamp(1.4rem,3.5vw,2rem); letter-spacing:0.18em; text-transform:uppercase; text-align:center; color:#111; margin-bottom:52px;">Gestalte deinen Bündel Charm</h2>
 
 <div class="card">
   <div class="charm-wrap">
@@ -524,6 +521,14 @@ function copyText() {
 
 // Initial draw
 drawCanvas();
+</script>
+<script>
+function sendHeight() {
+  window.parent.postMessage({ iframeHeight: document.body.scrollHeight }, '*');
+}
+const ro = new ResizeObserver(sendHeight);
+ro.observe(document.body);
+sendHeight();
 </script>
 </body>
 </html>
