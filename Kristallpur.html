@@ -377,5 +377,16 @@ function copyText() {
 // Initial draw
 drawCanvas();
 </script>
+<script>
+// iFrame Resizer – teilt dem übergeordneten Fenster die aktuelle Höhe mit
+function sendHeight() {
+  const h = document.body.scrollHeight;
+  window.parent.postMessage({ iframeHeight: h }, '*');
+}
+// Bei jedem DOM-Change neu messen (z.B. wenn Farboptionen eingeblendet werden)
+const ro = new ResizeObserver(sendHeight);
+ro.observe(document.body);
+sendHeight();
+</script>
 </body>
 </html>
