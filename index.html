@@ -573,7 +573,7 @@ drawBracelet();
 function sendHeight() {
   const card = document.querySelector('.card');
   const h = card ? card.getBoundingClientRect().bottom : document.body.scrollHeight;
-  window.parent.postMessage({ iframeHeight: Math.ceil(h) }, '*');
+  window.parent.postMessage({ iframeHeight: Math.ceil(h), iframeId: 'armband' }, '*');
 }
 const ro = new ResizeObserver(sendHeight);
 ro.observe(document.body);
