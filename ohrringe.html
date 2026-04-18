@@ -555,6 +555,8 @@ drawEarrings();
 </script>
 <script>
 function sendHeight() {
+  const card = document.querySelector('.card');
+  const h = card ? card.getBoundingClientRect().bottom : document.body.scrollHeight;
   window.parent.postMessage({ iframeHeight: Math.ceil(h), iframeId: 'ohrringe' }, '*');
 }
 const ro = new ResizeObserver(sendHeight);
