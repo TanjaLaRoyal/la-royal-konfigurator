@@ -540,15 +540,23 @@ function buildSummary() {
 
 function copyText() {
   const text = document.getElementById('summary-text').innerText;
-  const ta = document.createElement('textarea');
-  ta.value = text; ta.style.position = 'fixed'; ta.style.top = '-9999px';
-  ta.style.left = '-9999px'; ta.style.opacity = '0';
-  document.body.appendChild(ta); ta.focus(); ta.select();
-  try { document.execCommand('copy'); } catch(e) {}
-  document.body.removeChild(ta);
   const btn = document.getElementById('copy-btn');
-  btn.textContent = 'Kopiert!'; btn.classList.add('copied');
-  setTimeout(() => { btn.textContent = 'Text kopieren'; btn.classList.remove('copied'); }, 2000);
+  function fallback() {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.top = '-9999px';
+    ta.style.left = '-9999px'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch(e) {}
+    document.body.removeChild(ta);
+    btn.textContent = 'Kopiert ✓';
+    setTimeout(() => { btn.textContent = 'Text kopieren'; }, 2000);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Kopiert ✓';
+      setTimeout(() => { btn.textContent = 'Text kopieren'; }, 2000);
+    }).catch(() => fallback());
+  } else { fallback(); }
 }
 
 drawEarrings();
