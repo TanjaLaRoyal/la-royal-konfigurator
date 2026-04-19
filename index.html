@@ -57,8 +57,9 @@ header { text-align: center; margin-bottom: 36px; }
 .metal-btn.active { border-color: #111; background: #f4f3ef; }
 .metal-btn:hover:not(.active) { border-color: #111; }
 .metal-swatch { width: 13px; height: 13px; border-radius: 50%; }
-.metal-swatch.silber { background: linear-gradient(135deg, #d4d8dc, #8a9299); }
-.metal-swatch.gold   { background: linear-gradient(135deg, #e8c97e, #b8863a); }
+.metal-swatch.silber    { background: linear-gradient(135deg, #d4d8dc, #8a9299); }
+.metal-swatch.gold      { background: linear-gradient(135deg, #e8c97e, #b8863a); }
+.metal-swatch.rosegold  { background: linear-gradient(135deg, #f0c0a8, #c8785a); }
 .summary-box { display: none; background: #f4f3ef; border: 1px solid #e8e5df; border-radius: 1px; padding: 18px 20px; margin-bottom: 20px; }
 .summary-box.visible { display: block; }
 .summary-title { font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; font-weight: 500; margin-bottom: 10px; }
@@ -137,6 +138,9 @@ header { text-align: center; margin-bottom: 36px; }
         <button class="metal-btn" onclick="setMetal('Gold',this)">
           <span class="metal-swatch gold"></span> Gold
         </button>
+        <button class="metal-btn" onclick="setMetal('Rosegold',this)">
+          <span class="metal-swatch rosegold"></span> Rosegold
+        </button>
       </div>
     </div>
 
@@ -189,9 +193,9 @@ const state = {
 };
 
 function metalColor() {
-  return state.metal === 'Gold'
-    ? { hex: '#c9a96e', shimmer: '#e8d49a' }
-    : { hex: '#a8b0b8', shimmer: '#d0d6da' };
+  if (state.metal === 'Gold')     return { hex: '#c9a96e', shimmer: '#e8d49a' };
+  if (state.metal === 'Rosegold') return { hex: '#d4937a', shimmer: '#ecbfad' };
+  return { hex: '#a8b0b8', shimmer: '#d0d6da' };
 }
 
 function colorByName(name) {
