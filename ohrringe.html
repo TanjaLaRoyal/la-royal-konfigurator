@@ -160,6 +160,8 @@ const COLORS = [
   { name: 'Abendsonne',                    hex: '#FACB35', shimmer: '#FCE086', shape: 'bicone' },
   { name: 'Manrique Orange',               hex: '#FF8C00', shimmer: '#FFBA66', shape: 'bicone' },
   { name: 'Glühende Lava',                 hex: '#FE5302', shimmer: '#FE9867', shape: 'bicone' },
+  { name: 'Hibiskus Rot AB',               hex: '#D00F10', shimmer: '#E36F70', shape: 'bicone' },
+  { name: 'Venus',                         hex: '#7B4A26', shimmer: '#EED4A8', shape: 'round', stop: 0.75 },
   { name: 'Rosaline',                      hex: '#FDDAEA', shimmer: '#FEE9F2', shape: 'bicone' },
   { name: 'Pink Safir Matt',               hex: '#FCCEE0', shimmer: '#FDE2EC', shape: 'bicone' },
   { name: 'Dunkle Rose',                   hex: '#E48DA6', shimmer: '#EFBBCA', shape: 'bicone' },
@@ -215,9 +217,9 @@ function drawLava(ctx, x, y, r) {
   });
 }
 
-function drawSphere(ctx, x, y, r, base, shimmer, gloss) {
+function drawSphere(ctx, x, y, r, base, shimmer, gloss, stop = 0.42) {
   const g = ctx.createRadialGradient(x-r*.35,y-r*.38,r*.04,x+r*.1,y+r*.1,r*1.05);
-  g.addColorStop(0,shimmer); g.addColorStop(.42,base); g.addColorStop(1,darken(base,.48));
+  g.addColorStop(0,shimmer); g.addColorStop(stop,base); g.addColorStop(1,darken(base,.48));
   ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
   const sh = ctx.createRadialGradient(x-r*.28,y-r*.32,0,x-r*.28,y-r*.32,r*.4);
   sh.addColorStop(0,`rgba(255,255,255,${gloss})`); sh.addColorStop(1,'rgba(255,255,255,0)');
@@ -285,7 +287,7 @@ function drawKristallEarring(ctx, cx, startY) {
     y += R_CRYSTAL;
     c.shape === 'bicone'
       ? drawBicone(ctx, cx, y, R_CRYSTAL, c.hex, c.shimmer, 0.72)
-      : drawSphere(ctx, cx, y, R_CRYSTAL, c.hex, c.shimmer, 0.65);
+      : drawSphere(ctx, cx, y, R_CRYSTAL, c.hex, c.shimmer, 0.65, c.stop);
     y += R_CRYSTAL;
   }
   y += R_SPACER; drawSphere(ctx, cx, y, R_SPACER, mc.hex, mc.shimmer, 0.55);
@@ -367,7 +369,7 @@ function drawBuendelEarring(ctx, cx, startY) {
     if (c.shape === 'bicone') {
       drawBicone(ctx, bx, by, R_CRYSTAL, c.hex, c.shimmer, 0.72);
     } else {
-      drawSphere(ctx, bx, by, R_CRYSTAL, c.hex, c.shimmer, 0.65);
+      drawSphere(ctx, bx, by, R_CRYSTAL, c.hex, c.shimmer, 0.65, c.stop);
     }
   });
 }
@@ -479,7 +481,8 @@ function renderSlots() {
     COLORS.forEach(c => {
       const chip = document.createElement('button');
       chip.className = 'color-chip';
-      chip.innerHTML = `<span class="color-dot" style="background:${c.hex}"></span>${c.name}`;
+      const dotBg = c.stop ? `radial-gradient(circle at 32% 32%, ${c.shimmer}, ${c.hex} 70%)` : c.hex;
+      chip.innerHTML = `<span class="color-dot" style="background:${dotBg}"></span>${c.name}`;
       chip.onclick = () => {
         state.slots[i] = c.name;
         container.querySelectorAll('.color-chip').forEach(b => b.classList.remove('active'));
