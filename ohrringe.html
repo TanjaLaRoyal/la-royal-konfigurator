@@ -228,7 +228,7 @@ function drawSphere(ctx, x, y, r, base, shimmer, gloss, stop = 0.42) {
 }
 
 function drawBicone(ctx, x, y, r, base, shimmer, gloss) {
-  const w = r, h = r * 0.96;
+  const w = r * 0.96, h = r;
   ctx.beginPath();
   ctx.moveTo(x, y-h);
   ctx.bezierCurveTo(x+w*.45,y-h*.70, x+w,y-h*.12, x+w,y);
