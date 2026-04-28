@@ -44,10 +44,15 @@ header { text-align: center; margin-bottom: 36px; }
 .summary-text { font-size: 16px; color: #111; line-height: 1.7; white-space: pre-line; margin-bottom: 16px; font-family: 'Jost', sans-serif; }
 .copy-btn { border: 1px solid #111; background: transparent; padding: 10px 24px; border-radius: 1px; cursor: pointer; font-family: 'Jost', sans-serif; font-size: 14px; letter-spacing: 0.1em; color: #111; transition: all 0.2s; }
 .copy-btn:hover { background: #111; color: #fff; }
-.next-step { display: none; background: #fff; color: #111; border: 1px solid #ddd; border-radius: 1px; padding: 18px 20px; text-align: center; }
+.next-step { display: none; background: #fff; color: #111; border: 1px solid #e8e5df; border-radius: 1px; padding: 22px 20px; }
 .next-step.visible { display: block; }
-.next-step-label { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #111; margin-bottom: 6px; }
-.next-step-text { font-size: 15px; letter-spacing: 0.06em; line-height: 1.6; color: #111; }
+.next-step-title { font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; font-weight: 500; margin-bottom: 16px; }
+.next-step-steps { list-style: none; padding: 0; margin: 0 0 20px; display: flex; flex-direction: column; gap: 10px; }
+.next-step-steps li { display: flex; align-items: flex-start; gap: 12px; font-size: 17px; color: #111; line-height: 1.5; }
+.next-step-steps li span.step-text { flex: 1; min-width: 0; }
+.next-step-num { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: #111; color: #fff; font-size: 12px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+.order-btn { display: block; width: fit-content; margin: 0 auto; padding: 10px 22px; background: #c9a96e; color: #fff; border: none; border-radius: 20px; font-family: 'Jost', sans-serif; font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; text-align: center; text-decoration: none; transition: background 0.2s; }
+.order-btn:hover { background: #b8924f; }
 </style>
 </head>
 <body>
@@ -96,8 +101,13 @@ header { text-align: center; margin-bottom: 36px; }
   </div>
 
   <div class="next-step" id="next-step">
-    <div class="next-step-label">Schritt 4</div>
-    <div class="next-step-text">Kopiere den Text. Bestelle dein Kristall Pur Wunsch-Armband direkt oder schreibe mir per WhatsApp, wenn du Fragen hast.</div>
+    <div class="next-step-title">So bestellst du</div>
+    <ol class="next-step-steps">
+      <li><span class="next-step-num">1</span><span class="step-text">Kopiere deine Auswahl mit dem Button <strong>"Text kopieren"</strong>.</span></li>
+      <li><span class="next-step-num">2</span><span class="step-text">Klicke auf <strong>"Jetzt bestellen"</strong> und gehe zur Produktseite.</span></li>
+      <li><span class="next-step-num">3</span><span class="step-text">Füge den kopierten Text in das Feld <strong>"Auswahl einfügen"</strong> ein.</span></li>
+    </ol>
+    <a class="order-btn" href="https://laroyallanzarote.com/products/armband-kristall-pur-wunschfarben" target="_blank">Jetzt bestellen</a>
   </div>
 </div>
 
