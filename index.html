@@ -163,6 +163,7 @@ header { text-align: center; margin-bottom: 36px; }
 const COLORS = [
   { name: 'Weisser Opal',                  hex: '#F5F3EE', shimmer: '#F9F8F5', shape: 'round'  },
   { name: 'Schimmer Perle',                hex: '#FEFEFC', shimmer: '#FEFEFD', shape: 'round'  },
+  { name: 'Silbermine',                    hex: '#67655F', shimmer: '#D4D4D2', shape: 'bicone', stop: 0.75 },
   { name: 'Zartes Hellblau',               hex: '#E8FAFC', shimmer: '#F1FCFD', shape: 'bicone' },
   { name: 'Himmelblau AB',                 hex: '#99D6F8', shimmer: '#C2E6FB', shape: 'bicone' },
   { name: 'Capri Blau AB',                 hex: '#013CAC', shimmer: '#678ACD', shape: 'round'  },
@@ -402,8 +403,8 @@ function drawBicone(ctx, x, y, r, base, shimmer, gloss, angle) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
-  const w = r * 0.96;
-  const h = r;
+  const w = r;
+  const h = r * 0.96;
   ctx.beginPath();
   ctx.moveTo(0, -h);
   ctx.bezierCurveTo( w * 0.45, -h * 0.70,  w, -h * 0.12,  w,  0);
