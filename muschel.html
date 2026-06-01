@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Royal – Muschel Ohrringe</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --sand: #faf9f6; --lava: #1a1a1a; --gold: #c9a96e;
+  --soft: #f4f3ef; --text: #111;
+}
+body { background: transparent; color: var(--text); font-family: 'Jost', sans-serif; font-weight: 300; display: flex; flex-direction: column; align-items: center; padding: 0; }
+.card { background: transparent; padding: 20px 28px; width: 100%; max-width: 720px; }
+.earring-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; background: var(--soft); padding: 24px 20px 18px; border-radius: 1px; margin-bottom: 28px; }
+.preview-label { font-family: 'Cormorant Garamond', serif; font-size: 15px; color: #111; font-style: italic; text-align: center; min-height: 1.4em; }
+.preview-label.filled { font-style: normal; font-size: 16px; }
+.section-label { font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; margin-bottom: 12px; font-weight: 500; }
+.section { margin-bottom: 28px; }
+.option-row { display: flex; gap: 10px; }
+.option-btn { flex: 1; border: 1px solid #ddd; background: transparent; padding: 13px 8px; cursor: pointer; border-radius: 1px; font-family: 'Jost', sans-serif; font-weight: 300; font-size: 15px; letter-spacing: 0.04em; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text); }
+.option-btn.active { border-color: #111; background: #f4f3ef; }
+.option-btn:hover:not(.active) { border-color: #111; }
+.metal-swatch { width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0; }
+.metal-swatch.silber { background: linear-gradient(135deg, #d4d8dc, #8a9299); }
+.metal-swatch.gold   { background: linear-gradient(135deg, #e8c97e, #b8863a); }
+.count-options { display: flex; gap: 10px; }
+.count-btn { flex: 1; border: 1px solid #ddd; background: transparent; padding: 12px 6px; font-family: 'Cormorant Garamond', serif; font-size: 17px; color: var(--text); cursor: pointer; border-radius: 1px; transition: all 0.2s; text-align: center; }
+.count-btn.active { border-color: #111; background: var(--gold); color: #fff; }
+.count-btn:hover:not(.active) { border-color: #111; }
+.color-slot { margin-bottom: 16px; }
+.slot-label { font-size: 14px; letter-spacing: 0.15em; text-transform: uppercase; color: #111; margin-bottom: 8px; font-weight: 500; }
+.color-options { display: flex; flex-wrap: wrap; gap: 7px; }
+.color-chip { display: flex; align-items: center; gap: 7px; border: 1px solid #ddd; padding: 6px 10px; border-radius: 1px; cursor: pointer; font-size: 15px; transition: all 0.2s; background: transparent; font-family: 'Jost', sans-serif; font-weight: 300; color: var(--text); }
+.color-chip:hover:not(.active) { border-color: #111; }
+.color-chip.active { border-color: #111; background: #f4f3ef; }
+.color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.1); }
+.summary-box { display: none; background: #f4f3ef; border: 1px solid #e8e5df; border-radius: 1px; padding: 18px 20px; margin-bottom: 20px; }
+.summary-box.visible { display: block; }
+.summary-title { font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; font-weight: 500; margin-bottom: 10px; }
+.summary-text { font-size: 16px; color: #111; line-height: 1.7; white-space: pre-line; font-family: 'Jost', sans-serif; }
+.copy-btn { margin-top: 14px; display: inline-block; border: 1px solid #111; background: transparent; padding: 9px 18px; font-family: 'Jost', sans-serif; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; color: #111; transition: all 0.2s; border-radius: 1px; }
+.copy-btn:hover { background: #111; color: #fff; }
+.copy-btn.copied { background: #111; color: #fff; }
+.next-step { display: none; background: #fff; color: #111; border: 1px solid #e8e5df; border-radius: 1px; padding: 22px 20px 12px; }
+.next-step.visible { display: block; }
+.next-step-title { font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; font-weight: 500; margin-bottom: 16px; }
+.next-step-steps { list-style: none; padding: 0; margin: 0 0 20px; display: flex; flex-direction: column; gap: 10px; }
+.next-step-steps li { display: flex; align-items: flex-start; gap: 12px; font-size: 17px; color: #111; line-height: 1.5; }
+.next-step-steps li span.step-text { flex: 1; min-width: 0; }
+.next-step-num { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: #111; color: #fff; font-size: 12px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+</style>
+</head>
+<body>
+
+<div style="width:48px; height:1px; background:#c9a96e; margin:60px auto 16px;"></div>
+<h2 style="font-family:'Jost',sans-serif; font-weight:300; font-size:clamp(1.4rem,3.5vw,2rem); letter-spacing:0.18em; text-transform:uppercase; text-align:center; color:#111; margin-bottom:52px;">Gestalte deine Muschel Ohrringe</h2>
+
+<div class="card">
+
+  <div class="earring-wrap">
+    <canvas id="earring-canvas" width="300" height="280"></canvas>
+    <div class="preview-label" id="preview-label">Wähle Edelstahl, Verschluss und Farben – die Ohrringe füllen sich.</div>
+  </div>
+
+  <!-- 1: Edelstahl -->
+  <div class="section">
+    <div class="section-label">1 · Edelstahl</div>
+    <div class="option-row" id="metal-row">
+      <button class="option-btn" onclick="setMetal('Silber', this)">
+        <span class="metal-swatch silber"></span> Silber
+      </button>
+      <button class="option-btn" onclick="setMetal('Gold', this)">
+        <span class="metal-swatch gold"></span> Gold
+      </button>
+    </div>
+  </div>
+
+  <!-- 2: Verschluss -->
+  <div class="section">
+    <div class="section-label">2 · Verschluss</div>
+    <div class="option-row" id="clasp-row">
+      <button class="option-btn" onclick="setClasp('klapp', this)">Klapp-Verschluss</button>
+      <button class="option-btn" onclick="setClasp('haken', this)">Ohrhaken</button>
+    </div>
+  </div>
+
+  <!-- 3: Anzahl Farben -->
+  <div class="section">
+    <div class="section-label">3 · Wie viele Kristallfarben?</div>
+    <div class="count-options">
+      <button class="count-btn" onclick="setCount(1, this)">Einfarbig</button>
+      <button class="count-btn" onclick="setCount(2, this)">Zweifarbig</button>
+      <button class="count-btn" onclick="setCount(3, this)">Dreifarbig</button>
+    </div>
+  </div>
+
+  <!-- 4: Farben -->
+  <div class="section" id="color-section" style="display:none">
+    <div class="section-label">4 · Kristallfarben wählen</div>
+    <div id="slots-wrapper"></div>
+  </div>
+
+  <div class="summary-box" id="summary-box">
+    <div class="summary-title">Deine Auswahl</div>
+    <div class="summary-text" id="summary-text"></div>
+    <button class="copy-btn" id="copy-btn" onclick="copyText()">Text kopieren</button>
+  </div>
+
+  <div class="next-step" id="next-step">
+    <div class="next-step-title">So bestellst du</div>
+    <ol class="next-step-steps">
+      <li><span class="next-step-num">1</span><span class="step-text">Kopiere deine Auswahl mit dem Button <strong>"Text kopieren"</strong>.</span></li>
+      <li><span class="next-step-num">2</span><span class="step-text">Klicke auf <strong>"Muschel Ohrringe bestellen"</strong> und gehe zur Produktseite.</span></li>
+      <li><span class="next-step-num">3</span><span class="step-text">Füge den kopierten Text in das Feld <strong>"Auswahl einfügen"</strong> ein.</span></li>
+    </ol>
+  </div>
+
+</div>
+
+<script>
+const COLORS = [
+  { name: 'Weisser Opal',                  hex: '#F5F3EE', shimmer: '#F9F8F5', shape: 'round'  },
+  { name: 'Schimmer Perle',                hex: '#FEFEFC', shimmer: '#FEFEFD', shape: 'round'  },
+  { name: 'Silbermine AB',                 hex: '#67655F', shimmer: '#D4D4D2', shape: 'bicone', stop: 0.75 },
+  { name: 'Zartes Hellblau',               hex: '#E8FAFC', shimmer: '#F1FCFD', shape: 'bicone' },
+  { name: 'Himmelblau AB',                 hex: '#99D6F8', shimmer: '#C2E6FB', shape: 'bicone' },
+  { name: 'Capri Blau AB',                 hex: '#013CAC', shimmer: '#678ACD', shape: 'round'  },
+  { name: 'Meeresblau',                    hex: '#3547A6', shimmer: '#8691CA', shape: 'bicone' },
+  { name: 'Nachtblau',                     hex: '#36537D', shimmer: '#8698B1', shape: 'round'  },
+  { name: 'Türkise Lagune AB',             hex: '#04AD99', shimmer: '#68CEC2', shape: 'bicone' },
+  { name: 'Atlantik Türkis dunkel matt',   hex: '#3CA6B2', shimmer: '#8ACAD1', shape: 'bicone' },
+  { name: 'Zitrus Grün',                   hex: '#D0EC40', shimmer: '#E3F48C', shape: 'bicone' },
+  { name: 'El Golfo Grün',                 hex: '#0B6F0D', shimmer: '#6DA96E', shape: 'bicone' },
+  { name: 'Citrin Gelb AB',                hex: '#FDF158', shimmer: '#FEFCAA', shape: 'round'  },
+  { name: 'Sonnenschein Matt',             hex: '#FEF6C0', shimmer: '#FEFAD9', shape: 'round'  },
+  { name: 'Abendsonne',                    hex: '#FACB35', shimmer: '#FCE086', shape: 'bicone' },
+  { name: 'Manrique Orange',               hex: '#FF8C00', shimmer: '#FFBA66', shape: 'bicone' },
+  { name: 'Glühende Lava',                 hex: '#FE5302', shimmer: '#FE9867', shape: 'bicone' },
+  { name: 'Hibiskus Rot AB',               hex: '#D00F10', shimmer: '#E36F70', shape: 'bicone' },
+  { name: 'Venus',                         hex: '#7B4A26', shimmer: '#EED4A8', shape: 'round', stop: 0.75 },
+  { name: 'Rosaline',                      hex: '#FDDAEA', shimmer: '#FEE9F2', shape: 'bicone' },
+  { name: 'Pink Safir Matt',               hex: '#FCCEE0', shimmer: '#FDE2EC', shape: 'bicone' },
+  { name: 'Dunkle Rose',                   hex: '#E48DA6', shimmer: '#EFBBCA', shape: 'bicone' },
+  { name: 'Pinke Buganvilla AB',           hex: '#DF1683', shimmer: '#EC73B5', shape: 'bicone' },
+  { name: 'Pinke Buganvilla Matt',         hex: '#C53773', shimmer: '#DC87AB', shape: 'bicone' },
+];
+
+const EMPTY = { hex: '#d4d0c8', shimmer: '#e8e4dc', shape: 'round' };
+
+const state = {
+  metal:  null,
+  clasp:  null,
+  count:  null,
+  slots:  [],
+};
+
+function getMetalColor() {
+  if (state.metal === 'Gold') return { hex: '#c9a96e', shimmer: '#e8d49a' };
+  return { hex: '#a8b0b8', shimmer: '#d0d6da' };
+}
+
+function getCrystalAt(pos) {
+  if (!state.count) return EMPTY;
+  let slotIdx;
+  if (state.count === 1)      slotIdx = 0;
+  else if (state.count === 2) slotIdx = pos % 2;  // 1,2,1
+  else                        slotIdx = pos;       // 1,2,3
+  const name = state.slots[slotIdx];
+  if (!name) return EMPTY;
+  return COLORS.find(c => c.name === name) || EMPTY;
+}
+
+function darken(hex, f) {
+  return `rgb(${[1,3,5].map(i => Math.round(parseInt(hex.slice(i,i+2),16)*f)).join(',')})`;
+}
+
+function drawSphere(ctx, x, y, r, base, shimmer, gloss, stop = 0.42) {
+  const g = ctx.createRadialGradient(x-r*.35,y-r*.38,r*.04,x+r*.1,y+r*.1,r*1.05);
+  g.addColorStop(0,shimmer); g.addColorStop(stop,base); g.addColorStop(1,darken(base,.48));
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
+  const sh = ctx.createRadialGradient(x-r*.28,y-r*.32,0,x-r*.28,y-r*.32,r*.4);
+  sh.addColorStop(0,`rgba(255,255,255,${gloss})`); sh.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=sh; ctx.fill();
+}
+
+function drawBicone(ctx, x, y, r, base, shimmer, gloss) {
+  const w = r * 0.96, h = r;
+  ctx.beginPath();
+  ctx.moveTo(x, y-h);
+  ctx.bezierCurveTo(x+w*.45,y-h*.70, x+w,y-h*.12, x+w,y);
+  ctx.bezierCurveTo(x+w,y+h*.12, x+w*.45,y+h*.70, x,y+h);
+  ctx.bezierCurveTo(x-w*.45,y+h*.70, x-w,y+h*.12, x-w,y);
+  ctx.bezierCurveTo(x-w,y-h*.12, x-w*.45,y-h*.70, x,y-h);
+  ctx.closePath();
+  const g = ctx.createRadialGradient(x-w*.38,y-h*.36,h*.04,x+w*.1,y+h*.1,h);
+  g.addColorStop(0,shimmer); g.addColorStop(.42,base); g.addColorStop(1,darken(base,.48));
+  ctx.fillStyle=g; ctx.fill();
+  const sh = ctx.createRadialGradient(x-w*.3,y-h*.3,0,x-w*.3,y-h*.3,h*.42);
+  sh.addColorStop(0,`rgba(255,255,255,${gloss})`); sh.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=sh; ctx.fill();
+}
+
+// ── Verschlüsse ──────────────────────────────────────────────
+
+function drawKlappVerschluss(ctx, cx, startY, mc) {
+  const RX = 11, RY = 20, cy = startY + RY;
+  const a0 = 0.45, a1 = Math.PI * 2 - 0.1;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, RX, RY, 0, a0, a1, false);
+  ctx.strokeStyle = mc.hex; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.stroke();
+
+  // Klappbügel – schließt die Lücke an der Seite
+  const topX = cx + RX * Math.cos(a1), topY = cy + RY * Math.sin(a1);
+  const botX = cx + RX * Math.cos(a0), botY = cy + RY * Math.sin(a0);
+  const midX = (topX + botX) / 2, midY = (topY + botY) / 2;
+  ctx.beginPath();
+  ctx.moveTo(topX, topY);
+  ctx.quadraticCurveTo(midX + 4, midY, botX, botY);
+  ctx.strokeStyle = mc.hex; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.stroke();
+
+  ctx.beginPath(); ctx.arc(cx, cy + RY, 2.5, 0, Math.PI * 2);
+  ctx.fillStyle = darken(mc.hex, 0.75); ctx.fill();
+  return cy + RY + 2;
+}
+
+function drawOhrhaken(ctx, cx, startY, mc) {
+  ctx.save();
+  ctx.strokeStyle = mc.hex; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = 2;
+  const loopR = 4, loopCY = startY + 50, straightTop = startY + 24, arcR = 14, arcCX = cx + arcR;
+  ctx.beginPath();
+  ctx.moveTo(cx, loopCY - loopR);
+  ctx.lineTo(cx, straightTop);
+  ctx.arc(arcCX, straightTop, arcR, Math.PI, 0, false);
+  ctx.lineTo(cx + 2 * arcR, straightTop + 20);
+  ctx.stroke();
+  ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.arc(cx, loopCY, loopR, 0.35, Math.PI * 2 - 0.35); ctx.stroke();
+  ctx.restore();
+  return loopCY + loopR + 3;
+}
+
+// ── Verbindungsring ──────────────────────────────────────────
+function drawRing(ctx, cx, topY, mc) {
+  ctx.beginPath();
+  ctx.arc(cx, topY + 4, 4, 0, Math.PI * 2);
+  ctx.strokeStyle = mc.hex; ctx.lineWidth = 2; ctx.stroke();
+  return topY + 8;
+}
+
+// ── Muschel-Anhänger ─────────────────────────────────────────
+function drawMuschel(ctx, cx, topY, mc) {
+  // Verbindungsring zur Muschel
+  ctx.beginPath();
+  ctx.arc(cx, topY + 4, 4, 0, Math.PI * 2);
+  ctx.strokeStyle = mc.hex; ctx.lineWidth = 2; ctx.stroke();
+
+  const apexX = cx, apexY = topY + 8;   // direkt unter dem Ring
+  const W = 16;                          // halbe Breite an der Schulter
+  const shoulderY = apexY + 14;          // hier endet die Fächer-Flanke
+  const ctrlY = apexY + 33;              // Kontrolle für die runde Unterkante
+
+  // Korpus – oben fächerförmig mit gerundeten Seiten, unten rundlich
+  const g = ctx.createLinearGradient(cx, apexY, cx, ctrlY);
+  g.addColorStop(0, mc.shimmer);
+  g.addColorStop(1, darken(mc.hex, 0.7));
+  ctx.beginPath();
+  ctx.moveTo(apexX, apexY);
+  ctx.bezierCurveTo(cx - W*0.55, apexY + 1, cx - W, shoulderY - 7, cx - W, shoulderY);
+  ctx.quadraticCurveTo(cx, ctrlY, cx + W, shoulderY);
+  ctx.bezierCurveTo(cx + W, shoulderY - 7, cx + W*0.55, apexY + 1, apexX, apexY);
+  ctx.closePath();
+  ctx.fillStyle = g; ctx.fill();
+  ctx.strokeStyle = darken(mc.hex, 0.55); ctx.lineWidth = 1; ctx.stroke();
+
+  // Rippen – vom Ring weg, über den ganzen Korpus bis zur Unterkante
+  ctx.strokeStyle = darken(mc.hex, 0.5); ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+  [-0.85, -0.42, 0, 0.42, 0.85].forEach(t => {
+    ctx.beginPath();
+    ctx.moveTo(apexX, apexY);
+    ctx.lineTo(cx + t * W, shoulderY + (1 - t * t) / 2 * (ctrlY - shoulderY));
+    ctx.stroke();
+  });
+}
+
+// ── Ohrring zeichnen ─────────────────────────────────────────
+
+function drawMuschelEarring(ctx, cx, startY) {
+  const mc = getMetalColor();
+  const R_CRYSTAL = 10;
+
+  let y = state.clasp === 'haken'
+    ? drawOhrhaken(ctx, cx, startY, mc)
+    : drawKlappVerschluss(ctx, cx, startY, mc);
+
+  y = drawRing(ctx, cx, y, mc);   // Verbindungsring zwischen Verschluss und Kristallen
+
+  for (let i = 0; i < 3; i++) {
+    const c = getCrystalAt(i);
+    y += R_CRYSTAL;
+    c.shape === 'bicone'
+      ? drawBicone(ctx, cx, y, R_CRYSTAL, c.hex, c.shimmer, 0.72)
+      : drawSphere(ctx, cx, y, R_CRYSTAL, c.hex, c.shimmer, 0.65, c.stop);
+    y += R_CRYSTAL;
+  }
+
+  drawMuschel(ctx, cx, y, mc);
+}
+
+function getEarringHeight() {
+  const claspH = state.clasp === 'haken' ? 57 : 42;
+  return claspH + 8 + 60 + 33; // Ring + 3 Kristalle + Muschel
+}
+
+function drawEarrings() {
+  const canvas = document.getElementById('earring-canvas');
+  const ctx    = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const SCALE        = 1.15;
+  const FIXED_BOTTOM = canvas.height - 28;
+  const startY       = FIXED_BOTTOM / SCALE - getEarringHeight();
+
+  ctx.save();
+  ctx.translate(150, 0);
+  ctx.scale(SCALE, SCALE);
+  ctx.translate(-150, 0);
+  drawMuschelEarring(ctx, 105, startY);
+  drawMuschelEarring(ctx, 195, startY);
+  ctx.restore();
+
+  updateLabel();
+  updateSummary();
+}
+
+// ── UI-Logik ─────────────────────────────────────────────────
+
+function setMetal(metal, btn) {
+  state.metal = metal;
+  document.querySelectorAll('#metal-row .option-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  drawEarrings();
+}
+
+function setClasp(clasp, btn) {
+  state.clasp = clasp;
+  document.querySelectorAll('#clasp-row .option-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  drawEarrings();
+}
+
+function setCount(n, btn) {
+  state.count = n;
+  state.slots = Array(n).fill(null);
+  document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSlots();
+  document.getElementById('color-section').style.display = 'block';
+  drawEarrings();
+}
+
+function renderSlots() {
+  const wrapper = document.getElementById('slots-wrapper');
+  wrapper.innerHTML = '';
+  let labels;
+  if (state.count === 1) {
+    labels = ['Kristallfarbe'];
+  } else if (state.count === 2) {
+    labels = ['Farbe A · Kristall 1 & 3', 'Farbe B · Kristall 2'];
+  } else {
+    labels = ['Kristall 1 (oben)', 'Kristall 2 (Mitte)', 'Kristall 3 (unten)'];
+  }
+  for (let i = 0; i < state.count; i++) {
+    const div = document.createElement('div');
+    div.className = 'color-slot';
+    div.innerHTML = `<div class="slot-label">${labels[i]}</div><div class="color-options" id="slot-${i}"></div>`;
+    wrapper.appendChild(div);
+    const container = document.getElementById(`slot-${i}`);
+    COLORS.forEach(c => {
+      const chip = document.createElement('button');
+      chip.className = 'color-chip';
+      const dotBg = c.stop ? `radial-gradient(circle at 32% 32%, ${c.shimmer}, ${c.hex} 70%)` : c.hex;
+      chip.innerHTML = `<span class="color-dot" style="background:${dotBg}"></span>${c.name}`;
+      chip.onclick = () => {
+        state.slots[i] = c.name;
+        container.querySelectorAll('.color-chip').forEach(b => b.classList.remove('active'));
+        chip.classList.add('active');
+        drawEarrings();
+      };
+      container.appendChild(chip);
+    });
+  }
+}
+
+function isReady() {
+  return state.metal && state.clasp && state.count &&
+         state.slots.filter(Boolean).length === state.count;
+}
+
+function updateLabel() {
+  const label = document.getElementById('preview-label');
+  if (isReady()) {
+    const colorStr = state.count === 1 ? state.slots[0] : state.slots.join(' · ');
+    const claspName = state.clasp === 'haken' ? 'Ohrhaken' : 'Klapp-Verschluss';
+    label.textContent = `Muschel Ohrringe · ${colorStr} · ${state.metal} · ${claspName}`;
+    label.className = 'preview-label filled';
+  } else {
+    label.textContent = 'Wähle Edelstahl, Verschluss und Farben – die Ohrringe füllen sich.';
+    label.className = 'preview-label';
+  }
+}
+
+function updateSummary() {
+  if (isReady()) {
+    document.getElementById('summary-box').classList.add('visible');
+    const s = buildSummary();
+    document.getElementById('summary-text').innerHTML = '<strong>' + s.split('\n')[0] + '</strong>\n' + s.split('\n').slice(1).join('\n');
+    document.getElementById('next-step').classList.add('visible');
+  } else {
+    document.getElementById('summary-box').classList.remove('visible');
+    document.getElementById('next-step').classList.remove('visible');
+  }
+}
+
+function buildSummary() {
+  const claspName = state.clasp === 'haken' ? 'Ohrhaken' : 'Klapp-Verschluss';
+  let colorLines;
+  if (state.count === 1) {
+    colorLines = `Kristallfarbe: ${state.slots[0]}`;
+  } else if (state.count === 2) {
+    colorLines = `Farbe A: ${state.slots[0]}\nFarbe B: ${state.slots[1]}`;
+  } else {
+    colorLines = state.slots.map((s, i) => `Farbe ${i+1}: ${s}`).join('\n');
+  }
+  return `Muschel Ohrringe\n${colorLines}\nEdelstahl: ${state.metal}\nVerschluss: ${claspName}\nPreis: 45 €`;
+}
+
+function copyText() {
+  const text = document.getElementById('summary-text').innerText;
+  const btn = document.getElementById('copy-btn');
+  function fallback() {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.top = '-9999px';
+    ta.style.left = '-9999px'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch(e) {}
+    document.body.removeChild(ta);
+    btn.textContent = 'Kopiert ✓';
+    setTimeout(() => { btn.textContent = 'Text kopieren'; }, 2000);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Kopiert ✓';
+      setTimeout(() => { btn.textContent = 'Text kopieren'; }, 2000);
+    }).catch(() => fallback());
+  } else { fallback(); }
+}
+
+drawEarrings();
+</script>
+<script>
+function sendHeight() {
+  const card = document.querySelector('.card');
+  const h = card ? card.getBoundingClientRect().bottom : document.body.scrollHeight;
+  window.parent.postMessage({ iframeHeight: Math.ceil(h), iframeId: 'muschel' }, '*');
+}
+const ro = new ResizeObserver(sendHeight);
+ro.observe(document.body);
+sendHeight();
+</script>
+</body>
+</html>
