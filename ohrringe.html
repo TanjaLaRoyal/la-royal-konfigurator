@@ -176,6 +176,8 @@ const COLORS = [
   { name: 'Dunkle Rose',                   hex: '#E48DA6', shimmer: '#EFBBCA', shape: 'bicone' },
   { name: 'Pinke Buganvilla AB',           hex: '#DF1683', shimmer: '#EC73B5', shape: 'bicone' },
   { name: 'Pinke Buganvilla Matt',         hex: '#C53773', shimmer: '#DC87AB', shape: 'bicone' },
+  { name: 'Amethyst',                      hex: '#8C446D', shimmer: '#98577C', shape: 'bicone' },
+  { name: 'Heller Amethyst',               hex: '#D6BCD7', shimmer: '#DAC3DB', shape: 'bicone' },
 ];
 
 const EMPTY = { hex: '#d4d0c8', shimmer: '#e8e4dc', shape: 'round' };
@@ -255,13 +257,24 @@ function drawBicone(ctx, x, y, r, base, shimmer, gloss) {
 // ── Verschlüsse ──────────────────────────────────────────────
 
 function drawKlappVerschluss(ctx, cx, startY, mc) {
-  const R = 13, cy = startY + R;
+  const RX = 11, RY = 20, cy = startY + RY;
+  const a0 = 0.45, a1 = Math.PI * 2 - 0.1;
   ctx.beginPath();
-  ctx.arc(cx, cy, R, 0.45, Math.PI * 2 - 0.1, false);
+  ctx.ellipse(cx, cy, RX, RY, 0, a0, a1, false);
   ctx.strokeStyle = mc.hex; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.stroke();
-  ctx.beginPath(); ctx.arc(cx, cy + R, 2.5, 0, Math.PI * 2);
+
+  // Klappbügel – schließt die Lücke an der Seite
+  const topX = cx + RX * Math.cos(a1), topY = cy + RY * Math.sin(a1);
+  const botX = cx + RX * Math.cos(a0), botY = cy + RY * Math.sin(a0);
+  const midX = (topX + botX) / 2, midY = (topY + botY) / 2;
+  ctx.beginPath();
+  ctx.moveTo(topX, topY);
+  ctx.quadraticCurveTo(midX + 4, midY, botX, botY);
+  ctx.strokeStyle = mc.hex; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.stroke();
+
+  ctx.beginPath(); ctx.arc(cx, cy + RY, 2.5, 0, Math.PI * 2);
   ctx.fillStyle = darken(mc.hex, 0.75); ctx.fill();
-  return cy + R + 2;
+  return cy + RY + 2;
 }
 
 function drawOhrhaken(ctx, cx, startY, mc) {
@@ -386,7 +399,7 @@ function drawBuendelEarring(ctx, cx, startY) {
 // ── Zeichnen ─────────────────────────────────────────────────
 
 function getEarringHeight() {
-  const claspH = state.clasp === 'haken' ? 57 : 28;
+  const claspH = state.clasp === 'haken' ? 57 : 42;
   if (state.design === 'buendel') {
     return claspH + 97;  // y-offset(4) + clusterTop-R(10) + pos[7].y(73) + R_CRYSTAL(10)
   } else {
@@ -547,7 +560,7 @@ function buildSummary() {
   } else {
     colorLines = state.slots.map((s, i) => `Farbe ${i+1}: ${s}`).join('\n');
   }
-  const price = state.design === 'buendel' ? '50 €' : '35 €';
+  const price = state.design === 'buendel' ? '50 €' : '40 €';
   return `${designName}\n${colorLines}\nEdelstahl: ${state.metal}\nVerschluss: ${claspName}\nPreis: ${price}`;
 }
 
