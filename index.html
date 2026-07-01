@@ -438,7 +438,7 @@ function setDesign(design, btn) {
   state.count  = null;
   state.slots  = [];
   state.metal  = null;
-  state.ePos   = [0, 0, 1];
+  state.ePos   = [0, 1, 0];
   document.querySelectorAll('.design-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
@@ -453,7 +453,7 @@ function setDesign(design, btn) {
 function setCount(n, btn) {
   state.count = n;
   state.slots = Array(n).fill(null);
-  if (state.design === 'energie') state.ePos = [0, 0, 1];
+  if (state.design === 'energie') state.ePos = [0, 1, 0];
   document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderSlots();
