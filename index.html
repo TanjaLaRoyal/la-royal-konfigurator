@@ -19,7 +19,7 @@ header { text-align: center; margin-bottom: 36px; }
 .card { background: transparent; padding: 20px 28px 60px; width: 100%; max-width: 720px; }
 
 /* Canvas immer oben, einspaltig */
-.bracelet-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; background: var(--soft); padding: 24px 20px 18px; border-radius: 1px; margin-bottom: 28px; }
+.bracelet-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; background: var(--soft); padding: 24px 20px 18px; border-radius: 1px; max-width: 400px; margin: 0 auto 28px; }
 
 .preview-label { font-family: 'Cormorant Garamond', serif; font-size: 15px; color: #111; font-style: italic; text-align: center; min-height: 1.4em; }
 .preview-label.filled { color: #111; font-style: normal; font-size: 16px; }
@@ -87,7 +87,7 @@ header { text-align: center; margin-bottom: 36px; }
 
   <!-- Canvas immer oben -->
   <div class="bracelet-wrap">
-    <canvas id="bracelet-canvas" width="280" height="280"></canvas>
+    <canvas id="bracelet-canvas" width="340" height="340"></canvas>
     <div class="preview-label" id="preview-label">Wähle dein Design + Wunschkristalle – das Armband füllt sich mit deinen Farben.</div>
   </div>
 
@@ -296,9 +296,9 @@ function drawBracelet() {
   const seq = buildSequence();
   const N   = seq.length;
   const cx  = W / 2, cy = H / 2;
-  const R_LAVA    = 9;
-  const R_CRYSTAL = 9;
-  const R_METAL   = 4.5;
+  const R_LAVA    = 11;
+  const R_CRYSTAL = 11;
+  const R_METAL   = 5.5;
   function calcRingRadius(beads) {
     let r = 90;
     for (let iter = 0; iter < 300; iter++) {
