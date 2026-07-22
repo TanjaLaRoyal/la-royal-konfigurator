@@ -127,9 +127,18 @@ header { text-align: center; margin-bottom: 36px; }
     </div>
   </div>
 
-  <!-- 5: Farben -->
+  <!-- 5: Anordnung (nur Bündel, mehrfarbig) -->
+  <div class="section" id="mode-section" style="display:none">
+    <div class="section-label">5 · Anordnung</div>
+    <div class="option-row" id="mode-row">
+      <button class="option-btn" onclick="setMode('mix', this)">Mix</button>
+      <button class="option-btn" onclick="setMode('verlauf', this)">Farbverlauf</button>
+    </div>
+  </div>
+
+  <!-- 6: Farben -->
   <div class="section" id="color-section" style="display:none">
-    <div class="section-label">5 · Kristallfarben wählen</div>
+    <div class="section-label">6 · Kristallfarben wählen</div>
     <div id="slots-wrapper"></div>
   </div>
 
@@ -187,6 +196,7 @@ const state = {
   metal:  null,
   clasp:  null,
   count:  null,
+  mode:   null,   // 'mix' | 'verlauf' (nur Bündel, mehrfarbig)
   slots:  [],
 };
 
@@ -202,12 +212,17 @@ function getCrystalAt(pos, total) {
   let slotIdx;
   if (state.count === 1) {
     slotIdx = 0;
-  } else if (state.count === 2) {
-    slotIdx = pos % 2;
+  } else if (total === 4) {
+    // Stab: kein Anordnungs-Modus
+    slotIdx = state.count === 2 ? pos % 2 : pos;
+  } else if (state.mode === 'verlauf') {
+    // Bündel Farbverlauf
+    slotIdx = state.count === 2
+      ? (pos < 4 ? 0 : 1)          // 1–4 = Farbe 1, 5–8 = Farbe 2
+      : Math.floor(pos / 2);       // 1+2=0, 3+4=1, 5+6=2, 7+8=3
   } else {
-    // 4 slots
-    if (total === 4) slotIdx = pos;       // Kristall: 1 Farbe pro Kristall
-    else             slotIdx = pos % 4;  // Bündel: 1+5, 2+6, 3+7, 4+8
+    // Bündel Mix
+    slotIdx = state.count === 2 ? pos % 2 : pos % 4;
   }
   const name = state.slots[slotIdx];
   if (!name) return EMPTY;
@@ -434,18 +449,21 @@ function drawEarrings() {
 function setDesign(design, btn) {
   state.design = design;
   state.count  = null;
+  state.mode   = null;
   state.slots  = [];
   document.querySelectorAll('.design-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   // Roségold nur bei Stab Ohrringe verfügbar
   const rg = document.getElementById('rosegold-btn');
   if (design === 'buendel') {
-    rg.disabled = true;
+    rg.style.display = 'none';
     if (state.metal === 'Roségold') { state.metal = null; updateMetalButtons(); }
   } else {
-    rg.disabled = false;
+    rg.style.display = '';
   }
   document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#mode-row .option-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mode-section').style.display = 'none';
   document.getElementById('color-section').style.display = 'none';
   drawEarrings();
 }
@@ -470,8 +488,28 @@ function setClasp(clasp, btn) {
 
 function setCount(n, btn) {
   state.count = n;
-  state.slots = Array(n).fill(null);
+  state.mode  = null;
+  state.slots = [];
   document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#mode-row .option-btn').forEach(b => b.classList.remove('active'));
+  const needsMode = state.design === 'buendel' && n > 1;
+  document.getElementById('mode-section').style.display = needsMode ? 'block' : 'none';
+  document.getElementById('color-section').style.display = 'none';
+  if (!needsMode) {
+    // Stab oder Einfarbig: keine Anordnungs-Wahl nötig
+    state.mode  = 'mix';
+    state.slots = Array(n).fill(null);
+    renderSlots();
+    document.getElementById('color-section').style.display = 'block';
+  }
+  drawEarrings();
+}
+
+function setMode(mode, btn) {
+  state.mode  = mode;
+  state.slots = Array(state.count).fill(null);
+  document.querySelectorAll('#mode-row .option-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderSlots();
   document.getElementById('color-section').style.display = 'block';
@@ -482,16 +520,21 @@ function renderSlots() {
   const wrapper = document.getElementById('slots-wrapper');
   wrapper.innerHTML = '';
   const isBuendel = state.design === 'buendel';
+  const v = state.mode === 'verlauf';
   let labels;
   if (state.count === 1) {
     labels = ['Kristallfarbe'];
   } else if (state.count === 2) {
     labels = isBuendel
-      ? ['Farbe A · Kristalle 1, 3, 5, 7', 'Farbe B · Kristalle 2, 4, 6, 8']
+      ? (v
+          ? ['Farbe 1 · Kristall 1–4', 'Farbe 2 · Kristall 5–8']
+          : ['Farbe A · Kristalle 1, 3, 5, 7', 'Farbe B · Kristalle 2, 4, 6, 8'])
       : ['Farbe A · Kristall 1 & 3', 'Farbe B · Kristall 2 & 4'];
   } else {
     labels = isBuendel
-      ? ['Farbe 1 · Kristall 1 & 5', 'Farbe 2 · Kristall 2 & 6', 'Farbe 3 · Kristall 3 & 7', 'Farbe 4 · Kristall 4 & 8']
+      ? (v
+          ? ['Farbe 1 · Kristall 1 & 2', 'Farbe 2 · Kristall 3 & 4', 'Farbe 3 · Kristall 5 & 6', 'Farbe 4 · Kristall 7 & 8']
+          : ['Farbe 1 · Kristall 1 & 5', 'Farbe 2 · Kristall 2 & 6', 'Farbe 3 · Kristall 3 & 7', 'Farbe 4 · Kristall 4 & 8'])
       : ['Kristall 1', 'Kristall 2', 'Kristall 3', 'Kristall 4'];
   }
   for (let i = 0; i < state.count; i++) {
@@ -517,7 +560,7 @@ function renderSlots() {
 }
 
 function isReady() {
-  return state.design && state.metal && state.clasp && state.count &&
+  return state.design && state.metal && state.clasp && state.count && state.mode &&
          state.slots.filter(Boolean).length === state.count;
 }
 
@@ -552,16 +595,22 @@ function updateSummary() {
 function buildSummary() {
   const claspName  = state.clasp === 'haken' ? 'Ohrhaken' : 'Klapp-Verschluss';
   const designName = state.design === 'buendel' ? 'Bündel Ohrringe' : 'Stab Ohrringe';
+  const v = state.mode === 'verlauf';
   let colorLines;
   if (state.count === 1) {
     colorLines = `Kristallfarbe: ${state.slots[0]}`;
   } else if (state.count === 2) {
-    colorLines = `Farbe A: ${state.slots[0]}\nFarbe B: ${state.slots[1]}`;
+    colorLines = v
+      ? `Farbe 1 (Kristall 1–4): ${state.slots[0]}\nFarbe 2 (Kristall 5–8): ${state.slots[1]}`
+      : `Farbe A: ${state.slots[0]}\nFarbe B: ${state.slots[1]}`;
   } else {
     colorLines = state.slots.map((s, i) => `Farbe ${i+1}: ${s}`).join('\n');
   }
+  const modeLine = state.design === 'buendel' && state.count > 1
+    ? `\nAnordnung: ${v ? 'Farbverlauf' : 'Mix'}`
+    : '';
   const price = state.design === 'buendel' ? '50 €' : '40 €';
-  return `${designName}\n${colorLines}\nEdelstahl: ${state.metal}\nVerschluss: ${claspName}\nPreis: ${price}`;
+  return `${designName}\n${colorLines}${modeLine}\nEdelstahl: ${state.metal}\nVerschluss: ${claspName}\nPreis: ${price}`;
 }
 
 function copyText() {
