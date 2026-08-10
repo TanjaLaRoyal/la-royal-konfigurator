@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>La Royal – Muschel Ohrringe</title>
+<title>La Royal – Sternchen Ohrringe</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -55,7 +55,7 @@ body { background: transparent; color: var(--text); font-family: 'Jost', sans-se
 <body>
 
 <div style="width:48px; height:1px; background:#c9a96e; margin:60px auto 16px;"></div>
-<h2 style="font-family:'Jost',sans-serif; font-weight:300; font-size:clamp(1.4rem,3.5vw,2rem); letter-spacing:0.18em; text-transform:uppercase; text-align:center; color:#111; margin-bottom:52px;">Gestalte deine Muschel Ohrringe</h2>
+<h2 style="font-family:'Jost',sans-serif; font-weight:300; font-size:clamp(1.4rem,3.5vw,2rem); letter-spacing:0.18em; text-transform:uppercase; text-align:center; color:#111; margin-bottom:52px;">Gestalte deine Sternchen Ohrringe</h2>
 
 <div class="card">
 
@@ -112,7 +112,7 @@ body { background: transparent; color: var(--text); font-family: 'Jost', sans-se
     <div class="next-step-title">So bestellst du</div>
     <ol class="next-step-steps">
       <li><span class="next-step-num">1</span><span class="step-text">Kopiere deine Auswahl mit dem Button <strong>"Text kopieren"</strong>.</span></li>
-      <li><span class="next-step-num">2</span><span class="step-text">Klicke auf <strong>"Muschel Ohrringe bestellen"</strong> und gehe zur Produktseite.</span></li>
+      <li><span class="next-step-num">2</span><span class="step-text">Klicke auf <strong>"Sternchen Ohrringe bestellen"</strong> und gehe zur Produktseite.</span></li>
       <li><span class="next-step-num">3</span><span class="step-text">Füge den kopierten Text in das Feld <strong>"Auswahl einfügen"</strong> ein.</span></li>
     </ol>
   </div>
@@ -207,7 +207,7 @@ function drawBicone(ctx, x, y, r, base, shimmer, gloss) {
 // ── Verschlüsse ──────────────────────────────────────────────
 
 function drawKlappVerschluss(ctx, cx, startY, mc) {
-  const RX = 11, RY = 20, cy = startY + RY;
+  const RX = 12, RY = 18, cy = startY + RY;
   const a0 = 0.45, a1 = Math.PI * 2 - 0.1;
   ctx.beginPath();
   ctx.ellipse(cx, cy, RX, RY, 0, a0, a1, false);
@@ -251,44 +251,36 @@ function drawRing(ctx, cx, topY, mc) {
   return topY + 8;
 }
 
-// ── Muschel-Anhänger ─────────────────────────────────────────
-function drawMuschel(ctx, cx, topY, mc) {
-  // Verbindungsring zur Muschel
+// ── Stern-Anhänger ───────────────────────────────────────────
+function drawStern(ctx, cx, topY, mc) {
+  // Verbindungsring zum Stern
   ctx.beginPath();
   ctx.arc(cx, topY + 4, 4, 0, Math.PI * 2);
   ctx.strokeStyle = mc.hex; ctx.lineWidth = 2; ctx.stroke();
 
-  const apexX = cx, apexY = topY + 8;   // direkt unter dem Ring
-  const W = 16;                          // halbe Breite an der Schulter
-  const shoulderY = apexY + 14;          // hier endet die Fächer-Flanke
-  const ctrlY = apexY + 33;              // Kontrolle für die runde Unterkante
+  const R = 15, r = 6;              // Außen-/Innenradius
+  const cyS = topY + 8 + R;         // Mittelpunkt – oberste Spitze direkt unter dem Ring
 
-  // Korpus – oben fächerförmig mit gerundeten Seiten, unten rundlich
-  const g = ctx.createLinearGradient(cx, apexY, cx, ctrlY);
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const ang = -Math.PI / 2 + i * Math.PI / 5;   // 36°-Schritte, Start oben
+    const rad = (i % 2 === 0) ? R : r;
+    const x = cx + rad * Math.cos(ang);
+    const y = cyS + rad * Math.sin(ang);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+
+  const g = ctx.createLinearGradient(cx, cyS - R, cx, cyS + R);
   g.addColorStop(0, mc.shimmer);
   g.addColorStop(1, darken(mc.hex, 0.7));
-  ctx.beginPath();
-  ctx.moveTo(apexX, apexY);
-  ctx.bezierCurveTo(cx - W*0.55, apexY + 1, cx - W, shoulderY - 7, cx - W, shoulderY);
-  ctx.quadraticCurveTo(cx, ctrlY, cx + W, shoulderY);
-  ctx.bezierCurveTo(cx + W, shoulderY - 7, cx + W*0.55, apexY + 1, apexX, apexY);
-  ctx.closePath();
   ctx.fillStyle = g; ctx.fill();
-  ctx.strokeStyle = darken(mc.hex, 0.55); ctx.lineWidth = 1; ctx.stroke();
-
-  // Rippen – vom Ring weg, über den ganzen Korpus bis zur Unterkante
-  ctx.strokeStyle = darken(mc.hex, 0.5); ctx.lineWidth = 1.4; ctx.lineCap = 'round';
-  [-0.85, -0.42, 0, 0.42, 0.85].forEach(t => {
-    ctx.beginPath();
-    ctx.moveTo(apexX, apexY);
-    ctx.lineTo(cx + t * W, shoulderY + (1 - t * t) / 2 * (ctrlY - shoulderY));
-    ctx.stroke();
-  });
+  ctx.strokeStyle = darken(mc.hex, 0.55); ctx.lineWidth = 1; ctx.lineJoin = 'round'; ctx.stroke();
 }
 
 // ── Ohrring zeichnen ─────────────────────────────────────────
 
-function drawMuschelEarring(ctx, cx, startY) {
+function drawSternEarring(ctx, cx, startY) {
   const mc = getMetalColor();
   const R_CRYSTAL = 10;
 
@@ -307,12 +299,12 @@ function drawMuschelEarring(ctx, cx, startY) {
     y += R_CRYSTAL;
   }
 
-  drawMuschel(ctx, cx, y, mc);
+  drawStern(ctx, cx, y, mc);
 }
 
 function getEarringHeight() {
-  const claspH = state.clasp === 'haken' ? 57 : 42;
-  return claspH + 8 + 60 + 33; // Ring + 3 Kristalle + Muschel
+  const claspH = state.clasp === 'haken' ? 57 : 38;
+  return claspH + 8 + 60 + 35; // Ring + 3 Kristalle + Stern
 }
 
 function drawEarrings() {
@@ -328,8 +320,8 @@ function drawEarrings() {
   ctx.translate(150, 0);
   ctx.scale(SCALE, SCALE);
   ctx.translate(-150, 0);
-  drawMuschelEarring(ctx, 105, startY);
-  drawMuschelEarring(ctx, 195, startY);
+  drawSternEarring(ctx, 105, startY);
+  drawSternEarring(ctx, 195, startY);
   ctx.restore();
 
   updateLabel();
@@ -405,7 +397,7 @@ function updateLabel() {
   if (isReady()) {
     const colorStr = state.count === 1 ? state.slots[0] : state.slots.join(' · ');
     const claspName = state.clasp === 'haken' ? 'Ohrhaken' : 'Klapp-Verschluss';
-    label.textContent = `Muschel Ohrringe · ${colorStr} · ${state.metal} · ${claspName}`;
+    label.textContent = `Sternchen Ohrringe · ${colorStr} · ${state.metal} · ${claspName}`;
     label.className = 'preview-label filled';
   } else {
     label.textContent = 'Wähle Edelstahl, Verschluss und Farben – die Ohrringe füllen sich.';
@@ -435,7 +427,7 @@ function buildSummary() {
   } else {
     colorLines = state.slots.map((s, i) => `Farbe ${i+1}: ${s}`).join('\n');
   }
-  return `Muschel Ohrringe\n${colorLines}\nEdelstahl: ${state.metal}\nVerschluss: ${claspName}\nPreis: 45 €`;
+  return `Sternchen Ohrringe\n${colorLines}\nEdelstahl: ${state.metal}\nVerschluss: ${claspName}\nPreis: 45 €`;
 }
 
 function copyText() {
