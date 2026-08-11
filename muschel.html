@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>La Royal – Sternchen Ohrringe</title>
+<title>La Royal – Sternschnuppen Ohrringe</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -55,12 +55,12 @@ body { background: transparent; color: var(--text); font-family: 'Jost', sans-se
 <body>
 
 <div style="width:48px; height:1px; background:#c9a96e; margin:60px auto 16px;"></div>
-<h2 style="font-family:'Jost',sans-serif; font-weight:300; font-size:clamp(1.4rem,3.5vw,2rem); letter-spacing:0.18em; text-transform:uppercase; text-align:center; color:#111; margin-bottom:52px;">Gestalte deine Sternchen Ohrringe</h2>
+<h2 style="font-family:'Jost',sans-serif; font-weight:300; font-size:clamp(1.4rem,3.5vw,2rem); letter-spacing:0.18em; text-transform:uppercase; text-align:center; color:#111; margin-bottom:52px;">Designe deine Wunschohrringe</h2>
 
 <div class="card">
 
   <div class="earring-wrap">
-    <canvas id="earring-canvas" width="300" height="280"></canvas>
+    <canvas id="earring-canvas" width="300" height="260"></canvas>
     <div class="preview-label" id="preview-label">Wähle Edelstahl, Verschluss und Farben – die Ohrringe füllen sich.</div>
   </div>
 
@@ -112,7 +112,7 @@ body { background: transparent; color: var(--text); font-family: 'Jost', sans-se
     <div class="next-step-title">So bestellst du</div>
     <ol class="next-step-steps">
       <li><span class="next-step-num">1</span><span class="step-text">Kopiere deine Auswahl mit dem Button <strong>"Text kopieren"</strong>.</span></li>
-      <li><span class="next-step-num">2</span><span class="step-text">Klicke auf <strong>"Sternchen Ohrringe bestellen"</strong> und gehe zur Produktseite.</span></li>
+      <li><span class="next-step-num">2</span><span class="step-text">Klicke unten auf <strong>"Jetzt bestellen"</strong> und gehe zur Produktseite.</span></li>
       <li><span class="next-step-num">3</span><span class="step-text">Füge den kopierten Text in das Feld <strong>"Auswahl einfügen"</strong> ein.</span></li>
     </ol>
   </div>
@@ -312,7 +312,7 @@ function drawEarrings() {
   const ctx    = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const SCALE        = 1.15;
+  const SCALE        = 1.3;
   const FIXED_BOTTOM = canvas.height - 28;
   const startY       = FIXED_BOTTOM / SCALE - getEarringHeight();
 
@@ -397,7 +397,7 @@ function updateLabel() {
   if (isReady()) {
     const colorStr = state.count === 1 ? state.slots[0] : state.slots.join(' · ');
     const claspName = state.clasp === 'haken' ? 'Ohrhaken' : 'Klapp-Verschluss';
-    label.textContent = `Sternchen Ohrringe · ${colorStr} · ${state.metal} · ${claspName}`;
+    label.textContent = `Sternschnuppen Ohrringe · ${colorStr} · ${state.metal} · ${claspName}`;
     label.className = 'preview-label filled';
   } else {
     label.textContent = 'Wähle Edelstahl, Verschluss und Farben – die Ohrringe füllen sich.';
@@ -427,7 +427,7 @@ function buildSummary() {
   } else {
     colorLines = state.slots.map((s, i) => `Farbe ${i+1}: ${s}`).join('\n');
   }
-  return `Sternchen Ohrringe\n${colorLines}\nEdelstahl: ${state.metal}\nVerschluss: ${claspName}\nPreis: 45 €`;
+  return `Sternschnuppen Ohrringe\n${colorLines}\nEdelstahl: ${state.metal}\nVerschluss: ${claspName}\nPreis: 45 €`;
 }
 
 function copyText() {
