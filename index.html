@@ -346,15 +346,18 @@ function buildEnergieSequence() {
     const s = state.slots[slotIdx];
     return s ? colorByName(s) : GREY;
   }
+  // Aufbau: Lava · [Platzhalter · 3 Kristalle · Platzhalter · Lava] × 6
+  // = 7 Lava, 18 Kristalle. Direkt neben der Grosslochperle sitzt auf beiden
+  // Seiten eine Lavaperle – dort keine Platzhalter (würden reinrutschen).
   const unit = [
-    { type: 'metal',   ...metalC, small: true },
-    { type: 'lava' },
     { type: 'metal',   ...metalC, small: true },
     { type: 'crystal', ...gcPos(0) },
     { type: 'crystal', ...gcPos(1) },
     { type: 'crystal', ...gcPos(2) },
+    { type: 'metal',   ...metalC, small: true },
+    { type: 'lava' },
   ];
-  const seq = [];
+  const seq = [{ type: 'lava' }];
   for (let i = 0; i < 6; i++) seq.push(...unit);
   return seq;
 }
