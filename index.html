@@ -21,6 +21,16 @@ header { text-align: center; margin-bottom: 36px; }
 /* Canvas immer oben, einspaltig */
 .bracelet-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; background: var(--soft); padding: 24px 20px 18px; border-radius: 1px; max-width: 400px; margin: 0 auto 28px; }
 
+.progress { display: flex; align-items: flex-start; max-width: 480px; margin: 0 auto 32px; }
+.p-step { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 7px; position: relative; }
+.p-step::before { content: ''; position: absolute; top: 13px; left: calc(-50% + 17px); width: calc(100% - 34px); height: 1px; background: #ddd; }
+.p-step:first-child::before { display: none; }
+.p-step.done::before { background: var(--gold); }
+.p-dot { width: 27px; height: 27px; border-radius: 50%; border: 1px solid #ccc; background: transparent; color: #999; display: flex; align-items: center; justify-content: center; font-size: 13px; font-family: 'Jost', sans-serif; transition: all 0.3s; }
+.p-step.done .p-dot { background: var(--gold); border-color: var(--gold); color: #fff; }
+.p-step.current .p-dot { border-color: #111; color: #111; font-weight: 500; }
+.p-label { font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase; text-align: center; color: #999; line-height: 1.3; transition: color 0.3s; }
+.p-step.done .p-label, .p-step.current .p-label { color: #111; }
 .preview-label { font-family: 'Cormorant Garamond', serif; font-size: 15px; color: #111; font-style: italic; text-align: center; min-height: 1.4em; }
 .preview-label.filled { color: #111; font-style: normal; font-size: 16px; }
 .section-label { font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; margin-bottom: 12px; font-weight: 500; }
@@ -30,6 +40,7 @@ header { text-align: center; margin-bottom: 36px; }
 .design-btn.active { border-color: #111; background: #f4f3ef; }
 .design-btn:hover:not(.active) { border-color: #111; }
 .design-btn-name { font-size: 17px; font-weight: 400; }
+.design-btn.dimmed { opacity: 0.3; }
 .design-btn-desc { font-size: 13px; color: #111; letter-spacing: 0.04em; }
 .count-options { display: flex; gap: 10px; }
 .count-btn { flex: 1; border: 1px solid #ddd; background: transparent; padding: 12px 6px; font-family: 'Cormorant Garamond', serif; font-size: 17px; color: var(--text); cursor: pointer; border-radius: 1px; transition: all 0.2s; text-align: center; }
@@ -91,6 +102,8 @@ header { text-align: center; margin-bottom: 36px; }
     <div class="preview-label" id="preview-label">Wähle dein Design + Wunschkristalle – das Armband füllt sich mit deinen Farben.</div>
   </div>
 
+  <div class="progress" id="progress"></div>
+
   <div class="options-col">
 
     <div class="section">
@@ -146,6 +159,32 @@ header { text-align: center; margin-bottom: 36px; }
         <button class="metal-btn" onclick="setMetal('Rosegold',this)">
           <span class="metal-swatch rosegold"></span> Rosegold
         </button>
+      </div>
+    </div>
+
+    <div class="section" id="extras-section" style="display:none">
+      <div class="section-label">5 · Extra Funkel-Wünsche</div>
+      <div class="design-options">
+        <button class="design-btn" id="extra-none-btn" onclick="setNoExtras()">
+          <span class="design-btn-name">Keine extra Funkel-Wünsche</span>
+          <span class="design-btn-desc">Dein Armband wird klassisch gefädelt, so wie abgebildet</span>
+        </button>
+        <button class="design-btn" id="extra-lava-btn" onclick="toggleLavaReplace()">
+          <span class="design-btn-name">Lava durch Kristalle ersetzen &nbsp;+ 5 €</span>
+          <span class="design-btn-desc">Alle Lavaperlen werden durch Kristalle in deiner Wunschfarbe ersetzt</span>
+        </button>
+        <button class="design-btn" id="extra-keine-btn" onclick="setPlaceholders('keine')">
+          <span class="design-btn-name">Keine Platzhalter Perlen</span>
+          <span class="design-btn-desc">Dein Armband wird ohne die kleinen Edelstahlperlen gefädelt</span>
+        </button>
+        <button class="design-btn" id="extra-eine-btn" onclick="setPlaceholders('eine')">
+          <span class="design-btn-name">Nur eine Platzhalter Perle &nbsp;+ 5 €</span>
+          <span class="design-btn-desc">Eine einzelne Platzhalter Perle, gegenüber der Grosslochperle</span>
+        </button>
+      </div>
+      <div id="lava-color-block" style="display:none; margin-top:18px;">
+        <div class="slot-label">Kristallfarbe statt Lava</div>
+        <div class="color-options" id="lava-color-options"></div>
       </div>
     </div>
 
@@ -205,11 +244,23 @@ const state = {
   slots:  [],
   metal:  null,
   ePos:   [0, 0, 1],
+  lavaReplace:  false,
+  lavaColor:    null,
+  placeholders: 'alle',   // 'alle' | 'keine' | 'eine'
+  noExtras:     false,
 };
 
 function metalColor() {
   if (state.metal === 'Gold')     return { hex: '#c9a96e', shimmer: '#e8d49a' };
   if (state.metal === 'Rosegold') return { hex: '#d4937a', shimmer: '#ecbfad' };
+  return { hex: '#a8b0b8', shimmer: '#d0d6da' };
+}
+
+function barrelColor() {
+  // Die Grosslochperle (längliche Edelstahlperle) gibt es nur in Silber und Gold –
+  // bei Roségold wird sie schwarz dargestellt.
+  if (state.metal === 'Gold')     return { hex: '#c9a96e', shimmer: '#e8d49a' };
+  if (state.metal === 'Rosegold') return { hex: '#2a2a2a', shimmer: '#8a8a8a' };
   return { hex: '#a8b0b8', shimmer: '#d0d6da' };
 }
 
@@ -219,7 +270,28 @@ function colorByName(name) {
 }
 
 function buildSequence() {
-  return state.design === 'energie' ? buildEnergieSequence() : buildDKSequence();
+  let seq = state.design === 'energie' ? buildEnergieSequence() : buildDKSequence();
+  seq = applyExtras(seq);
+  // Grosslochperle immer an Position 0 (oben)
+  return [{ type: 'barrel', ...barrelColor() }, ...seq];
+}
+
+function applyExtras(seq) {
+  // Lava durch Kristalle ersetzen
+  if (state.lavaReplace) {
+    const lc = state.lavaColor ? colorByName(state.lavaColor) : GREY;
+    seq = seq.map(b => b.type === 'lava' ? { type: 'crystal', ...lc } : b);
+  }
+  // Platzhalter Perlen
+  if (state.placeholders === 'keine' || state.placeholders === 'eine') {
+    seq = seq.filter(b => b.type !== 'metal');
+    if (state.placeholders === 'eine') {
+      // Eine einzelne Platzhalter Perle, gegenüber der Grosslochperle
+      const mid = Math.round(seq.length / 2);
+      seq = [...seq.slice(0, mid), { type: 'metal', ...metalColor(), small: true }, ...seq.slice(mid)];
+    }
+  }
+  return seq;
 }
 
 function buildDKSequence() {
@@ -298,12 +370,18 @@ function drawBracelet() {
   const R_LAVA    = 11;
   const R_CRYSTAL = 11;
   const R_METAL   = 5.5;
+  const R_BARREL  = 13.5;   // halbe Länge der Grosslochperle entlang des Bandes
+  function beadR(b) {
+    if (b.type === 'lava')   return R_LAVA;
+    if (b.type === 'metal')  return R_METAL;
+    if (b.type === 'barrel') return R_BARREL;
+    return R_CRYSTAL;
+  }
   function calcRingRadius(beads) {
     let r = 90;
     for (let iter = 0; iter < 300; iter++) {
       const total = beads.reduce((sum, b) => {
-        const pr = b.type === 'lava' ? R_LAVA : b.type === 'metal' ? R_METAL : R_CRYSTAL;
-        return sum + 2 * Math.asin(Math.min(pr / r, 0.9999));
+        return sum + 2 * Math.asin(Math.min(beadR(b) / r, 0.9999));
       }, 0);
       r = r * total / (2 * Math.PI);
     }
@@ -311,10 +389,10 @@ function drawBracelet() {
   }
   const ringR = Math.min(calcRingRadius(seq), (W / 2) - 12);
   const angles = [];
-  let cur = -Math.PI / 2;
+  // Start so, dass die erste Perle (die Grosslochperle) genau oben sitzt
+  let cur = -Math.PI / 2 - Math.asin(Math.min(beadR(seq[0]) / ringR, 0.9999));
   for (let i = 0; i < N; i++) {
-    const pr   = seq[i].type === 'lava' ? R_LAVA : seq[i].type === 'metal' ? R_METAL : R_CRYSTAL;
-    const half = Math.asin(Math.min(pr / ringR, 0.9999));
+    const half = Math.asin(Math.min(beadR(seq[i]) / ringR, 0.9999));
     cur += half;
     angles.push(cur);
     cur += half;
@@ -329,19 +407,21 @@ function drawBracelet() {
     const y = cy + ringR * Math.sin(angles[i]);
     const b = seq[i];
     if      (b.type === 'lava')    drawLava(ctx, x, y, R_LAVA);
+    else if (b.type === 'barrel')  drawBarrel(ctx, x, y, R_CRYSTAL, b.hex, b.shimmer, 0.82, angles[i]);
     else if (b.type === 'metal')   drawSphere(ctx, x, y, R_METAL,   b.hex, b.shimmer, 0.55);
     else if (b.shape === 'bicone') drawBicone(ctx, x, y, R_CRYSTAL, b.hex, b.shimmer, 0.72, angles[i] + Math.PI / 2);
     else                           drawSphere(ctx, x, y, R_CRYSTAL, b.hex, b.shimmer, 0.65, b.stop);
   }
   updateLabel();
   updateSummary();
+  updateProgress();
 }
 
 function updateLabel() {
   const label       = document.getElementById('preview-label');
   const filledSlots = state.slots.filter(Boolean);
   const allFilled   = state.count && filledSlots.length === state.count;
-  const ready       = allFilled && state.metal;
+  const ready       = isReady();
   if (!state.design) {
     label.textContent = 'Wähle dein Design + Wunschkristalle – das Armband füllt sich mit deinen Farben.';
     label.className   = 'preview-label';
@@ -359,6 +439,9 @@ function updateLabel() {
       label.textContent = `${designName} · ${colorNames} · ${state.metal}`;
     }
     label.className = 'preview-label filled';
+  } else if (allFilled && state.metal) {
+    label.textContent = 'Fast fertig – wähle noch deine Extra Funkel-Wünsche.';
+    label.className   = 'preview-label';
   } else if (state.count) {
     label.textContent = 'Wähle Farben und Edelstahl – das Armband passt sich an.';
     label.className   = 'preview-label';
@@ -372,7 +455,38 @@ function isReady() {
   return state.design &&
          state.count &&
          state.metal &&
-         state.slots.filter(Boolean).length === state.count;
+         state.slots.filter(Boolean).length === state.count &&
+         extrasComplete();
+}
+
+function extrasComplete() {
+  // Schritt 5 gilt als erledigt, sobald eine Entscheidung getroffen ist –
+  // auch "Keine extra Funkel-Wünsche" ist eine Entscheidung.
+  const decided = state.noExtras || state.lavaReplace || state.placeholders !== 'alle';
+  return decided && (!state.lavaReplace || state.lavaColor);
+}
+
+const STEP_LABELS = ['Design', 'Farb-Anzahl', 'Farben', 'Edelstahl', 'Funkel-Wünsche'];
+
+function stepDone() {
+  return [
+    !!state.design,
+    !!state.count,
+    !!state.count && state.slots.filter(Boolean).length === state.count,
+    !!state.metal,
+    extrasComplete(),
+  ];
+}
+
+function updateProgress() {
+  const el = document.getElementById('progress');
+  const done = stepDone();
+  const current = done.indexOf(false);   // erster offener Schritt, -1 = alles fertig
+  el.innerHTML = STEP_LABELS.map((label, i) => {
+    const cls = done[i] ? 'p-step done' : (i === current ? 'p-step current' : 'p-step');
+    const dot = done[i] ? '✓' : (i + 1);
+    return `<div class="${cls}"><div class="p-dot">${dot}</div><div class="p-label">${label}</div></div>`;
+  }).join('');
 }
 
 function updateSummary() {
@@ -432,6 +546,108 @@ function drawBicone(ctx, x, y, r, base, shimmer, gloss, angle) {
   ctx.restore();
 }
 
+function drawBarrel(ctx, x, y, r, base, shimmer, gloss, angle) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle || 0);
+  const w = r * 0.92, h = r * 1.25;
+  const we = r * 0.62;
+  ctx.beginPath();
+  ctx.moveTo(0, -h);
+  ctx.bezierCurveTo( we*1.3, -h*.88,  w, -h*.32,  w, 0);
+  ctx.bezierCurveTo( w,  h*.32,  we*1.3,  h*.88,  0,  h);
+  ctx.bezierCurveTo(-we*1.3,  h*.88, -w,  h*.32, -w, 0);
+  ctx.bezierCurveTo(-w, -h*.32, -we*1.3, -h*.88,  0, -h);
+  ctx.closePath();
+  const g = ctx.createRadialGradient(-w*.3,-h*.3,h*.04, w*.1, h*.1, h);
+  g.addColorStop(0,shimmer); g.addColorStop(.42,base); g.addColorStop(1,darken(base,.48));
+  ctx.fillStyle=g; ctx.fill();
+  const sh = ctx.createRadialGradient(-w*.28,-h*.28,0,-w*.28,-h*.28,h*.4);
+  sh.addColorStop(0,`rgba(255,255,255,${gloss})`); sh.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=sh; ctx.fill();
+  ctx.restore();
+}
+
+function updateExtraDimming() {
+  const anyExtra = state.lavaReplace || state.placeholders !== 'alle';
+  ['extra-lava-btn', 'extra-keine-btn', 'extra-eine-btn'].forEach(id =>
+    document.getElementById(id).classList.toggle('dimmed', state.noExtras));
+  document.getElementById('extra-none-btn').classList.toggle('dimmed', anyExtra);
+}
+
+function setNoExtras() {
+  state.noExtras = !state.noExtras;
+  if (state.noExtras) {
+    state.lavaReplace  = false;
+    state.lavaColor    = null;
+    state.placeholders = 'alle';
+    document.getElementById('extra-lava-btn').classList.remove('active');
+    document.getElementById('extra-keine-btn').classList.remove('active');
+    document.getElementById('extra-eine-btn').classList.remove('active');
+    document.getElementById('lava-color-block').style.display = 'none';
+  }
+  document.getElementById('extra-none-btn').classList.toggle('active', state.noExtras);
+  updateExtraDimming();
+  drawBracelet();
+}
+
+function clearNoExtras() {
+  state.noExtras = false;
+  document.getElementById('extra-none-btn').classList.remove('active');
+}
+
+function toggleLavaReplace() {
+  state.lavaReplace = !state.lavaReplace;
+  if (state.lavaReplace) clearNoExtras();
+  if (!state.lavaReplace) state.lavaColor = null;
+  document.getElementById('extra-lava-btn').classList.toggle('active', state.lavaReplace);
+  document.getElementById('lava-color-block').style.display = state.lavaReplace ? 'block' : 'none';
+  if (state.lavaReplace) renderLavaColorOptions();
+  updateExtraDimming();
+  drawBracelet();
+}
+
+function setPlaceholders(mode) {
+  // Nochmal klicken schaltet die Option wieder aus; 'keine' und 'eine' schließen sich aus
+  state.placeholders = state.placeholders === mode ? 'alle' : mode;
+  if (state.placeholders !== 'alle') clearNoExtras();
+  document.getElementById('extra-keine-btn').classList.toggle('active', state.placeholders === 'keine');
+  document.getElementById('extra-eine-btn').classList.toggle('active', state.placeholders === 'eine');
+  updateExtraDimming();
+  drawBracelet();
+}
+
+function renderLavaColorOptions() {
+  const container = document.getElementById('lava-color-options');
+  container.innerHTML = '';
+  COLORS.forEach(c => {
+    const chip = document.createElement('button');
+    chip.className = 'color-chip' + (state.lavaColor === c.name ? ' active' : '');
+    const dotBg = c.stop ? `radial-gradient(circle at 32% 32%, ${c.shimmer}, ${c.hex} 70%)` : c.hex;
+    chip.innerHTML = `<span class="color-dot" style="background:${dotBg}"></span>${c.name}`;
+    chip.onclick = () => {
+      state.lavaColor = c.name;
+      container.querySelectorAll('.color-chip').forEach(b => b.classList.remove('active'));
+      chip.classList.add('active');
+      drawBracelet();
+    };
+    container.appendChild(chip);
+  });
+}
+
+function resetExtras() {
+  state.lavaReplace  = false;
+  state.lavaColor    = null;
+  state.placeholders = 'alle';
+  state.noExtras     = false;
+  updateExtraDimming();
+  document.getElementById('extra-none-btn').classList.remove('active');
+  document.getElementById('extra-lava-btn').classList.remove('active');
+  document.getElementById('extra-keine-btn').classList.remove('active');
+  document.getElementById('extra-eine-btn').classList.remove('active');
+  document.getElementById('lava-color-block').style.display = 'none';
+}
+
 function setDesign(design, btn) {
   state.design = design;
   state.count  = null;
@@ -446,6 +662,8 @@ function setDesign(design, btn) {
   document.getElementById('en-count-section').style.display = design === 'energie' ? 'block' : 'none';
   document.getElementById('color-section').style.display    = 'none';
   document.getElementById('metal-section').style.display    = 'none';
+  document.getElementById('extras-section').style.display   = 'none';
+  resetExtras();
   drawBracelet();
 }
 
@@ -456,8 +674,9 @@ function setCount(n, btn) {
   document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderSlots();
-  document.getElementById('color-section').style.display = 'block';
-  document.getElementById('metal-section').style.display = 'block';
+  document.getElementById('color-section').style.display  = 'block';
+  document.getElementById('metal-section').style.display  = 'block';
+  document.getElementById('extras-section').style.display = 'block';
   drawBracelet();
 }
 
@@ -544,13 +763,32 @@ function getEnergieColorAtPos(pos) {
   return state.slots[slotIdx] || '';
 }
 
+function buildExtraLines() {
+  const lines = [];
+  if (state.noExtras)               lines.push('Keine extra Funkel-Wünsche');
+  if (state.lavaReplace)            lines.push(`Extra: Lava durch Kristalle ersetzen – ${state.lavaColor} (+5 €)`);
+  if (state.placeholders === 'keine') lines.push('Extra: keine Platzhalter Perlen');
+  if (state.placeholders === 'eine')  lines.push('Extra: nur eine Platzhalter Perle (+5 €)');
+  return lines;
+}
+
+function totalPrice() {
+  let p = 45;
+  if (state.lavaReplace) p += 5;
+  if (state.placeholders === 'eine') p += 5;
+  return p;
+}
+
 function buildSummary() {
+  const extras    = buildExtraLines();
+  const extraPart = extras.length ? extras.join('\n') + '\n' : '';
+  const priceLine = `Preis: ${totalPrice()} €`;
   if (state.design === 'dk') {
-    return `Doppel Kristall Armband\nFarben: ${state.slots.join(', ')}\nEdelstahl: ${state.metal}\nPreis: 45 €`;
+    return `Doppel Kristall Armband\nFarben: ${state.slots.join(', ')}\nEdelstahl: ${state.metal}\n${extraPart}${priceLine}`;
   } else {
     const posNames   = ['Links', 'Mitte', 'Rechts'];
     const colorLines = posNames.map((p, i) => `${p}: ${getEnergieColorAtPos(i)}`).join('\n');
-    return `Energie Armband\nKristallfarben:\n${colorLines}\nEdelstahl: ${state.metal}\nPreis: 45 €`;
+    return `Energie Armband\nKristallfarben:\n${colorLines}\nEdelstahl: ${state.metal}\n${extraPart}${priceLine}`;
   }
 }
 
