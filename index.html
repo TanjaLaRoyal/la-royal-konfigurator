@@ -85,6 +85,9 @@ header { text-align: center; margin-bottom: 36px; }
 .next-step-steps li { display: flex; align-items: flex-start; gap: 12px; font-size: 17px; color: #111; line-height: 1.5; }
 .next-step-steps li span.step-text { flex: 1; min-width: 0; }
 .next-step-num { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: #111; color: #fff; font-size: 12px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+.next-step-steps li.extras-step { display: none; background: #fbf5e8; border-left: 3px solid var(--gold); padding: 10px 12px; margin-left: -12px; }
+.next-step-steps li.extras-step.visible { display: flex; }
+.next-step-steps li.extras-step .next-step-num { background: var(--gold); }
 .order-btn { display: block; width: fit-content; margin: 0 auto; padding: 10px 22px; background: #c9a96e; color: #fff; border: none; border-radius: 20px; font-family: 'Jost', sans-serif; font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; text-align: center; text-decoration: none; transition: background 0.2s; }
 .order-btn:hover { background: #b8924f; }
 </style>
@@ -198,8 +201,9 @@ header { text-align: center; margin-bottom: 36px; }
       <div class="next-step-title">So bestellst du</div>
       <ol class="next-step-steps">
         <li><span class="next-step-num">1</span><span class="step-text">Kopiere deine Auswahl mit dem Button <strong>"Text kopieren"</strong>.</span></li>
-        <li><span class="next-step-num">2</span><span class="step-text">Klicke auf <strong>"Jetzt bestellen"</strong> und gehe zur Produktseite.</span></li>
+        <li><span class="next-step-num">2</span><span class="step-text">Klicke auf <strong>"Jetzt bestellen"</strong> und gehe zur Bestellseite.</span></li>
         <li><span class="next-step-num">3</span><span class="step-text">Füge den kopierten Text in das Feld <strong>"Auswahl einfügen"</strong> ein.</span></li>
+        <li class="extras-step" id="extras-step"><span class="next-step-num">4</span><span class="step-text" id="extras-step-text"></span></li>
       </ol>
     </div>
 
@@ -502,6 +506,21 @@ function updateSummary() {
     document.getElementById('summary-box').classList.remove('visible');
     document.getElementById('next-step').classList.remove('visible');
   }
+  updateExtrasStep();
+}
+
+// Hinweis: Extras müssen auf der Produktseite nochmals angeklickt werden,
+// sonst rechnet der Shop den Aufpreis nicht – der Konfigurator-Text allein ändert den Preis nicht.
+function updateExtrasStep() {
+  const li       = document.getElementById('extras-step');
+  const anyExtra = state.lavaReplace || state.placeholders !== 'alle';
+  const show     = anyExtra && isReady();
+  li.classList.toggle('visible', show);
+  if (!show) return;
+  document.getElementById('extras-step-text').innerHTML =
+    '<strong>Wichtig bei Extra Funkel-Wünschen:</strong> Wähle beim Bestellen bei ' +
+    '"Extra Funkel-Wünsche" <strong>Ja</strong> und klicke deine Extras dort nochmals an. ' +
+    'Nur so erfährt Tanja von deinem Wunsch.';
 }
 
 function drawLava(ctx, x, y, r) {
