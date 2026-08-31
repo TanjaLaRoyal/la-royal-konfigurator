@@ -52,7 +52,7 @@ header { text-align: center; margin-bottom: 36px; }
 .color-chip { display: flex; align-items: center; gap: 7px; border: 1px solid #ddd; padding: 6px 10px; border-radius: 1px; cursor: pointer; font-size: 15px; transition: all 0.2s; background: transparent; font-family: 'Jost', sans-serif; font-weight: 300; color: var(--text); }
 .color-chip:hover:not(.active) { border-color: #111; }
 .color-chip.active { border-color: #111; background: #f4f3ef; }
-.color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.1); }
+.color-dot { width: 18px; height: 18px; flex-shrink: 0; }
 .position-section-label { font-size: 14px; letter-spacing: 0.15em; text-transform: uppercase; color: #111; margin-bottom: 10px; font-weight: 500; margin-top: 20px; }
 .position-table { border: 1px solid #e0dbd0; border-radius: 1px; overflow: hidden; }
 .position-row { display: flex; align-items: center; padding: 10px 14px; border-bottom: 1px solid #e0dbd0; gap: 12px; }
@@ -626,8 +626,8 @@ function renderLavaColorOptions() {
   COLORS.forEach(c => {
     const chip = document.createElement('button');
     chip.className = 'color-chip' + (state.lavaColor === c.name ? ' active' : '');
-    const dotBg = c.stop ? `radial-gradient(circle at 32% 32%, ${c.shimmer}, ${c.hex} 70%)` : c.hex;
-    chip.innerHTML = `<span class="color-dot" style="background:${dotBg}"></span>${c.name}`;
+    chip.appendChild(colorDot(c));
+    chip.appendChild(document.createTextNode(c.name));
     chip.onclick = () => {
       state.lavaColor = c.name;
       container.querySelectorAll('.color-chip').forEach(b => b.classList.remove('active'));
@@ -683,6 +683,23 @@ function setCount(n, btn) {
   drawBracelet();
 }
 
+// Kleiner Kristall für die Farb-Chips – gleiche Form und gleicher Schimmer wie in der Vorschau
+function colorDot(c, size = 18) {
+  const dpr = 2;
+  const cv  = document.createElement('canvas');
+  cv.width  = size * dpr;
+  cv.height = size * dpr;
+  cv.className = 'color-dot';
+  cv.style.width  = size + 'px';
+  cv.style.height = size + 'px';
+  const ctx = cv.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const r = size * 0.42;
+  if (c.shape === 'bicone') drawBicone(ctx, size / 2, size / 2, r, c.hex, c.shimmer, 0.72, 0);
+  else                      drawSphere(ctx, size / 2, size / 2, r, c.hex, c.shimmer, 0.65, c.stop);
+  return cv;
+}
+
 function renderSlots() {
   const wrapper     = document.getElementById('slots-wrapper');
   wrapper.innerHTML = '';
@@ -701,8 +718,8 @@ function renderSlots() {
     COLORS.forEach(c => {
       const chip = document.createElement('button');
       chip.className = 'color-chip';
-      const dotBg = c.stop ? `radial-gradient(circle at 32% 32%, ${c.shimmer}, ${c.hex} 70%)` : c.hex;
-      chip.innerHTML = `<span class="color-dot" style="background:${dotBg}"></span>${c.name}`;
+      chip.appendChild(colorDot(c));
+      chip.appendChild(document.createTextNode(c.name));
       chip.onclick = () => {
         state.slots[i] = c.name;
         container.querySelectorAll('.color-chip').forEach(b => b.classList.remove('active'));
@@ -741,7 +758,10 @@ function renderPositionTable() {
       const label     = colorName ? colorName : `Farbe ${slotIdx + 1}`;
       const btn       = document.createElement('button');
       btn.className   = 'pos-btn' + (state.ePos[posIdx] === slotIdx ? ' active' : '');
-      btn.innerHTML   = `<span class="pos-dot" style="background:${colorHex}"></span>${label}`;
+      const colorObj  = colorName ? COLORS.find(c => c.name === colorName) : null;
+      if (colorObj) btn.appendChild(colorDot(colorObj, 14));
+      else          btn.innerHTML = `<span class="pos-dot" style="background:${colorHex}"></span>`;
+      btn.appendChild(document.createTextNode(label));
       btn.onclick     = () => {
         state.ePos[posIdx] = slotIdx;
         renderPositionTable();

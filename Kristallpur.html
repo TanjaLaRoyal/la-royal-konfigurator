@@ -47,7 +47,7 @@ header { text-align: center; margin-bottom: 36px; }
 .color-chip { display: flex; align-items: center; gap: 7px; border: 1px solid #ddd; padding: 6px 10px; border-radius: 1px; cursor: pointer; font-size: 15px; transition: all 0.2s; background: transparent; font-family: 'Jost', sans-serif; font-weight: 300; color: var(--text); }
 .color-chip:hover { border-color: #111; }
 .color-chip.active { border-color: #111; background: var(--soft); }
-.color-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.1); }
+.color-dot { width: 18px; height: 18px; flex-shrink: 0; }
 .summary-box { display: none; background: var(--soft); border: 1px solid #e8e5df; border-radius: 1px; padding: 24px; margin-bottom: 20px; }
 .summary-box.visible { display: block; }
 .summary-title { font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; font-weight: 500; margin-bottom: 10px; }
@@ -309,6 +309,23 @@ function setCount(n, btn) {
   btn.focus({ preventScroll: true });
 }
 
+// Kleiner Kristall für die Farb-Chips – gleiche Form und gleicher Schimmer wie in der Vorschau
+function colorDot(c, size = 18) {
+  const dpr = 2;
+  const cv  = document.createElement('canvas');
+  cv.width  = size * dpr;
+  cv.height = size * dpr;
+  cv.className = 'color-dot';
+  cv.style.width  = size + 'px';
+  cv.style.height = size + 'px';
+  const ctx = cv.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const r = size * 0.42;
+  if (c.shape === 'bicone') drawBicone(ctx, size / 2, size / 2, r, c.hex, c.shimmer, 0.72, 0);
+  else                      drawSphere(ctx, size / 2, size / 2, r, c.hex, c.shimmer, 0.65, c.stop);
+  return cv;
+}
+
 function renderSlots() {
   const wrapper = document.getElementById('slots-wrapper');
   wrapper.innerHTML = '';
@@ -335,8 +352,8 @@ function renderSlots() {
     COLORS.forEach(c => {
       const chip = document.createElement('button');
       chip.className = 'color-chip';
-      const dotBg = c.stop ? `radial-gradient(circle at 32% 32%, ${c.shimmer}, ${c.hex} 70%)` : c.hex;
-      chip.innerHTML = `<span class="color-dot" style="background:${dotBg}"></span>${c.name}`;
+      chip.appendChild(colorDot(c));
+      chip.appendChild(document.createTextNode(c.name));
       if (state.slots[i] === c.name) chip.classList.add('active');
       chip.onclick = () => {
         state.slots[i] = c.name;
