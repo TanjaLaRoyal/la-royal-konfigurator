@@ -30,6 +30,8 @@ header { text-align: center; margin-bottom: 36px; }
 .p-step.done .p-label, .p-step.current .p-label { color: #111; }
 .preview-label { font-family: 'Cormorant Garamond', serif; font-size: 15px; color: #111; font-style: italic; text-align: center; min-height: 1.4em; }
 .preview-label.filled { font-style: normal; font-size: 16px; }
+.metal-swatch.schwarz { background: radial-gradient(circle at 35% 35%, #585858, #1a1a1a 60%, #0a0a0a); }
+.metal-swatch.kupfer  { background: radial-gradient(circle at 35% 35%, #fff5ea, #efcfaa 40%, #cf9a6c 80%, #8f6040); }
 .section-label { font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; margin-bottom: 12px; font-weight: 500; }
 .section { margin-bottom: 28px; }
 .design-options { display: flex; flex-direction: column; gap: 10px; }
@@ -104,9 +106,22 @@ header { text-align: center; margin-bottom: 36px; }
     </div>
   </div>
 
-  <!-- 2: Edelstahl -->
+  <!-- 2: Lava (nur Stab Ohrringe) -->
+  <div class="section" id="lava-section" style="display:none">
+    <div class="section-label">2 · Lava</div>
+    <div class="option-row" id="lava-row">
+      <button class="option-btn" onclick="setLava('Schwarz', this)">
+        <span class="metal-swatch schwarz"></span> Schwarz
+      </button>
+      <button class="option-btn" onclick="setLava('Helles Kupfer', this)">
+        <span class="metal-swatch kupfer"></span> Helles Kupfer
+      </button>
+    </div>
+  </div>
+
+  <!-- 3: Edelstahl -->
   <div class="section">
-    <div class="section-label">2 · Edelstahl</div>
+    <div class="section-label" data-nr="Edelstahl">3 · Edelstahl</div>
     <div class="option-row" id="metal-row">
       <button class="option-btn" onclick="setMetal('Silber', this)">
         <span class="metal-swatch silber"></span> Silber
@@ -122,7 +137,7 @@ header { text-align: center; margin-bottom: 36px; }
 
   <!-- 3: Verschluss -->
   <div class="section">
-    <div class="section-label">3 · Verschluss</div>
+    <div class="section-label" data-nr="Verschluss">4 · Verschluss</div>
     <div class="option-row" id="clasp-row">
       <button class="option-btn" onclick="setClasp('klapp', this)">Klapp-Verschluss</button>
       <button class="option-btn" onclick="setClasp('haken', this)">Ohrhaken</button>
@@ -131,7 +146,7 @@ header { text-align: center; margin-bottom: 36px; }
 
   <!-- 4: Anzahl Farben -->
   <div class="section">
-    <div class="section-label">4 · Wie viele Kristallfarben?</div>
+    <div class="section-label" data-nr="Farb-Anzahl">5 · Wie viele Kristallfarben?</div>
     <div class="count-options">
       <button class="count-btn" onclick="setCount(1, this)">Einfarbig</button>
       <button class="count-btn" onclick="setCount(2, this)">Zweifarbig</button>
@@ -141,7 +156,7 @@ header { text-align: center; margin-bottom: 36px; }
 
   <!-- 5: Anordnung (nur Bündel, mehrfarbig) -->
   <div class="section" id="mode-section" style="display:none">
-    <div class="section-label">5 · Anordnung</div>
+    <div class="section-label" data-nr="Anordnung">6 · Anordnung</div>
     <div class="option-row" id="mode-row">
       <button class="option-btn" onclick="setMode('mix', this)">Mix</button>
       <button class="option-btn" onclick="setMode('verlauf', this)">Farbverlauf</button>
@@ -150,7 +165,7 @@ header { text-align: center; margin-bottom: 36px; }
 
   <!-- 6: Farben -->
   <div class="section" id="color-section" style="display:none">
-    <div class="section-label">6 · Kristallfarben wählen</div>
+    <div class="section-label" data-nr="Farben">7 · Kristallfarben wählen</div>
     <div id="slots-wrapper"></div>
   </div>
 
@@ -202,8 +217,13 @@ const COLORS = [
 
 const EMPTY = { hex: '#d4d0c8', shimmer: '#e8e4dc', shape: 'round' };
 
+// Lava "Helles Kupfer" (galvanisiert) – begrenzter Vorrat. Auf false stellen, wenn
+// sie ausverkauft ist: der Schritt "Lava" verschwindet, Nummern rücken nach.
+const LAVA_KUPFER_VERFUEGBAR = true;
+
 const state = {
   design: null,   // 'kristall' | 'buendel'
+  lava:   null,   // 'Schwarz' | 'Helles Kupfer' (nur Stab Ohrringe)
   metal:  null,
   clasp:  null,
   count:  null,
@@ -242,6 +262,21 @@ function getCrystalAt(pos, total) {
 
 function darken(hex, f) {
   return `rgb(${[1,3,5].map(i => Math.round(parseInt(hex.slice(i,i+2),16)*f)).join(',')})`;
+}
+
+function drawLavaKupfer(ctx, x, y, r) {
+  // Helles Kupfer: Champagner-Basis mit Kupfer-Wärme, grobe Poren, Glanzpunkt
+  const g = ctx.createRadialGradient(x - r * .3, y - r * .3, r * .05, x, y, r);
+  g.addColorStop(0, '#fff5ea'); g.addColorStop(.4, '#efcfaa'); g.addColorStop(.85, '#cf9a6c'); g.addColorStop(1, '#8f6040');
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+  ctx.fillStyle = 'rgba(110,60,35,0.5)';
+  [[-.28, -.18], [.22, .28], [-.1, .35], [.34, -.12], [.1, -.34], [-.34, .12],
+   [.05, .05], [-.45, -.3], [.4, .35], [-.2, -.42]].forEach(([dx, dy], i) => {
+    ctx.beginPath(); ctx.arc(x + dx * r, y + dy * r, r * (i < 6 ? .11 : .07), 0, Math.PI * 2); ctx.fill();
+  });
+  const sh = ctx.createRadialGradient(x - r * .3, y - r * .32, 0, x - r * .3, y - r * .32, r * .45);
+  sh.addColorStop(0, 'rgba(255,255,255,0.65)'); sh.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = sh; ctx.fill();
 }
 
 function drawLava(ctx, x, y, r) {
@@ -328,7 +363,7 @@ function drawKristallEarring(ctx, cx, startY) {
     ? drawOhrhaken(ctx, cx, startY, mc)
     : drawKlappVerschluss(ctx, cx, startY, mc);
   y += R_SPACER; drawSphere(ctx, cx, y, R_SPACER, mc.hex, mc.shimmer, 0.55); y += R_SPACER;
-  y += R_LAVA;   drawLava(ctx, cx, y, R_LAVA);                                y += R_LAVA;
+  y += R_LAVA;   (state.lava === 'Helles Kupfer' ? drawLavaKupfer : drawLava)(ctx, cx, y, R_LAVA); y += R_LAVA;
   y += R_SPACER; drawSphere(ctx, cx, y, R_SPACER, mc.hex, mc.shimmer, 0.55); y += R_SPACER;
   for (let i = 0; i < 4; i++) {
     const c = getCrystalAt(i, 4);
@@ -465,6 +500,12 @@ function setDesign(design, btn) {
   state.slots  = [];
   document.querySelectorAll('.design-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  // Lava-Wahl nur bei Stab Ohrringe (Bündel hat keine Lavaperle)
+  state.lava = null;
+  document.querySelectorAll('#lava-row .option-btn').forEach(b => b.classList.remove('active'));
+  if (LAVA_KUPFER_VERFUEGBAR) {
+    document.getElementById('lava-section').style.display = design === 'kristall' ? 'block' : 'none';
+  }
   // Roségold nur bei Stab Ohrringe verfügbar
   const rg = document.getElementById('rosegold-btn');
   if (design === 'buendel') {
@@ -482,6 +523,17 @@ function setDesign(design, btn) {
 
 function updateMetalButtons() {
   document.querySelectorAll('#metal-row .option-btn').forEach(b => b.classList.remove('active'));
+}
+
+function setLava(lava, btn) {
+  state.lava = lava;
+  document.querySelectorAll('#lava-row .option-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  drawEarrings();
+}
+
+function lavaComplete() {
+  return !LAVA_KUPFER_VERFUEGBAR || state.design !== 'kristall' || !!state.lava;
 }
 
 function setMetal(metal, btn) {
@@ -589,7 +641,7 @@ function renderSlots() {
 }
 
 function isReady() {
-  return state.design && state.metal && state.clasp && state.count && state.mode &&
+  return state.design && lavaComplete() && state.metal && state.clasp && state.count && state.mode &&
          state.slots.filter(Boolean).length === state.count;
 }
 
@@ -601,7 +653,8 @@ function updateLabel() {
       : state.slots.join(' · ');
     const claspName = state.clasp === 'haken' ? 'Ohrhaken' : 'Klapp-Verschluss';
     const designName = state.design === 'buendel' ? 'Bündel Ohrringe' : 'Stab Ohrringe';
-    label.textContent = `${designName} · ${colorStr} · ${state.metal} · ${claspName}`;
+    const lavaStr = state.design === 'kristall' && state.lava === 'Helles Kupfer' ? ' · Lava Helles Kupfer' : '';
+    label.textContent = `${designName} · ${colorStr} · ${state.metal}${lavaStr} · ${claspName}`;
     label.className = 'preview-label filled';
   } else {
     label.textContent = 'Wähle dein Design – die Ohrringe füllen sich mit deinen Farben.';
@@ -639,7 +692,8 @@ function buildSummary() {
     ? `\nAnordnung: ${v ? 'Farbverlauf' : 'Mix'}`
     : '';
   const price = state.design === 'buendel' ? '50 €' : '40 €';
-  return `${designName}\n${colorLines}${modeLine}\nEdelstahl: ${state.metal}\nVerschluss: ${claspName}\nPreis: ${price}`;
+  const lavaLine = LAVA_KUPFER_VERFUEGBAR && state.design === 'kristall' && state.lava ? `\nLava: ${state.lava}` : '';
+  return `${designName}\n${colorLines}${modeLine}\nEdelstahl: ${state.metal}${lavaLine}\nVerschluss: ${claspName}\nPreis: ${price}`;
 }
 
 function copyText() {
@@ -664,11 +718,25 @@ function copyText() {
 }
 
 
-const STEP_LABELS = ['Design', 'Edelstahl', 'Verschluss', 'Farb-Anzahl', 'Anordnung', 'Farben'];
+const STEP_LABELS = LAVA_KUPFER_VERFUEGBAR
+  ? ['Design', 'Lava', 'Edelstahl', 'Verschluss', 'Farb-Anzahl', 'Anordnung', 'Farben']
+  : ['Design', 'Edelstahl', 'Verschluss', 'Farb-Anzahl', 'Anordnung', 'Farben'];
+
+// Ist die Kupfer-Lava ausverkauft (Schalter oben auf false), verschwindet der
+// Schritt und die Nummern rücken nach (Edelstahl = 2 … Farben = 6).
+function applyLavaSwitch() {
+  if (LAVA_KUPFER_VERFUEGBAR) return;
+  document.getElementById('lava-section').remove();
+  document.querySelectorAll('.section-label[data-nr]').forEach(el => {
+    el.textContent = el.textContent.replace(/^(\d+)/, n => String(Number(n) - 1));
+  });
+}
+applyLavaSwitch();
 
 function stepDone() {
   return [
     !!state.design,
+    ...(LAVA_KUPFER_VERFUEGBAR ? [!!state.design && lavaComplete()] : []),
     !!state.metal,
     !!state.clasp,
     !!state.count,

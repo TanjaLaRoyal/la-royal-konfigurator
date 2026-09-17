@@ -30,6 +30,9 @@ header { text-align: center; margin-bottom: 36px; }
 .p-step.done .p-label, .p-step.current .p-label { color: #111; }
 .preview-label { font-family: 'Cormorant Garamond', serif; font-size: 15px; color: #111; font-style: italic; text-align: center; min-height: 1.4em; }
 .preview-label.filled { font-style: normal; font-size: 16px; }
+.lava-swatch { display:inline-block; width: 13px; height: 13px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+.lava-swatch.schwarz { background: radial-gradient(circle at 35% 35%, #585858, #1a1a1a 60%, #0a0a0a); }
+.lava-swatch.kupfer  { background: radial-gradient(circle at 35% 35%, #fff5ea, #efcfaa 40%, #cf9a6c 80%, #8f6040); }
 .section-label { font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; margin-bottom: 12px; font-weight: 500; }
 .section { margin-bottom: 28px; }
 .option-row { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -93,6 +96,13 @@ header { text-align: center; margin-bottom: 36px; }
       <button class="count-btn" onclick="setCount(2, this)">2 Farben</button>
       <button class="count-btn" onclick="setCount(3, this)">3 Farben + Lava</button>
       <button class="count-btn" onclick="setCount(4, this)">4 Farben</button>
+    </div>
+    <div id="lava-block" style="display:none; margin-top:18px;">
+      <div class="slot-label">Lava</div>
+      <div class="option-row" id="lava-row">
+        <button class="option-btn" onclick="setLava('Schwarz', this)"><span class="lava-swatch schwarz"></span>Schwarz</button>
+        <button class="option-btn" onclick="setLava('Helles Kupfer', this)"><span class="lava-swatch kupfer"></span>Helles Kupfer</button>
+      </div>
     </div>
   </div>
 
@@ -160,8 +170,13 @@ const COLORS = [
 const EMPTY = { hex: '#d4d0c8', shimmer: '#e8e4dc', shape: 'round' };
 const LAVA  = { hex: '#1a1a1a', shimmer: '#585858', shape: 'lava'  };
 
+// Lava "Helles Kupfer" (galvanisiert) – begrenzter Vorrat. Auf false stellen, wenn
+// sie ausverkauft ist: die Lava-Wahl bei "3 Farben + Lava" verschwindet.
+const LAVA_KUPFER_VERFUEGBAR = true;
+
 const state = {
   metal: null,
+  lava:  null,  // 'Schwarz' | 'Helles Kupfer' – nur bei "3 Farben + Lava"
   count: null,
   mode:  null,  // 'mix' | 'verlauf'
   slots: [],
@@ -173,6 +188,9 @@ function getMetalColor() {
 }
 
 function getCrystalAt(pos) {
+  // "3 Farben + Lava": sobald die Lava-Farbe gewählt ist, die Lavaperlen schon zeigen
+  // (Mix-Positionen), auch bevor die Anordnung gewählt wurde
+  if (state.count === 3 && !state.mode) return (state.lava && (pos === 0 || pos === 4)) ? LAVA : EMPTY;
   if (!state.count || !state.mode) return EMPTY;
   let slotIdx;
 
@@ -204,6 +222,21 @@ function getCrystalAt(pos) {
   const name = state.slots[slotIdx];
   if (!name) return EMPTY;
   return COLORS.find(c => c.name === name) || EMPTY;
+}
+
+function drawLavaKupfer(ctx, x, y, r) {
+  // Helles Kupfer: Champagner-Basis mit Kupfer-Wärme, grobe Poren, Glanzpunkt
+  const g = ctx.createRadialGradient(x - r * .3, y - r * .3, r * .05, x, y, r);
+  g.addColorStop(0, '#fff5ea'); g.addColorStop(.4, '#efcfaa'); g.addColorStop(.85, '#cf9a6c'); g.addColorStop(1, '#8f6040');
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+  ctx.fillStyle = 'rgba(110,60,35,0.5)';
+  [[-.28, -.18], [.22, .28], [-.1, .35], [.34, -.12], [.1, -.34], [-.34, .12],
+   [.05, .05], [-.45, -.3], [.4, .35], [-.2, -.42]].forEach(([dx, dy], i) => {
+    ctx.beginPath(); ctx.arc(x + dx * r, y + dy * r, r * (i < 6 ? .11 : .07), 0, Math.PI * 2); ctx.fill();
+  });
+  const sh = ctx.createRadialGradient(x - r * .3, y - r * .32, 0, x - r * .3, y - r * .32, r * .45);
+  sh.addColorStop(0, 'rgba(255,255,255,0.65)'); sh.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = sh; ctx.fill();
 }
 
 function drawLava(ctx, x, y, r) {
@@ -370,7 +403,7 @@ function drawCharm(ctx, cx, startY) {
     const bx = cx + pos[0];
     const by = clusterTop + pos[1];
     if (c.shape === 'lava') {
-      drawLava(ctx, bx, by, R_CRYSTAL);
+      (state.lava === 'Helles Kupfer' ? drawLavaKupfer : drawLava)(ctx, bx, by, R_CRYSTAL);
     } else if (c.shape === 'bicone') {
       drawBicone(ctx, bx, by, R_CRYSTAL * 1.1, c.hex, c.shimmer, 0.72);
     } else {
@@ -412,6 +445,10 @@ function setCount(n, btn) {
   document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.querySelectorAll('#mode-row .option-btn').forEach(b => b.classList.remove('active'));
+  // Lava-Wahl nur bei "3 Farben + Lava"
+  state.lava = null;
+  document.querySelectorAll('#lava-row .option-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('lava-block').style.display = (LAVA_KUPFER_VERFUEGBAR && n === 3) ? 'block' : 'none';
   // Mode-Schritt nur bei count > 1 zeigen
   document.getElementById('mode-section').style.display = n === 1 ? 'none' : 'block';
   document.getElementById('color-section').style.display = 'none';
@@ -422,6 +459,13 @@ function setCount(n, btn) {
     renderSlots();
     document.getElementById('color-section').style.display = 'block';
   }
+  drawCanvas();
+}
+
+function setLava(lava, btn) {
+  state.lava = lava;
+  document.querySelectorAll('#lava-row .option-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
   drawCanvas();
 }
 
@@ -467,9 +511,8 @@ function renderSlots() {
   } else if (state.count === 3) {
     const hint = document.createElement('div');
     hint.style.cssText = 'font-size:13px;color:#888;margin-bottom:14px;letter-spacing:0.05em;';
-    hint.textContent = v
-      ? 'Kristall 1 & 2 · Schwarze Lavaperlen (fix)'
-      : 'Kristall 1 & 5 · Schwarze Lavaperlen (fix)';
+    const lavaWort = LAVA_KUPFER_VERFUEGBAR ? 'Lavaperlen (fix)' : 'Schwarze Lavaperlen (fix)';
+    hint.textContent = (v ? 'Kristall 1 & 2 · ' : 'Kristall 1 & 5 · ') + lavaWort;
     wrapper.appendChild(hint);
     labels = v
       ? ['Farbe 1 · Kristall 3 & 4', 'Farbe 2 · Kristall 5 & 6', 'Farbe 3 · Kristall 7 & 8']
@@ -501,8 +544,12 @@ function renderSlots() {
   }
 }
 
+function lavaComplete() {
+  return !LAVA_KUPFER_VERFUEGBAR || state.count !== 3 || !!state.lava;
+}
+
 function isReady() {
-  return state.metal && state.count && state.mode &&
+  return state.metal && state.count && state.mode && lavaComplete() &&
          state.slots.filter(Boolean).length === state.slots.length && state.slots.length > 0;
 }
 
@@ -510,7 +557,8 @@ function updateLabel() {
   const label = document.getElementById('preview-label');
   if (isReady()) {
     const colorStr = state.count === 1 ? state.slots[0] : state.slots.join(' · ');
-    label.textContent = `Bündel Charm · ${colorStr} · ${state.metal}`;
+    const lavaStr = state.count === 3 && state.lava === 'Helles Kupfer' ? ' · Lava Helles Kupfer' : '';
+    label.textContent = `Bündel Charm · ${colorStr} · ${state.metal}${lavaStr}`;
     label.className = 'preview-label filled';
   } else {
     label.textContent = 'Wähle dein Edelstahl und deine Kristallfarben.';
@@ -547,7 +595,8 @@ function buildSummary() {
     colorLines = state.slots.map((s, i) => `Farbe ${i+1}: ${s}`).join('\n');
   }
   const modeLine = state.count > 1 ? `\nAnordnung: ${v ? 'Farbverlauf' : 'Mix'}` : '';
-  return `Bündel Charm\n${colorLines}${modeLine}\nEdelstahl: ${state.metal}\nPreis: 35 €`;
+  const lavaLine = LAVA_KUPFER_VERFUEGBAR && state.count === 3 && state.lava ? `\nLava: ${state.lava}` : '';
+  return `Bündel Charm\n${colorLines}${modeLine}\nEdelstahl: ${state.metal}${lavaLine}\nPreis: 35 €`;
 }
 
 function copyText() {
@@ -577,7 +626,7 @@ const STEP_LABELS = ['Edelstahl', 'Farb-Anzahl', 'Anordnung', 'Farben'];
 function stepDone() {
   return [
     !!state.metal,
-    !!state.count,
+    !!state.count && lavaComplete(),
     !!state.mode,
     state.slots.length > 0 && state.slots.every(Boolean),
   ];
