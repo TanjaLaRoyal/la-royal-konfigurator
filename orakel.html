@@ -19,22 +19,6 @@
     --karte-bg: #FFFFFF;
     --schatten: 0 22px 50px -24px rgba(3, 38, 91, .45);
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --grund:    #0E1319;  --grund-2:  #161C24;
-      --tinte:    #A9C6EC;  --schwarz:  #EFECE5;
-      --leise:    #8A939D;  --linie:    #262E38;
-      --karte-bg: #161C24;
-      --schatten: 0 22px 50px -24px rgba(0, 0, 0, .8);
-    }
-  }
-  :root[data-theme="dark"] {
-    --grund:    #0E1319;  --grund-2:  #161C24;
-    --tinte:    #A9C6EC;  --schwarz:  #EFECE5;
-    --leise:    #8A939D;  --linie:    #262E38;
-    --karte-bg: #161C24;
-    --schatten: 0 22px 50px -24px rgba(0, 0, 0, .8);
-  }
 
   * { box-sizing: border-box; }
 
@@ -160,29 +144,6 @@
     color: var(--tinte); letter-spacing: .05em;
   }
 
-  .entwurf {
-    margin: 24px 0 0; padding: 14px 16px;
-    border-left: 2px solid var(--tinte);
-    background: var(--grund-2);
-    font-size: 14px; font-weight: 400; line-height: 1.65;
-    color: var(--leise);
-  }
-  .entwurf b { color: var(--schwarz); font-weight: 600; }
-  .vergleich {
-    display: flex; flex-wrap: wrap; align-items: center;
-    gap: 8px; margin-top: 12px;
-  }
-  .vergleich span { font-weight: 600; color: var(--schwarz); }
-  .vergleich button {
-    font-family: inherit; font-size: 14px; font-weight: 400;
-    padding: 7px 14px; border-radius: 2px;
-    border: 1px solid var(--linie);
-    background: transparent; color: var(--leise); cursor: pointer;
-  }
-  .vergleich button[aria-pressed="true"] {
-    border-color: var(--tinte); color: var(--tinte); font-weight: 600;
-  }
-
   /* ---------- Tanjas Ansicht (#liste) ---------- */
   .werkzeug {
     display: flex; flex-wrap: wrap; gap: 10px;
@@ -233,7 +194,7 @@
   <h1 id="titel">Funkel Orakel</h1>
 
   <section id="ziehen">
-    <p class="einstimmung" id="einstimmung">Welcher Kristall soll es heute sein, liebe Funkelgöttin?<br>Such dir einen aus.</p>
+    <p class="einstimmung">Welcher Kristall soll es heute sein, liebe Funkelgöttin?<br>Such dir einen aus.</p>
     <div class="kristalle" id="kristalle"></div>
   </section>
 
@@ -260,7 +221,7 @@
     <ul class="spruchliste" id="spruchliste"></ul>
   </section>
 
-  <footer class="fuss">laroyallanzarote.com/orakel</footer>
+  <footer class="fuss" id="fuss">laroyallanzarote.com/orakel</footer>
 
 </div>
 
@@ -408,15 +369,7 @@
   }
 
   var $ = function (id) { return document.getElementById(id); };
-  var letzterBlob = null, letzteWahl = null, grundArt = "hell";
-
-  function tinte() {
-    try {
-      var v = getComputedStyle(document.documentElement).getPropertyValue("--schwarz").trim();
-      if (v) return v;
-    } catch (e) {}
-    return "#191919";
-  }
+  var letzterBlob = null, letzteWahl = null;
 
   // ---------- Farbrechnen ----------
   function rgb(hex) {
@@ -756,15 +709,6 @@
     if (akt) z.push(akt);
     return z;
   }
-  function passend(ctx, text, bauer, maxB, maxH, start, min) {
-    for (var g = start; g >= min; g -= 2) {
-      ctx.font = bauer(g);
-      var z = umbrechen(ctx, text, maxB);
-      if (z.length * g * 1.30 <= maxH) return { g: g, z: z };
-    }
-    ctx.font = bauer(min);
-    return { g: min, z: umbrechen(ctx, text, maxB) };
-  }
   function gesperrt(ctx, text, x, y, px) {
     var alt = ctx.letterSpacing, ging = false;
     try { ctx.letterSpacing = px + "px"; ging = true; } catch (e) {}
@@ -791,20 +735,14 @@
     var H = hsl(f[1]);
     var grund, schrift, spruchFarbe;
 
-    if (grundArt === "dunkel") {
-      grund = "#141414";
-      schrift = "#FFFFFF";
-      spruchFarbe = H[1] < 0.10 ? "#FFFFFF" : ausHsl(H[0], Math.min(0.85, Math.max(0.45, H[1])), 0.84);
-    } else {
-      // sehr heller Ton derselben Farbe, Schrift bleibt schwarz
-      grund = H[1] < 0.07 ? "#FBFAF8" : ausHsl(H[0], Math.min(0.62, Math.max(0.30, H[1])), 0.945);
-      schrift = "#191919";
-      spruchFarbe = "#191919";
-    }
+    // sehr heller Ton derselben Farbe, Schrift bleibt schwarz
+    grund = H[1] < 0.07 ? "#FBFAF8" : ausHsl(H[0], Math.min(0.62, Math.max(0.30, H[1])), 0.945);
+    schrift = "#191919";
+    spruchFarbe = "#191919";
 
     var g = ctx.createLinearGradient(0, 0, S * 0.7, S);
-    g.addColorStop(0, mischen(grund, schrift === "#FFFFFF" ? "#FFFFFF" : "#000000", 0.07));
-    g.addColorStop(1, mischen(grund, schrift === "#FFFFFF" ? "#000000" : "#FFFFFF", 0.05));
+    g.addColorStop(0, mischen(grund, "#000000", 0.07));
+    g.addColorStop(1, mischen(grund, "#FFFFFF", 0.05));
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, S, S);
 
@@ -850,7 +788,7 @@
 
     if (zV.length) {
       ctx.font = "400 " + g + 'px "Montserrat", Arial, sans-serif';
-      ctx.globalAlpha = grundArt === "dunkel" ? 0.92 : 0.78;
+      ctx.globalAlpha = 0.78;
       for (var k = 0; k < zV.length; k++) ctx.fillText(zV[k], S / 2, y + k * g * zeilAb);
       ctx.globalAlpha = 1;
       y += (zV.length + absatz) * g * zeilAb;
@@ -859,7 +797,7 @@
     for (var j = 0; j < zT.length; j++) ctx.fillText(zT[j], S / 2, y + j * g * zeilAb);
 
     // Untere Hälfte: Kristall, Farbname, Logo, Adresse
-    kristall(ctx, S / 2, S * 0.605, S * 0.130, S * 0.135, f, grundArt !== "dunkel");
+    kristall(ctx, S / 2, S * 0.605, S * 0.130, S * 0.135, f, true);
 
     // Eine gemeinsame Grösse für alles unter dem Spruch
     var kl = Math.round(26 * sk);
@@ -1029,10 +967,37 @@
     }
   }
 
-  // Im Shop-Einbau steht die Marke schon in der Navigation darüber
-  try {
-    if (window.self !== window.top) $("kopf").hidden = true;
-  } catch (e) { $("kopf").hidden = true; }
+  // ---------- Umgebung ----------
+  var eingebettet = false;
+  try { eingebettet = window.self !== window.top; } catch (e) { eingebettet = true; }
+
+  // Im Shop-Einbau steht die Marke schon in der Navigation darüber,
+  // und die Adresse steht schon in der Adresszeile des Browsers.
+  // Auf dem Kärtchen-Bild bleibt die Adresse in jedem Fall stehen.
+  if (eingebettet) {
+    $("kopf").hidden = true;
+    $("fuss").hidden = true;
+  }
+
+  // ---------- Höhe an den Shop melden ----------
+  function hoeheMelden() {
+    if (!eingebettet) return;
+    var el = document.querySelector(".huelle");
+    if (!el) return;
+    var h = Math.ceil(el.getBoundingClientRect().height + 48);
+    try { window.parent.postMessage({ funkelOrakel: "hoehe", hoehe: h }, "*"); } catch (e) {}
+  }
+
+  if (eingebettet) {
+    if (window.ResizeObserver) {
+      try { new ResizeObserver(hoeheMelden).observe(document.querySelector(".huelle")); } catch (e) {}
+    }
+    window.addEventListener("resize", hoeheMelden);
+    window.addEventListener("load", hoeheMelden);
+    setTimeout(hoeheMelden, 250);
+    setTimeout(hoeheMelden, 1200);
+    setTimeout(hoeheMelden, 2600);
+  }
 
   window.addEventListener("hashchange", ansichtSetzen);
   ansichtSetzen();
