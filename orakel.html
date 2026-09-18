@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Funkel Orakel · La Royal Lanzarote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
+<style>
+
+  :root {
+    --grund:    #FAF9F6;
+    --grund-2:  #F1EEE8;
+    --tinte:    #03265B;
+    --schwarz:  #191919;
+    --leise:    #6E7681;
+    --linie:    #E3DED5;
+    --karte-bg: #FFFFFF;
+    --schatten: 0 22px 50px -24px rgba(3, 38, 91, .45);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --grund:    #0E1319;  --grund-2:  #161C24;
+      --tinte:    #A9C6EC;  --schwarz:  #EFECE5;
+      --leise:    #8A939D;  --linie:    #262E38;
+      --karte-bg: #161C24;
+      --schatten: 0 22px 50px -24px rgba(0, 0, 0, .8);
+    }
+  }
+  :root[data-theme="dark"] {
+    --grund:    #0E1319;  --grund-2:  #161C24;
+    --tinte:    #A9C6EC;  --schwarz:  #EFECE5;
+    --leise:    #8A939D;  --linie:    #262E38;
+    --karte-bg: #161C24;
+    --schatten: 0 22px 50px -24px rgba(0, 0, 0, .8);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--grund);
+    color: var(--schwarz);
+    font-family: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .huelle {
+    max-width: 700px;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 26px 52px;
+  }
+
+  .kopf { text-align: center; line-height: 1.1; }
+  .kopf .name {
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 23px;
+    font-weight: 500;
+    color: var(--tinte);
+  }
+  .kopf .ort {
+    display: block;
+    font-family: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+    margin-top: 4px;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: .38em;
+    text-transform: uppercase;
+    color: var(--leise);
+  }
+
+  h1 {
+    font-family: "Playfair Display", Georgia, serif;
+    font-weight: 500;
+    font-size: clamp(34px, 9vw, 46px);
+    text-align: center;
+    margin: 30px 0 0;
+    text-wrap: balance;
+    color: var(--tinte);
+  }
+  .einstimmung {
+    margin: 12px auto 0;
+    max-width: 32ch;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.6;
+    color: var(--leise);
+    text-wrap: balance;
+  }
+
+  .kristalle {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    margin-top: 32px;
+  }
+  @media (max-width: 460px) {
+    .kristalle { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  }
+  .kristall {
+    background: none; border: 0; padding: 8px 2px 12px;
+    cursor: pointer; border-radius: 4px;
+    display: flex; justify-content: center;
+    transition: transform .22s ease;
+  }
+  .kristall canvas { display: block; width: 100%; height: auto; max-width: 136px; }
+  .kristall:hover { transform: translateY(-5px); }
+  .kristall:focus-visible { outline: 2px solid var(--tinte); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) {
+    .kristall, .buehne { transition: none !important; animation: none !important; }
+  }
+
+  .rahmen {
+    width: 100%; max-width: 400px; margin: 0 auto;
+    border-radius: 3px; overflow: hidden;
+    box-shadow: var(--schatten); background: var(--karte-bg);
+  }
+  .rahmen img { display: block; width: 100%; height: auto; }
+
+  .buehne { animation: auf .45s ease both; }
+  @keyframes auf {
+    from { opacity: 0; transform: translateY(14px) scale(.975); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .knoepfe {
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 10px; margin-top: 22px;
+  }
+  button.tat {
+    font-family: inherit; font-size: 15px; font-weight: 500;
+    letter-spacing: .02em;
+    padding: 11px 22px; border-radius: 2px;
+    border: 1px solid var(--tinte);
+    background: var(--tinte); color: var(--grund);
+    cursor: pointer;
+    transition: opacity .12s ease, transform .12s ease;
+  }
+  button.tat.leer { background: transparent; color: var(--tinte); }
+  button.tat:hover { opacity: .82; }
+  button.tat:active { transform: translateY(1px); }
+  button.tat:focus-visible { outline: 2px solid var(--tinte); outline-offset: 3px; }
+
+  .hinweis {
+    margin: 16px auto 0; max-width: 34ch; text-align: center;
+    font-size: 14px; font-weight: 400; line-height: 1.55;
+    color: var(--leise); min-height: 2.2em;
+  }
+  .hinweis strong { color: var(--schwarz); font-weight: 600; }
+
+  .fuss {
+    margin-top: 48px; padding-top: 18px;
+    border-top: 1px solid var(--linie);
+    text-align: center; font-size: 14px; font-weight: 400;
+    color: var(--tinte); letter-spacing: .05em;
+  }
+
+  .entwurf {
+    margin: 24px 0 0; padding: 14px 16px;
+    border-left: 2px solid var(--tinte);
+    background: var(--grund-2);
+    font-size: 14px; font-weight: 400; line-height: 1.65;
+    color: var(--leise);
+  }
+  .entwurf b { color: var(--schwarz); font-weight: 600; }
+  .vergleich {
+    display: flex; flex-wrap: wrap; align-items: center;
+    gap: 8px; margin-top: 12px;
+  }
+  .vergleich span { font-weight: 600; color: var(--schwarz); }
+  .vergleich button {
+    font-family: inherit; font-size: 14px; font-weight: 400;
+    padding: 7px 14px; border-radius: 2px;
+    border: 1px solid var(--linie);
+    background: transparent; color: var(--leise); cursor: pointer;
+  }
+  .vergleich button[aria-pressed="true"] {
+    border-color: var(--tinte); color: var(--tinte); font-weight: 600;
+  }
+
+  /* ---------- Tanjas Ansicht (#liste) ---------- */
+  .werkzeug {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    align-items: center; justify-content: center;
+    margin-top: 22px;
+  }
+  .werkzeug input, .werkzeug select {
+    font-family: inherit; font-size: 15px; font-weight: 400;
+    color: var(--schwarz); background: var(--karte-bg);
+    border: 1px solid var(--linie); border-radius: 2px;
+    padding: 10px 12px; min-width: 0;
+  }
+  .werkzeug input { flex: 1 1 220px; }
+  .werkzeug select { flex: 0 1 220px; }
+  .werkzeug input:focus-visible, .werkzeug select:focus-visible {
+    outline: 2px solid var(--tinte); outline-offset: 2px;
+  }
+
+  .zaehler {
+    margin: 14px 0 0; text-align: center;
+    font-size: 13px; color: var(--leise);
+  }
+
+  .spruchliste { list-style: none; margin: 18px 0 0; padding: 0; }
+  .spruchliste li + li { border-top: 1px solid var(--linie); }
+  .spruchliste button {
+    display: block; width: 100%; text-align: left;
+    background: transparent; border: 0; cursor: pointer;
+    padding: 13px 4px; color: var(--schwarz);
+    font-family: inherit; font-size: 16px; font-weight: 400; line-height: 1.45;
+  }
+  .spruchliste button:hover { background: var(--grund-2); }
+  .spruchliste button:focus-visible { outline: 2px solid var(--tinte); outline-offset: -2px; }
+  .spruchliste .nr {
+    display: inline-block; min-width: 2.6em;
+    color: var(--leise); font-variant-numeric: tabular-nums;
+  }
+</style>
+</head>
+<body>
+
+<div class="huelle">
+
+  <header class="kopf">
+    <div class="name">La Royal<span class="ort">Lanzarote</span></div>
+  </header>
+
+  <section id="ziehen">
+    <h1 id="titel">Funkel Orakel</h1>
+    <p class="einstimmung" id="einstimmung">Welcher Kristall soll es heute sein, liebe Funkelgöttin?<br>Such dir einen aus.</p>
+    <div class="kristalle" id="kristalle"></div>
+  </section>
+
+  <section id="ergebnis" hidden>
+    <div class="buehne" id="buehne">
+      <div class="rahmen"><img id="karte" alt="Spruchkärtchen"></div>
+      <div class="knoepfe">
+        <button type="button" class="tat" id="btnTeilen">Teilen</button>
+        <button type="button" class="tat leer" id="btnSpeichern">Bild speichern</button>
+        <button type="button" class="tat leer" id="btnNochmal">Nochmal ziehen</button>
+      </div>
+      <p class="hinweis" id="hinweis">&nbsp;</p>
+    </div>
+  </section>
+
+  <section id="listeAnsicht" hidden>
+    <h1 id="titelListe" style="margin-top:24px;">Deine Sprüche</h1>
+    <div class="werkzeug">
+      <input type="search" id="suche" placeholder="Spruch suchen" aria-label="Spruch suchen">
+      <select id="farbwahl" aria-label="Farbe wählen">
+        <option value="zufall">Farbe: Zufall</option>
+      </select>
+    </div>
+    <p class="zaehler" id="zaehler"></p>
+    <ul class="spruchliste" id="spruchliste"></ul>
+  </section>
+
+  <footer class="fuss">laroyallanzarote.com/orakel</footer>
+
+</div>
+
+<script>
+
+(function () {
+  "use strict";
+
+  // ---------- Farben mit eingetragener Form (Tabelle "Kristall Farben") ----------
+  var FARBEN = [
+    ["Abendsonne","#FACB35","bicone"],
+    ["Atlantik Türkis dunkel matt","#3CA6B2","bicone"],
+    ["Capri Blau AB","#013CAC","rund"],
+    ["Citrin Gelb AB","#FDF158","rund"],
+    ["El Golfo Grün","#0B6F0D","bicone"],
+    ["Glühende Lava","#FE5302","bicone"],
+    ["Heller Amethyst","#D6BCD7","bicone"],
+    ["Hibiskus Rot AB","#D00F10","bicone"],
+    ["Himmelblau AB","#99D6F8","bicone"],
+    ["Manrique Orange","#FF8C00","bicone"],
+    ["Meeresblau","#3547A6","bicone"],
+    ["Nachtblau","#36537D","rund"],
+    ["Olivin Grün","#85A752","bicone"],
+    ["Pink Safir Matt","#FCCEE0","bicone"],
+    ["Pinke Buganvilla AB","#DF1683","bicone"],
+    ["Pinke Buganvilla Matt","#C53773","bicone"],
+    ["Rosaline","#FDDAEA","bicone"],
+    ["Schimmer Perle","#FEFEFC","rund"],
+    ["Silbermine AB","#67655F","bicone"],
+    ["Sonnenschein Matt","#FEF6C0","rund"],
+    ["Türkise Lagune AB","#04AD99","bicone"],
+    ["Venus","#7B4A26","rund"],
+    ["Weisser Opal","#F5F3EE","rund"],
+    ["Zitrus Grün","#D0EC40","bicone"]
+  ];
+
+  // Ein Spruch ist eine Zeile. Nur ein Doppelpunkt trennt Vorspann und Aussage –
+  // ein Komma oder ein Punkt tut das nicht.
+  var SPRUECHE = [
+    "Antwortest du, wenn Lanzarote dich ruft?",
+    "Auf der Insel Lanzarote sind die Tage immer ein bisschen schöner.",
+    "Auf Lanzarote findet die Seele Ruhe.",
+    "Auf Lanzarote fühlt sich das Leben leicht an.",
+    "Auf Lanzarote kann man das Glück einatmen.",
+    "Auf Lanzarote schlägt das Herz aus Freude. Nicht aus Gewohnheit.",
+    "Auf Lanzarote tanzt mein Herz!",
+    "Auf Lanzarote zu sein, ist eines der schönsten Gefühle der Welt.",
+    "Bei akutem Glücksmangel einfach mal wieder nach Lanzarote fliegen.",
+    "Bei Stress einfach tief einatmen und ausatmen. Dann den Koffer packen und nach Lanzarote fliegen.",
+    "Beziehungsstatus: Verliebt in die Insel Lanzarote!",
+    "Das Geheimnis für ein glückliches Leben? Lachen, Lieben, Lanzarote",
+    "Das Geheimnis für ein glückliches Leben? Lieben, Lachen, Lanzarote und jede Menge Funkel Schmuck.",
+    "Das Leben ist zu kurz für ohne Lanzarote.",
+    "Das Leben ist zu kurz für Schmuck, der nicht funkelt.",
+    "Der kleine Kompass in meinem Herzen zeigt immer Richtung Lanzarote.",
+    "Die Grundlage für ein zufriedenes Leben: Lanzarote",
+    "Dieses Gefühl, wenn man auf Lanzarote landet und plötzlich alles Sinn ergibt.",
+    "Du und ich auf Lanzarote. Das wär's jetzt.",
+    "Du wirst niemals denken: „Dieses Jahr brauche ich keinen Flug nach Lanzarote!“",
+    "Du wirst niemals denken: „Wäre ich bloss weniger nach Lanzarote gereist.“",
+    "Egal wie oft ich schon auf der Insel war, ich habe immer wieder Lanzaroteweh.",
+    "Studien belegen: Ein Flug nach Lanzarote macht glücklich.",
+    "Eines der schönsten Gefühle? Wenn du deine Sachen packst und Lanzarote auf dich wartet.",
+    "Eins ist sicher: Lanzarote tut immer gut.",
+    "Erinnerungen, die auf Lanzarote gemacht wurden, bleiben für immer im Herzen.",
+    "Es gibt Orte, die wie ein zweites zu Hause sind: Lanzarote",
+    "Es ist mal wieder Zeit für ein Lanzarote Abenteuer.",
+    "Es ist vollkommen in Ordnung, süchtig nach Funkel Schmuck zu sein.",
+    "Es kommt nicht darauf an, wie oft du auf Lanzarote sein kannst. Sondern wie sehr du die Insel in deinem Herzen trägst.",
+    "Etwas Lanzarote bitte.",
+    "Für immer Lanzarote verliebt.",
+    "Für mich gibt es einfach nichts Schöneres als: Den Strand und das Meer auf Lanzarote!",
+    "Funkel Schmuck ist wie Nachtisch: Dafür ist immer Platz.",
+    "Glück mit neun Buchstaben: Lanzarote",
+    "Glücksmoment: Wenn unter dem Flugzeugflügel Lanzarote auftaucht.",
+    "Hab grad auf die Uhr geguckt. Es ist Zeit für Lanzarote!",
+    "Hauptsache es funkelt!",
+    "Hauptsache Lanzarote!",
+    "Hier bin ich ganz. Hier bin ich ich. Lanzarote.",
+    "Huch, in Gedanken schon wieder auf Lanzarote gelandet. Wie ungeschickt von mir.",
+    "Ich bin in einer Beziehung mit der Insel Lanzarote und ja, es ist ernst!",
+    "Ich brauche dringend mehr Lanzarote in meinem Leben.",
+    "Ich brauche einfach mehr Lanzarote.",
+    "Ich bräuchte Funkel Schmuck unbedingt auf Rezept.",
+    "Ich gehöre nach Lanzarote. Ende der Geschichte.",
+    "Ich habe eine ernstzunehmende Krankheit: Lanzaroteweh",
+    "Ich liebe diese Momente auf Lanzarote, wo ich alle meine Sorgen vergesse und mich einfach frei und glücklich fühle.",
+    "Ich liebe es, auf Lanzarote zu sein. Kein Drama, kein Stress, keine Hektik. Einfach nur geniessen.",
+    "Ich vermisse Lanzarote.",
+    "Ich wäre jetzt bereit für meine nächste Lanzarote Therapie.",
+    "Ich wäre jetzt bereit, schöne Erinnerungen auf Lanzarote zu sammeln.",
+    "Ich wäre jetzt gerne da, wo meine Gedanken gerade sind: auf Lanzarote.",
+    "Ich weiss nicht, warum mir auf Lanzarote immer so leicht ums Herz wird, aber ich bin süchtig nach dem Gefühl.",
+    "Immer ganz oben auf meiner To-do-Liste: Ein Flug nach Lanzarote.",
+    "In Gedanken barfuss auf Lanzarote.",
+    "Jedes Mal, wenn ich auf der Insel bin, überkommt mich dieses unbeschreibliche Glücksgefühl.",
+    "Jedes Mal, wenn ich auf Lanzarote lande, überkommt mich dieses unbeschreibliche Glücksgefühl.",
+    "Jedes Schmuckstück erzählt eine andere Geschichte.",
+    "Jeder Schritt auf Lanzarote ist wie ein Spaziergang durch die Seele.",
+    "Kaffee wärmt das Herz und Lanzarote wärmt die Seele.",
+    "Lanzarote Erinnerungen berühren unser Herz und bleiben für immer.",
+    "Lanzarote ist das schönste Wunder der Natur.",
+    "Lanzarote ist ein Schatz voller Abenteuer, für alle die sich darauf einlassen.",
+    "Lanzarote ist immer eine gute Idee!",
+    "Lanzarote ist immer eine Reise wert!",
+    "Lanzarote ist mein Anker und mein Heimathafen.",
+    "Lanzarote ist nicht irgendeine Insel. Lanzarote ist Zuhause.",
+    "Lanzarote tut meiner Seele gut.",
+    "Lanzarote wartet schon auf mich!",
+    "Lanzarote, du hast mein Herz gestohlen.",
+    "Lanzarote? Ja, bitte!",
+    "Manche Seelen gehören einfach nach Lanzarote.",
+    "Manche sammeln Muscheln. Ich sammle La Royal Armbänder.",
+    "Mein Glücksrezept: Lanzarote Sonne auf der Haut, Meeresrauschen in den Ohren und Funkel Schmuck am Handgelenk.",
+    "Mein Herz schlägt für Lanzarote.",
+    "Mein Lieblings-Infinity-Pool ist immer noch der Atlantik vor Lanzarote.",
+    "Mein Lieblingsort: überall auf Lanzarote.",
+    "Mein Lieblingsweg zum Briefkasten: Wenn ein sonnengeküsster Umschlag drin liegt, direkt aus Lanzarote.",
+    "Mein Plan: Ich fliege nach Lanzarote, tauche ab und werde Meerjungfrau.",
+    "Nach Lanzarote zu reisen, ist immer eine gute Idee.",
+    "Nichts macht so viel Sinn wie die Zeit auf Lanzarote.",
+    "Rein ins Flugzeug, raus aus dem Alltag, ab nach Lanzarote.",
+    "Sonne. Wind. Lava. Meer. Alles andere kann warten.",
+    "Und wenn ich auf Lanzarote bin, muss ich immer auch eine kleine Weile einfach am Meer stehen und glücklich sein.",
+    "Was ich brauche? Urlaub. Wann? Sofort. Wo ich hin will? Lanzarote!",
+    "Wenn das Lanzaroteweh zu gross wird, öffne ich einfach mein Schmuckkästchen.",
+    "Wenn der Alltag laut wird, träume ich mich nach Lanzarote und plötzlich ist alles wieder gut.",
+    "Wenn deine Gedanken andauernd nach Lanzarote abdriften, solltest du ihnen ab und zu folgen.",
+    "Wenn die Insel ruft, hört man alles andere nicht mehr.",
+    "Wenn Lanzarote ruft, folge ich.",
+    "Wenn Reisen ein Buch ist, dann ist Lanzarote mein Lieblingskapitel.",
+    "Wie ich durch den Alltag komme? Ich trage Funkel Schmuck und träume mich nach Lanzarote.",
+    "Wird mal wieder Zeit für Sonne und Salz auf der Haut. Lanzarote, ich komme!",
+    "Wir sollten viel öfter mit unserem Lieblingsmenschen nach Lanzarote fliegen.",
+    "Es ist jetzt offiziell die Jahreszeit, in der ich am liebsten nach Lanzarote fliegen würde.",
+    "„Ich habe genug Schmuck.“ – hat noch nie eine Funkelgöttin gesagt."
+  ];
+
+  function teilen(spruch) {
+    var i = spruch.indexOf(":");
+    if (i > 0 && i <= 42) {
+      return { vor: spruch.slice(0, i + 1).trim(), text: spruch.slice(i + 1).trim() };
+    }
+    return { vor: "", text: spruch };
+  }
+
+  var $ = function (id) { return document.getElementById(id); };
+  var letzterBlob = null, letzteWahl = null, grundArt = "hell";
+
+  function tinte() {
+    try {
+      var v = getComputedStyle(document.documentElement).getPropertyValue("--schwarz").trim();
+      if (v) return v;
+    } catch (e) {}
+    return "#191919";
+  }
+
+  // ---------- Farbrechnen ----------
+  function rgb(hex) {
+    var h = hex.replace("#", "");
+    return [parseInt(h.substr(0,2),16), parseInt(h.substr(2,2),16), parseInt(h.substr(4,2),16)];
+  }
+  function hex(r, g, b) {
+    function t(v) { v = Math.max(0, Math.min(255, Math.round(v))); return (v<16?"0":"") + v.toString(16); }
+    return "#" + t(r) + t(g) + t(b);
+  }
+  function hsl(hx) {
+    var c = rgb(hx).map(function (v) { return v / 255; });
+    var max = Math.max.apply(null, c), min = Math.min.apply(null, c);
+    var l = (max + min) / 2, s = 0, h = 0, d = max - min;
+    if (d) {
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      if (max === c[0]) h = ((c[1] - c[2]) / d + (c[1] < c[2] ? 6 : 0));
+      else if (max === c[1]) h = (c[2] - c[0]) / d + 2;
+      else h = (c[0] - c[1]) / d + 4;
+      h *= 60;
+    }
+    return [h, s, l];
+  }
+  function ausHsl(h, s, l) {
+    h = ((h % 360) + 360) % 360;
+    var c = (1 - Math.abs(2 * l - 1)) * s;
+    var x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    var m = l - c / 2, r = 0, g = 0, b = 0;
+    if (h < 60)       { r = c; g = x; }
+    else if (h < 120) { r = x; g = c; }
+    else if (h < 180) { g = c; b = x; }
+    else if (h < 240) { g = x; b = c; }
+    else if (h < 300) { r = x; b = c; }
+    else              { r = c; b = x; }
+    return hex((r + m) * 255, (g + m) * 255, (b + m) * 255);
+  }
+  function mischen(a, b, t) {
+    var x = rgb(a), y = rgb(b);
+    return hex(x[0]+(y[0]-x[0])*t, x[1]+(y[1]-x[1])*t, x[2]+(y[2]-x[2])*t);
+  }
+
+  // ---------- Vier klar unterscheidbare Farben ----------
+  function blass(f) { return hsl(f[1])[2] > 0.86; }
+
+  function verschieden(a, b) {
+    var A = hsl(a[1]), B = hsl(b[1]);
+    var dh = Math.abs(A[0] - B[0]); if (dh > 180) dh = 360 - dh;
+    var dl = Math.abs(A[2] - B[2]);
+    var ds = Math.abs(A[1] - B[1]);
+    if (A[1] < 0.12 && B[1] < 0.12) return dl > 0.14;   // zwei fast graue: nur Helligkeit zählt
+    return dh >= 32 || dl >= 0.20 || ds >= 0.40;
+  }
+
+  // Gedächtnis für diese Sitzung: zuletzt Gezogenes bleibt eine Weile gesperrt,
+  // damit sich nichts unmittelbar wiederholt.
+  var zuletztFarben = [], zuletztSprueche = [];
+
+  function merken(liste, wert, vorrat) {
+    liste.push(wert);
+    var laenge = Math.min(Math.floor(vorrat / 3), 6);
+    while (liste.length > laenge) liste.shift();
+  }
+
+  function vierFarben() {
+    var frei = FARBEN.filter(function (f) { return zuletztFarben.indexOf(f[0]) === -1; });
+    if (frei.length < 8) frei = FARBEN.slice();
+    for (var v = 0; v < 400; v++) {
+      var topf = frei.slice(), wahl = [];
+      while (topf.length && wahl.length < 4) {
+        var k = topf.splice(Math.floor(Math.random() * topf.length), 1)[0];
+        if (blass(k) && wahl.filter(blass).length >= 1) continue;
+        var ok = true;
+        for (var i = 0; i < wahl.length; i++) if (!verschieden(k, wahl[i])) { ok = false; break; }
+        if (ok) wahl.push(k);
+      }
+      if (wahl.length === 4) return wahl;
+    }
+    return FARBEN.slice(0, 4);
+  }
+
+  function neuerSpruch() {
+    var frei = SPRUECHE.filter(function (s) { return zuletztSprueche.indexOf(s) === -1; });
+    if (!frei.length) frei = SPRUECHE.slice();
+    return frei[Math.floor(Math.random() * frei.length)];
+  }
+
+  // ---------- Kristall zeichnen ----------
+  function istAb(name) { return / AB$/.test(name); }
+
+  function schimmer(ctx, cx, cy, w, h) {
+    // AB-Beschichtung: öliger Farbschleier
+    var g = ctx.createLinearGradient(cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2);
+    g.addColorStop(0.00, "rgba(120,220,255,.30)");
+    g.addColorStop(0.32, "rgba(200,160,255,.24)");
+    g.addColorStop(0.58, "rgba(255,225,150,.26)");
+    g.addColorStop(0.82, "rgba(150,255,210,.22)");
+    g.addColorStop(1.00, "rgba(255,170,220,.26)");
+    ctx.fillStyle = g;
+    ctx.fill();
+  }
+
+  function bicone(ctx, cx, cy, w, h, farbe, ab) {
+    var hw = w / 2, hh = h / 2;
+    var oben = cy - hh, unten = cy + hh;
+    var N = 10;
+
+    function pfadSilhouette() {
+      ctx.beginPath();
+      ctx.moveTo(cx, oben);
+      ctx.lineTo(cx + hw, cy);
+      ctx.lineTo(cx, unten);
+      ctx.lineTo(cx - hw, cy);
+      ctx.closePath();
+    }
+
+    pfadSilhouette();
+    ctx.save(); ctx.clip();
+    ctx.fillStyle = farbe;
+    ctx.fillRect(cx - hw, oben, w, h);
+
+    // Facetten von den Spitzen zur Mittelkante
+    for (var i = 0; i < N; i++) {
+      var x1 = cx - hw + (w * i) / N, x2 = cx - hw + (w * (i + 1)) / N;
+      var m = (i + 0.5) / N;                              // 0 links … 1 rechts
+      var t = Math.max(-1, Math.min(1, Math.cos((m - 0.34) * Math.PI * 1.35)));
+
+      ctx.beginPath();
+      ctx.moveTo(cx, oben); ctx.lineTo(x1, cy); ctx.lineTo(x2, cy); ctx.closePath();
+      ctx.fillStyle = t > 0 ? mischen(farbe, "#FFFFFF", 0.10 + t * 0.50)
+                            : mischen(farbe, "#000000", 0.05 - t * 0.30);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(cx, unten); ctx.lineTo(x1, cy); ctx.lineTo(x2, cy); ctx.closePath();
+      ctx.fillStyle = t > 0 ? mischen(farbe, "#FFFFFF", 0.02 + t * 0.26)
+                            : mischen(farbe, "#000000", 0.14 - t * 0.26);
+      ctx.fill();
+    }
+
+    // Lichtkante dort, wo die beiden Kegel aufeinandertreffen
+    var lk = ctx.createLinearGradient(cx - hw, 0, cx + hw, 0);
+    lk.addColorStop(0,    "rgba(255,255,255,0)");
+    lk.addColorStop(0.34, "rgba(255,255,255,.62)");
+    lk.addColorStop(0.62, "rgba(255,255,255,.22)");
+    lk.addColorStop(1,    "rgba(255,255,255,0)");
+    ctx.fillStyle = lk;
+    ctx.fillRect(cx - hw, cy - h * 0.012, w, h * 0.024);
+
+    // weiches Gesamtlicht, damit die Facettenkanten nicht hart aneinanderstossen
+    var wl = ctx.createRadialGradient(cx - hw * 0.30, cy - hh * 0.34, 0,
+                                      cx - hw * 0.30, cy - hh * 0.34, Math.max(w, h) * 0.78);
+    wl.addColorStop(0,    "rgba(255,255,255,.30)");
+    wl.addColorStop(0.36, "rgba(255,255,255,.09)");
+    wl.addColorStop(1,    "rgba(255,255,255,0)");
+    ctx.fillStyle = wl;
+    ctx.fillRect(cx - hw, oben, w, h);
+
+    var ws = ctx.createRadialGradient(cx, cy, Math.max(w, h) * 0.24, cx, cy, Math.max(w, h) * 0.56);
+    ws.addColorStop(0, "rgba(0,0,0,0)");
+    ws.addColorStop(1, mischen(farbe, "#000000", 0.45) + "3d");
+    ctx.fillStyle = ws;
+    ctx.fillRect(cx - hw, oben, w, h);
+
+    if (ab) { pfadSilhouette(); schimmer(ctx, cx, cy, w, h); }
+    ctx.restore();
+
+    pfadSilhouette();
+    ctx.strokeStyle = mischen(farbe, "#000000", 0.38);
+    ctx.globalAlpha = 0.26;
+    ctx.lineWidth = Math.max(0.8, w * 0.008);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  // Runde Perle: echte Facettenkugel. Die Schnittachse liegt fast waagerecht,
+  // die Perle wird also von der Seite gesehen. Die Facetten stossen ohne harte
+  // Trennlinien aneinander – jede hat einen eigenen weichen Verlauf.
+  function rund(ctx, cx, cy, w, h, farbe, ab, dreh) {
+    var r = Math.min(w, h) / 2;
+    var LAT = 5, LON = 10;
+    var aY = 1.43, aZ = 0.22 + (dreh || 0);
+    var cY = Math.cos(aY), sY = Math.sin(aY), cZ = Math.cos(aZ), sZ = Math.sin(aZ);
+    var Lx = -0.44, Ly = -0.54, Lz = 0.72;
+
+    function ecke(theta, phi) {
+      var x = Math.sin(theta) * Math.cos(phi),
+          y = Math.sin(theta) * Math.sin(phi),
+          z = Math.cos(theta);
+      var x1 =  x * cY + z * sY, z1 = -x * sY + z * cY;
+      return [x1 * cZ - y * sZ, x1 * sZ + y * cZ, z1];
+    }
+
+    function ton(b) {
+      return b > 0 ? mischen(farbe, "#FFFFFF", Math.min(0.94, 0.04 + b * 0.74))
+                   : mischen(farbe, "#000000", Math.min(0.50, 0.06 - b * 0.44));
+    }
+
+    var flaechen = [], i, j, k, maxR = 0.0001;
+    for (i = 0; i < LAT; i++) {
+      var t1 = (i / LAT) * Math.PI, t2 = ((i + 1) / LAT) * Math.PI;
+      for (j = 0; j < LON; j++) {
+        var f1 = (j / LON) * Math.PI * 2, f2 = ((j + 1) / LON) * Math.PI * 2;
+        var e;
+        if (i === 0) e = [ecke(t1, 0), ecke(t2, f1), ecke(t2, f2)];
+        else if (i === LAT - 1) e = [ecke(t1, f1), ecke(t1, f2), ecke(t2, 0)];
+        else e = [ecke(t1, f1), ecke(t1, f2), ecke(t2, f2), ecke(t2, f1)];
+
+        var nx = 0, ny = 0, nz = 0;
+        for (k = 0; k < e.length; k++) { nx += e[k][0]; ny += e[k][1]; nz += e[k][2]; }
+        var len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+        nx /= len; ny /= len; nz /= len;
+        if (nz <= -0.06) continue;
+        for (k = 0; k < e.length; k++) {
+          var rr = Math.sqrt(e[k][0] * e[k][0] + e[k][1] * e[k][1]);
+          if (rr > maxR) maxR = rr;
+        }
+        flaechen.push({ e: e, n: [nx, ny, nz], z: nz });
+      }
+    }
+    flaechen.sort(function (a, b) { return a.z - b.z; });
+
+    var s = r / maxR;   // Facetten füllen den Kreis bis zum Rand
+
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.clip();
+    ctx.lineJoin = "round";
+
+    for (i = 0; i < flaechen.length; i++) {
+      var fl = flaechen[i];
+      var b = fl.n[0] * Lx + fl.n[1] * Ly + fl.n[2] * Lz;
+      var glanz = Math.pow(Math.max(0, b), 8) * 0.40;
+      var mitte = ton(b + glanz);
+      var hell  = ton(b + glanz + 0.16);
+      var dunk  = ton(b + glanz - 0.16);
+
+      var x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9, px, py;
+      for (k = 0; k < fl.e.length; k++) {
+        px = cx + fl.e[k][0] * s; py = cy + fl.e[k][1] * s;
+        if (px < x0) x0 = px; if (px > x1) x1 = px;
+        if (py < y0) y0 = py; if (py > y1) y1 = py;
+      }
+      var g = ctx.createLinearGradient(x1, y1, x0, y0);   // hell zur Lichtseite hin
+      g.addColorStop(0, dunk);
+      g.addColorStop(0.5, mitte);
+      g.addColorStop(1, hell);
+
+      ctx.beginPath();
+      ctx.moveTo(cx + fl.e[0][0] * s, cy + fl.e[0][1] * s);
+      for (k = 1; k < fl.e.length; k++) ctx.lineTo(cx + fl.e[k][0] * s, cy + fl.e[k][1] * s);
+      ctx.closePath();
+      ctx.fillStyle = g;
+      ctx.fill();
+      // feine, gleichfarbige Naht statt dunkler Kante – schliesst Lücken, ohne zu zeichnen
+      ctx.strokeStyle = mitte;
+      ctx.lineWidth = Math.max(0.6, r * 0.014);
+      ctx.stroke();
+    }
+
+    // weiches Gesamtlicht: Glanzwolke oben links, sanfter Schatten am Rand
+    var gl = ctx.createRadialGradient(cx - r * 0.34, cy - r * 0.40, 0,
+                                      cx - r * 0.34, cy - r * 0.40, r * 1.05);
+    gl.addColorStop(0,    "rgba(255,255,255,.38)");
+    gl.addColorStop(0.32, "rgba(255,255,255,.12)");
+    gl.addColorStop(1,    "rgba(255,255,255,0)");
+    ctx.fillStyle = gl;
+    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+
+    var sch = ctx.createRadialGradient(cx, cy, r * 0.58, cx, cy, r);
+    sch.addColorStop(0, "rgba(0,0,0,0)");
+    sch.addColorStop(1, mischen(farbe, "#000000", 0.45) + "4d");
+    ctx.fillStyle = sch;
+    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+
+    if (ab) { ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); schimmer(ctx, cx, cy, r * 2, r * 2); }
+    ctx.restore();
+
+    ctx.beginPath(); ctx.arc(cx, cy, r - 0.3, 0, Math.PI * 2);
+    ctx.strokeStyle = mischen(farbe, "#000000", 0.35);
+    ctx.globalAlpha = 0.22;
+    ctx.lineWidth = Math.max(0.7, r * 0.018);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  var GRAU = "#D6D5D1";
+
+  function kristall(ctx, cx, cy, w, h, f, mitLicht, grau) {
+    var ton = grau ? GRAU : f[1];
+    var ab = grau ? false : istAb(f[0]);
+    if (mitLicht) {
+      var g = ctx.createRadialGradient(cx, cy + h * 0.56, 1, cx, cy + h * 0.56, w * 0.95);
+      g.addColorStop(0,    mischen(ton, "#FFFFFF", 0.20) + "bb");
+      g.addColorStop(0.45, mischen(ton, "#FFFFFF", 0.55) + "4d");
+      g.addColorStop(1,    "rgba(255,255,255,0)");
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.ellipse(cx, cy + h * 0.56, w * 0.95, h * 0.28, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    if (f[2] === "rund") {
+      // leichte Eigendrehung je Farbe, damit nicht alle Perlen identisch liegen
+      var d = 0, i;
+      for (i = 0; i < f[0].length; i++) d = (d * 31 + f[0].charCodeAt(i)) % 997;
+      rund(ctx, cx, cy, w, h, ton, ab, (d / 997) * Math.PI * 2 / 14);
+    } else {
+      bicone(ctx, cx, cy, w, h, ton, ab);
+    }
+  }
+
+  // ---------- Auslegen ----------
+  function auslegen() {
+    var box = $("kristalle");
+    box.innerHTML = "";
+    vierFarben().forEach(function (f) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "kristall";
+      b.setAttribute("aria-label", "Kristall wählen");
+      var c = document.createElement("canvas");
+      var S = 2, G = 150;
+      c.width = G * S; c.height = G * S;
+      var ctx = c.getContext("2d");
+      ctx.scale(S, S);
+      kristall(ctx, G / 2, G / 2 - 6, G * 0.58, G * 0.60, f, true, true);
+      b.appendChild(c);
+      b.addEventListener("click", function () { ziehen(f); });
+      box.appendChild(b);
+    });
+  }
+
+  // ---------- Kärtchen ----------
+  function umbrechen(ctx, text, maxB) {
+    var w = text.split(" "), z = [], akt = "";
+    for (var i = 0; i < w.length; i++) {
+      var v = akt ? akt + " " + w[i] : w[i];
+      if (ctx.measureText(v).width > maxB && akt) { z.push(akt); akt = w[i]; }
+      else akt = v;
+    }
+    if (akt) z.push(akt);
+    return z;
+  }
+  function passend(ctx, text, bauer, maxB, maxH, start, min) {
+    for (var g = start; g >= min; g -= 2) {
+      ctx.font = bauer(g);
+      var z = umbrechen(ctx, text, maxB);
+      if (z.length * g * 1.30 <= maxH) return { g: g, z: z };
+    }
+    ctx.font = bauer(min);
+    return { g: min, z: umbrechen(ctx, text, maxB) };
+  }
+  function gesperrt(ctx, text, x, y, px) {
+    var alt = ctx.letterSpacing, ging = false;
+    try { ctx.letterSpacing = px + "px"; ging = true; } catch (e) {}
+    if (ging) { ctx.fillText(text, x, y); ctx.letterSpacing = alt || "0px"; return; }
+    var b = 0, i;
+    for (i = 0; i < text.length; i++) b += ctx.measureText(text[i]).width + px;
+    b -= px;
+    var cx = x - b / 2;
+    var alteAus = ctx.textAlign;
+    ctx.textAlign = "left";
+    for (i = 0; i < text.length; i++) {
+      ctx.fillText(text[i], cx, y);
+      cx += ctx.measureText(text[i]).width + px;
+    }
+    ctx.textAlign = alteAus;
+  }
+
+  function karteZeichnen(spruch, f) {
+    var S = 1080, sk = S / 1080;
+    var c = document.createElement("canvas");
+    c.width = S; c.height = S;
+    var ctx = c.getContext("2d");
+
+    var H = hsl(f[1]);
+    var grund, schrift, spruchFarbe;
+
+    if (grundArt === "dunkel") {
+      grund = "#141414";
+      schrift = "#FFFFFF";
+      spruchFarbe = H[1] < 0.10 ? "#FFFFFF" : ausHsl(H[0], Math.min(0.85, Math.max(0.45, H[1])), 0.84);
+    } else {
+      // sehr heller Ton derselben Farbe, Schrift bleibt schwarz
+      grund = H[1] < 0.07 ? "#FBFAF8" : ausHsl(H[0], Math.min(0.62, Math.max(0.30, H[1])), 0.945);
+      schrift = "#191919";
+      spruchFarbe = "#191919";
+    }
+
+    var g = ctx.createLinearGradient(0, 0, S * 0.7, S);
+    g.addColorStop(0, mischen(grund, "#FFFFFF", grundArt === "dunkel" ? 0.05 : 0.45));
+    g.addColorStop(1, grund);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, S, S);
+
+    var rand = S * 0.115, maxB = S - rand * 2;
+
+    // Spruch
+    // Obere Hälfte gehört allein dem Spruch: die Schrift wächst, bis sie die Hälfte füllt.
+    // Ein Satz bleibt ein Satz – gleiche Grösse, gleiche Stärke, gleicher Zeilenabstand.
+    // Nur ein Doppelpunkt setzt den Vorspann leichter ab.
+    var teil = teilen(spruch);
+    // Rand oben wie an den Seiten, unten Luft zum Kristall; der Block sitzt
+    // mittig in dem, was dazwischen übrig bleibt.
+    var bandOben = S * 0.125, bandUnten = S * 0.44;
+    var band = bandUnten - bandOben, zeilAb = 1.28, absatz = 0.45;
+    var gross = Math.round(96 * sk), klein = Math.round(30 * sk), g, zV = [], zT = [];
+    for (g = gross; g >= klein; g -= 2) {
+      ctx.font = "400 " + g + 'px "Montserrat", Arial, sans-serif';
+      zV = teil.vor ? umbrechen(ctx, teil.vor, maxB) : [];
+      ctx.font = "600 " + g + 'px "Montserrat", Arial, sans-serif';
+      zT = umbrechen(ctx, teil.text, maxB);
+      var zeilen = zV.length + zT.length + (zV.length ? absatz : 0);
+      if (zeilen * g * zeilAb <= band) break;
+    }
+
+    var hoehe = (zV.length + zT.length + (zV.length ? absatz : 0)) * g * zeilAb;
+    var y = (bandOben + bandUnten) / 2 - hoehe / 2;
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = spruchFarbe;
+
+    if (zV.length) {
+      ctx.font = "400 " + g + 'px "Montserrat", Arial, sans-serif';
+      ctx.globalAlpha = grundArt === "dunkel" ? 0.92 : 0.78;
+      for (var k = 0; k < zV.length; k++) ctx.fillText(zV[k], S / 2, y + k * g * zeilAb);
+      ctx.globalAlpha = 1;
+      y += (zV.length + absatz) * g * zeilAb;
+    }
+    ctx.font = "600 " + g + 'px "Montserrat", Arial, sans-serif';
+    for (var j = 0; j < zT.length; j++) ctx.fillText(zT[j], S / 2, y + j * g * zeilAb);
+
+    // Untere Hälfte: Kristall, Farbname, Logo, Adresse
+    kristall(ctx, S / 2, S * 0.605, S * 0.130, S * 0.135, f, grundArt !== "dunkel");
+
+    // Eine gemeinsame Grösse für alles unter dem Spruch
+    var kl = Math.round(26 * sk);
+
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = schrift;
+
+    // Farbname – fett, weil er etwas aussagt
+    ctx.font = "600 " + kl + 'px "Montserrat", Arial, sans-serif';
+    gesperrt(ctx, f[0].toUpperCase(), S / 2, S * 0.735, 4.2 * sk);
+
+    // La Royal / Lanzarote
+    ctx.font = "500 " + Math.round(52 * sk) + 'px "Playfair Display", Georgia, serif';
+    ctx.fillText("La Royal", S / 2, S * 0.855);
+    ctx.font = "400 " + kl + 'px "Montserrat", Arial, sans-serif';
+    ctx.globalAlpha = 0.75;
+    gesperrt(ctx, "LANZAROTE", S / 2, S * 0.898, 6 * sk);
+
+    ctx.font = "400 " + kl + 'px "Montserrat", Arial, sans-serif';
+    ctx.globalAlpha = 0.6;
+    ctx.fillText("laroyallanzarote.com/orakel", S / 2, S * 0.938);
+    ctx.globalAlpha = 1;
+
+    return c;
+  }
+
+  // ---------- Ablauf ----------
+  function malen() {
+    if (!letzteWahl) return;
+    var leinwand = karteZeichnen(letzteWahl.spruch, letzteWahl.farbe);
+    $("karte").src = leinwand.toDataURL("image/png");
+    $("karte").alt = "Spruchkärtchen in " + letzteWahl.farbe[0] + ": " + letzteWahl.spruch;
+    leinwand.toBlob(function (b) { letzterBlob = b; }, "image/png");
+  }
+
+  function ziehen(farbe) {
+    var spruch = neuerSpruch();
+    merken(zuletztSprueche, spruch, SPRUECHE.length);
+    merken(zuletztFarben, farbe[0], FARBEN.length);
+    letzteWahl = { farbe: farbe, spruch: spruch };
+    malen();
+    $("hinweis").innerHTML = "&nbsp;";
+    $("ziehen").hidden = true;
+    $("ergebnis").hidden = false;
+    var b = $("buehne");
+    b.style.animation = "none"; void b.offsetWidth; b.style.animation = "";
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }
+
+  $("btnNochmal").addEventListener("click", function () {
+    auslegen();
+    $("ergebnis").hidden = true;
+    $("ziehen").hidden = false;
+    window.scrollTo({ top: 0, behavior: "auto" });
+  });
+
+  $("btnSpeichern").addEventListener("click", function () {
+    if (!letzterBlob) return;
+    try {
+      var url = URL.createObjectURL(letzterBlob);
+      var a = document.createElement("a");
+      a.href = url; a.download = "funkel-orakel.png";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      $("hinweis").innerHTML = "Gespeichert. Am Handy: lange auf das Kärtchen tippen und <strong>Bild sichern</strong> wählen.";
+    } catch (e) {
+      $("hinweis").innerHTML = "Am Handy: lange auf das Kärtchen tippen und <strong>Bild sichern</strong> wählen.";
+    }
+  });
+
+  $("btnTeilen").addEventListener("click", function () {
+    if (!letzterBlob) return;
+    var datei = null;
+    try { datei = new File([letzterBlob], "funkel-orakel.png", { type: "image/png" }); } catch (e) {}
+    if (datei && navigator.canShare && navigator.canShare({ files: [datei] })) {
+      navigator.share({ files: [datei] }).then(function () {}).catch(function () {});
+    } else {
+      $("hinweis").innerHTML = "Teilen als Bild geht auf dem Handy. Am Rechner: <strong>Bild speichern</strong> und selbst hochladen.";
+    }
+  });
+
+  auslegen();
+
+  if (document.fonts && document.fonts.load) {
+    Promise.all([
+      document.fonts.load('700 60px "Montserrat"'),
+      document.fonts.load('600 40px "Montserrat"'),
+      document.fonts.load('400 40px "Montserrat"'),
+      document.fonts.load('500 60px "Playfair Display"')
+    ]).then(malen).catch(function () {});
+  }
+
+  // ---------- Tanjas Ansicht: nur über #liste erreichbar ----------
+  var istListe = /^#liste/.test(window.location.hash || "");
+
+  function zeigen(spruch, farbe) {
+    letzteWahl = { farbe: farbe, spruch: spruch };
+    malen();
+    $("hinweis").innerHTML = "&nbsp;";
+    $("ergebnis").hidden = false;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function listeAufbauen() {
+    var ul = $("spruchliste"), suche = $("suche").value.trim().toLowerCase();
+    ul.innerHTML = "";
+    var treffer = 0;
+    SPRUECHE.forEach(function (sp, i) {
+      if (suche && sp.toLowerCase().indexOf(suche) === -1) return;
+      treffer++;
+      var li = document.createElement("li");
+      var b = document.createElement("button");
+      b.type = "button";
+      var nr = document.createElement("span");
+      nr.className = "nr";
+      nr.textContent = (i + 1) + ".";
+      b.appendChild(nr);
+      b.appendChild(document.createTextNode(sp));
+      b.addEventListener("click", function () {
+        var w = $("farbwahl").value;
+        var farbe;
+        if (w === "zufall") farbe = FARBEN[Math.floor(Math.random() * FARBEN.length)];
+        else farbe = FARBEN.filter(function (f) { return f[0] === w; })[0] || FARBEN[0];
+        zeigen(sp, farbe);
+      });
+      li.appendChild(b);
+      ul.appendChild(li);
+    });
+    $("zaehler").textContent = suche
+      ? treffer + " von " + SPRUECHE.length + " Sprüchen"
+      : SPRUECHE.length + " Sprüche";
+  }
+
+  if (istListe) {
+    $("ziehen").hidden = true;
+    $("ergebnis").hidden = true;
+    $("listeAnsicht").hidden = false;
+    $("btnNochmal").hidden = true;
+    $("titel").textContent = "Deine Sprüche";
+    var sel = $("farbwahl");
+    FARBEN.forEach(function (f) {
+      var o = document.createElement("option");
+      o.value = f[0]; o.textContent = f[0];
+      sel.appendChild(o);
+    });
+    $("suche").addEventListener("input", listeAufbauen);
+    sel.addEventListener("change", function () {
+      if (letzteWahl) {
+        var w = sel.value;
+        var farbe = w === "zufall"
+          ? FARBEN[Math.floor(Math.random() * FARBEN.length)]
+          : (FARBEN.filter(function (f) { return f[0] === w; })[0] || FARBEN[0]);
+        zeigen(letzteWahl.spruch, farbe);
+      }
+    });
+    listeAufbauen();
+  }
+
+})();
+</script>
+</body>
+</html>
