@@ -10,12 +10,12 @@
 <style>
 
   :root {
-    --grund:    #FAF9F6;
-    --grund-2:  #F1EEE8;
+    --grund:    #FFFFFF;
+    --grund-2:  #F5F4F1;
     --tinte:    #03265B;
     --schwarz:  #191919;
     --leise:    #6E7681;
-    --linie:    #E3DED5;
+    --linie:    #E8E5DF;
     --karte-bg: #FFFFFF;
     --schatten: 0 22px 50px -24px rgba(3, 38, 91, .45);
   }
@@ -226,12 +226,13 @@
 
 <div class="huelle">
 
-  <header class="kopf">
+  <header class="kopf" id="kopf">
     <div class="name">La Royal<span class="ort">Lanzarote</span></div>
   </header>
 
+  <h1 id="titel">Funkel Orakel</h1>
+
   <section id="ziehen">
-    <h1 id="titel">Funkel Orakel</h1>
     <p class="einstimmung" id="einstimmung">Welcher Kristall soll es heute sein, liebe Funkelgöttin?<br>Such dir einen aus.</p>
     <div class="kristalle" id="kristalle"></div>
   </section>
@@ -249,7 +250,6 @@
   </section>
 
   <section id="listeAnsicht" hidden>
-    <h1 id="titelListe" style="margin-top:24px;">Deine Sprüche</h1>
     <div class="werkzeug">
       <input type="search" id="suche" placeholder="Spruch suchen" aria-label="Spruch suchen">
       <select id="farbwahl" aria-label="Farbe wählen">
@@ -803,10 +803,22 @@
     }
 
     var g = ctx.createLinearGradient(0, 0, S * 0.7, S);
-    g.addColorStop(0, mischen(grund, "#FFFFFF", grundArt === "dunkel" ? 0.05 : 0.45));
-    g.addColorStop(1, grund);
+    g.addColorStop(0, mischen(grund, schrift === "#FFFFFF" ? "#FFFFFF" : "#000000", 0.07));
+    g.addColorStop(1, mischen(grund, schrift === "#FFFFFF" ? "#000000" : "#FFFFFF", 0.05));
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, S, S);
+
+    // feines Funkeln
+    var s = 1337;
+    function rnd() { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }
+    for (var i = 0; i < 120; i++) {
+      var x = rnd() * S, y = rnd() * S, r = rnd() * 3 + 1;
+      var gg = ctx.createRadialGradient(x, y, 0, x, y, r * 4);
+      gg.addColorStop(0, "rgba(255,255,255," + (0.10 + rnd() * 0.30) + ")");
+      gg.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = gg;
+      ctx.beginPath(); ctx.arc(x, y, r * 4, 0, Math.PI * 2); ctx.fill();
+    }
 
     var rand = S * 0.115, maxB = S - rand * 2;
 
@@ -941,7 +953,10 @@
   }
 
   // ---------- Tanjas Ansicht: nur über #liste erreichbar ----------
-  var istListe = /^#liste/.test(window.location.hash || "");
+  function istListe() {
+    var h = (window.location.hash || "").replace(/^#/, "").trim().toLowerCase();
+    return h.indexOf("liste") === 0;
+  }
 
   function zeigen(spruch, farbe) {
     letzteWahl = { farbe: farbe, spruch: spruch };
@@ -949,6 +964,12 @@
     $("hinweis").innerHTML = "&nbsp;";
     $("ergebnis").hidden = false;
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function gewaehlteFarbe() {
+    var w = $("farbwahl").value;
+    if (w === "zufall") return FARBEN[Math.floor(Math.random() * FARBEN.length)];
+    return FARBEN.filter(function (f) { return f[0] === w; })[0] || FARBEN[0];
   }
 
   function listeAufbauen() {
@@ -966,13 +987,7 @@
       nr.textContent = (i + 1) + ".";
       b.appendChild(nr);
       b.appendChild(document.createTextNode(sp));
-      b.addEventListener("click", function () {
-        var w = $("farbwahl").value;
-        var farbe;
-        if (w === "zufall") farbe = FARBEN[Math.floor(Math.random() * FARBEN.length)];
-        else farbe = FARBEN.filter(function (f) { return f[0] === w; })[0] || FARBEN[0];
-        zeigen(sp, farbe);
-      });
+      b.addEventListener("click", function () { zeigen(sp, gewaehlteFarbe()); });
       li.appendChild(b);
       ul.appendChild(li);
     });
@@ -981,12 +996,10 @@
       : SPRUECHE.length + " Sprüche";
   }
 
-  if (istListe) {
-    $("ziehen").hidden = true;
-    $("ergebnis").hidden = true;
-    $("listeAnsicht").hidden = false;
-    $("btnNochmal").hidden = true;
-    $("titel").textContent = "Deine Sprüche";
+  var listeBereit = false;
+  function listeVorbereiten() {
+    if (listeBereit) return;
+    listeBereit = true;
     var sel = $("farbwahl");
     FARBEN.forEach(function (f) {
       var o = document.createElement("option");
@@ -995,16 +1008,34 @@
     });
     $("suche").addEventListener("input", listeAufbauen);
     sel.addEventListener("change", function () {
-      if (letzteWahl) {
-        var w = sel.value;
-        var farbe = w === "zufall"
-          ? FARBEN[Math.floor(Math.random() * FARBEN.length)]
-          : (FARBEN.filter(function (f) { return f[0] === w; })[0] || FARBEN[0]);
-        zeigen(letzteWahl.spruch, farbe);
-      }
+      if (letzteWahl) zeigen(letzteWahl.spruch, gewaehlteFarbe());
     });
-    listeAufbauen();
   }
+
+  function ansichtSetzen() {
+    $("titel").textContent = istListe() ? "Deine Sprüche" : "Funkel Orakel";
+    if (istListe()) {
+      listeVorbereiten();
+      listeAufbauen();
+      $("ziehen").hidden = true;
+      $("listeAnsicht").hidden = false;
+      $("btnNochmal").hidden = true;
+      if (!letzteWahl) $("ergebnis").hidden = true;
+    } else {
+      $("listeAnsicht").hidden = true;
+      $("btnNochmal").hidden = false;
+      $("ziehen").hidden = false;
+      $("ergebnis").hidden = true;
+    }
+  }
+
+  // Im Shop-Einbau steht die Marke schon in der Navigation darüber
+  try {
+    if (window.self !== window.top) $("kopf").hidden = true;
+  } catch (e) { $("kopf").hidden = true; }
+
+  window.addEventListener("hashchange", ansichtSetzen);
+  ansichtSetzen();
 
 })();
 </script>
