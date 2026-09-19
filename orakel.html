@@ -181,6 +181,12 @@
     display: inline-block; min-width: 2.6em;
     color: var(--leise); font-variant-numeric: tabular-nums;
   }
+  .druckwahl {
+    flex-basis: 100%;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 14px; color: var(--leise); cursor: pointer;
+  }
+  .druckwahl input { accent-color: var(--tinte); }
 </style>
 </head>
 <body>
@@ -216,6 +222,7 @@
       <select id="farbwahl" aria-label="Farbe wählen">
         <option value="zufall">Farbe: Zufall</option>
       </select>
+      <label class="druckwahl"><input type="checkbox" id="druckwahl"> Druckversion: ohne Adresszeile</label>
     </div>
     <p class="zaehler" id="zaehler"></p>
     <ul class="spruchliste" id="spruchliste"></ul>
@@ -710,7 +717,12 @@
     ctx.textAlign = alteAus;
   }
 
-  function karteZeichnen(spruch, f) {
+  function druckAktiv() {
+    var el = $("druckwahl");
+    return !!(el && el.checked);
+  }
+
+  function karteZeichnen(spruch, f, druck) {
     var S = 1080, sk = S / 1080;
     var c = document.createElement("canvas");
     c.width = S; c.height = S;
@@ -751,35 +763,41 @@
     var teil = teilen(spruch);
     // Rand oben wie an den Seiten, unten Luft zum Kristall; der Block sitzt
     // mittig in dem, was dazwischen übrig bleibt.
-    var bandOben = S * 0.125, bandUnten = S * 0.44;
+    // Druckversion (Tanjas Ansicht): Gedruckt zoomt niemand nach – ohne die
+    // Adresszeile darf der Spruch mehr als die Hälfte bekommen und grösser werden.
+    var bandOben = S * 0.125, bandUnten = druck ? S * 0.52 : S * 0.44;
     var band = bandUnten - bandOben, zeilAb = 1.28, absatz = 0.45;
-    var gross = Math.round(96 * sk), klein = Math.round(30 * sk), g, zV = [], zT = [];
+    var gross = Math.round((druck ? 120 : 96) * sk), klein = Math.round(30 * sk), g, gV, zV = [], zT = [];
     for (g = gross; g >= klein; g -= 2) {
-      ctx.font = "600 " + g + 'px "Montserrat", Arial, sans-serif';
+      // Vorspann fett bei 80 % der Satzgrösse; beide Blöcke werden getrennt gemessen.
+      gV = Math.max(12, Math.round(g * 0.8));
+      ctx.font = "600 " + gV + 'px "Montserrat", Arial, sans-serif';
       zV = teil.vor ? umbrechen(ctx, teil.vor, maxB) : [];
       ctx.font = "400 " + g + 'px "Montserrat", Arial, sans-serif';
       zT = umbrechen(ctx, teil.text, maxB);
-      var zeilen = zV.length + zT.length + (zV.length ? absatz : 0);
-      if (zeilen * g * zeilAb <= band) break;
+      var hoehe = zV.length * gV * zeilAb + (zV.length ? absatz * g * zeilAb : 0) + zT.length * g * zeilAb;
+      if (hoehe <= band) break;
     }
 
-    var hoehe = (zV.length + zT.length + (zV.length ? absatz : 0)) * g * zeilAb;
-    var y = (bandOben + bandUnten) / 2 - hoehe / 2;
+    var blockHoehe = zV.length * gV * zeilAb + (zV.length ? absatz * g * zeilAb : 0) + zT.length * g * zeilAb;
+    var y = (bandOben + bandUnten) / 2 - blockHoehe / 2;
 
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
     ctx.fillStyle = spruchFarbe;
 
     if (zV.length) {
-      ctx.font = "600 " + g + 'px "Montserrat", Arial, sans-serif';
-      for (var k = 0; k < zV.length; k++) ctx.fillText(zV[k], S / 2, y + k * g * zeilAb);
-      y += (zV.length + absatz) * g * zeilAb;
+      ctx.font = "600 " + gV + 'px "Montserrat", Arial, sans-serif';
+      for (var k = 0; k < zV.length; k++) ctx.fillText(zV[k], S / 2, y + k * gV * zeilAb);
+      y += zV.length * gV * zeilAb + absatz * g * zeilAb;
     }
     ctx.font = "400 " + g + 'px "Montserrat", Arial, sans-serif';
     for (var j = 0; j < zT.length; j++) ctx.fillText(zT[j], S / 2, y + j * g * zeilAb);
 
     // Untere Hälfte: Kristall, Farbname, Logo, Adresse
-    kristall(ctx, S / 2, S * 0.605, S * 0.130, S * 0.135, f, true);
+    // In der Druckversion rückt die Gruppe tiefer, weil der Spruch mehr Platz hat
+    // und die Adresszeile fehlt.
+    kristall(ctx, S / 2, S * (druck ? 0.665 : 0.605), S * 0.130, S * 0.135, f, true);
 
     // Eine gemeinsame Grösse für alles unter dem Spruch
     var kl = Math.round(26 * sk);
@@ -789,19 +807,24 @@
 
     // Farbname – fett, weil er etwas aussagt
     ctx.font = "600 " + kl + 'px "Montserrat", Arial, sans-serif';
-    gesperrt(ctx, f[0].toUpperCase(), S / 2, S * 0.735, 4.2 * sk);
+    gesperrt(ctx, f[0].toUpperCase(), S / 2, S * (druck ? 0.795 : 0.735), 4.2 * sk);
 
     // La Royal / Lanzarote
     ctx.font = "500 " + Math.round(52 * sk) + 'px "Playfair Display", Georgia, serif';
-    ctx.fillText("La Royal", S / 2, S * 0.855);
+    ctx.fillText("La Royal", S / 2, S * (druck ? 0.900 : 0.855));
     ctx.font = "400 " + kl + 'px "Montserrat", Arial, sans-serif';
     ctx.globalAlpha = 0.75;
-    gesperrt(ctx, "LANZAROTE", S / 2, S * 0.898, 6 * sk);
-
-    ctx.font = "400 " + kl + 'px "Montserrat", Arial, sans-serif';
-    ctx.globalAlpha = 0.6;
-    ctx.fillText("laroyallanzarote.com/orakel", S / 2, S * 0.938);
+    gesperrt(ctx, "LANZAROTE", S / 2, S * (druck ? 0.943 : 0.898), 6 * sk);
     ctx.globalAlpha = 1;
+
+    // Druckversion (nur Tanjas Ansicht): keine Adresszeile – auf dem gedruckten
+    // Dankeskärtchen führt der QR-Code auf der Rückseite zum Orakel.
+    if (!druck) {
+      ctx.font = "400 " + kl + 'px "Montserrat", Arial, sans-serif';
+      ctx.globalAlpha = 0.6;
+      ctx.fillText("laroyallanzarote.com/orakel", S / 2, S * 0.938);
+      ctx.globalAlpha = 1;
+    }
 
     return c;
   }
@@ -809,7 +832,7 @@
   // ---------- Ablauf ----------
   function malen() {
     if (!letzteWahl) return;
-    var leinwand = karteZeichnen(letzteWahl.spruch, letzteWahl.farbe);
+    var leinwand = karteZeichnen(letzteWahl.spruch, letzteWahl.farbe, istListe() && druckAktiv());
     $("karte").src = leinwand.toDataURL("image/png");
     $("karte").alt = "Spruchkärtchen in " + letzteWahl.farbe[0] + ": " + letzteWahl.spruch;
     leinwand.toBlob(function (b) { letzterBlob = b; }, "image/png");
@@ -841,7 +864,7 @@
     try {
       var url = URL.createObjectURL(letzterBlob);
       var a = document.createElement("a");
-      a.href = url; a.download = "funkel-orakel.png";
+      a.href = url; a.download = (istListe() && druckAktiv()) ? "funkel-orakel-druck.png" : "funkel-orakel.png";
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
       $("hinweis").innerHTML = "Gespeichert. Am Handy: lange auf das Kärtchen tippen und <strong>Bild sichern</strong> wählen.";
@@ -929,6 +952,9 @@
     $("suche").addEventListener("input", listeAufbauen);
     sel.addEventListener("change", function () {
       if (letzteWahl) zeigen(letzteWahl.spruch, gewaehlteFarbe());
+    });
+    $("druckwahl").addEventListener("change", function () {
+      if (letzteWahl) malen();
     });
   }
 
