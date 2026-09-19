@@ -412,17 +412,6 @@
   }
 
   // ---------- Vier klar unterscheidbare Farben ----------
-  function blass(f) { return hsl(f[1])[2] > 0.86; }
-
-  function verschieden(a, b) {
-    var A = hsl(a[1]), B = hsl(b[1]);
-    var dh = Math.abs(A[0] - B[0]); if (dh > 180) dh = 360 - dh;
-    var dl = Math.abs(A[2] - B[2]);
-    var ds = Math.abs(A[1] - B[1]);
-    if (A[1] < 0.12 && B[1] < 0.12) return dl > 0.14;   // zwei fast graue: nur Helligkeit zählt
-    return dh >= 32 || dl >= 0.20 || ds >= 0.40;
-  }
-
   // Gedächtnis für diese Sitzung: zuletzt Gezogenes bleibt eine Weile gesperrt,
   // damit sich nichts unmittelbar wiederholt.
   var zuletztFarben = [], zuletztSprueche = [];
@@ -433,21 +422,16 @@
     while (liste.length > laenge) liste.shift();
   }
 
+  // Die vier liegen grau da, sichtbar wird nur die gezogene Farbe.
+  // Deshalb reicht reiner Zufall aus dem Vorrat ohne die zuletzt gezogenen.
   function vierFarben() {
     var frei = FARBEN.filter(function (f) { return zuletztFarben.indexOf(f[0]) === -1; });
     if (frei.length < 8) frei = FARBEN.slice();
-    for (var v = 0; v < 400; v++) {
-      var topf = frei.slice(), wahl = [];
-      while (topf.length && wahl.length < 4) {
-        var k = topf.splice(Math.floor(Math.random() * topf.length), 1)[0];
-        if (blass(k) && wahl.filter(blass).length >= 1) continue;
-        var ok = true;
-        for (var i = 0; i < wahl.length; i++) if (!verschieden(k, wahl[i])) { ok = false; break; }
-        if (ok) wahl.push(k);
-      }
-      if (wahl.length === 4) return wahl;
+    var topf = frei.slice(), wahl = [];
+    while (topf.length && wahl.length < 4) {
+      wahl.push(topf.splice(Math.floor(Math.random() * topf.length), 1)[0]);
     }
-    return FARBEN.slice(0, 4);
+    return wahl;
   }
 
   function neuerSpruch() {
@@ -763,7 +747,7 @@
     // Spruch
     // Obere Hälfte gehört allein dem Spruch: die Schrift wächst, bis sie die Hälfte füllt.
     // Ein Satz bleibt ein Satz – gleiche Grösse, gleiche Stärke, gleicher Zeilenabstand.
-    // Nur ein Doppelpunkt setzt den Vorspann leichter ab.
+    // Nur ein Doppelpunkt setzt den Vorspann ab: er steht fett, der Rest normal.
     var teil = teilen(spruch);
     // Rand oben wie an den Seiten, unten Luft zum Kristall; der Block sitzt
     // mittig in dem, was dazwischen übrig bleibt.
@@ -771,9 +755,9 @@
     var band = bandUnten - bandOben, zeilAb = 1.28, absatz = 0.45;
     var gross = Math.round(96 * sk), klein = Math.round(30 * sk), g, zV = [], zT = [];
     for (g = gross; g >= klein; g -= 2) {
-      ctx.font = "400 " + g + 'px "Montserrat", Arial, sans-serif';
-      zV = teil.vor ? umbrechen(ctx, teil.vor, maxB) : [];
       ctx.font = "600 " + g + 'px "Montserrat", Arial, sans-serif';
+      zV = teil.vor ? umbrechen(ctx, teil.vor, maxB) : [];
+      ctx.font = "400 " + g + 'px "Montserrat", Arial, sans-serif';
       zT = umbrechen(ctx, teil.text, maxB);
       var zeilen = zV.length + zT.length + (zV.length ? absatz : 0);
       if (zeilen * g * zeilAb <= band) break;
@@ -787,13 +771,11 @@
     ctx.fillStyle = spruchFarbe;
 
     if (zV.length) {
-      ctx.font = "400 " + g + 'px "Montserrat", Arial, sans-serif';
-      ctx.globalAlpha = 0.78;
+      ctx.font = "600 " + g + 'px "Montserrat", Arial, sans-serif';
       for (var k = 0; k < zV.length; k++) ctx.fillText(zV[k], S / 2, y + k * g * zeilAb);
-      ctx.globalAlpha = 1;
       y += (zV.length + absatz) * g * zeilAb;
     }
-    ctx.font = "600 " + g + 'px "Montserrat", Arial, sans-serif';
+    ctx.font = "400 " + g + 'px "Montserrat", Arial, sans-serif';
     for (var j = 0; j < zT.length; j++) ctx.fillText(zT[j], S / 2, y + j * g * zeilAb);
 
     // Untere Hälfte: Kristall, Farbname, Logo, Adresse
