@@ -766,12 +766,20 @@
     var woerter = [];
     if (teil.vor) teil.vor.split(" ").forEach(function (w) { if (w) woerter.push({ t: w, fett: true }); });
     teil.text.split(" ").forEach(function (w) { if (w) woerter.push({ t: w, fett: false }); });
+    // Nach dem Doppelpunkt beginnt das erste Wort auf dem Kärtchen gross – Tanjas
+    // Entscheidung (sieht schöner aus), auch wenn die Grammatik klein verlangt.
+    // Nur auf dem Kärtchen; die Spruchliste selbst bleibt wie geschrieben.
+    if (teil.vor) {
+      var erst = woerter.length ? woerter[teil.vor.split(" ").filter(Boolean).length] : null;
+      if (erst) erst.t = erst.t.replace(/^([„"'(]*)(\S)/, function (m, a, b) { return a + b.toUpperCase(); });
+    }
     function schriftArt(px, fett) { return (fett ? "600 " : "400 ") + px + 'px "Montserrat", Arial, sans-serif'; }
     // Wörter mit Fett/Normal auf Zeilen verteilen; jedes Wort in seiner eigenen Stärke gemessen.
     function umbrechenGemischt(px) {
       ctx.font = schriftArt(px, false);
       var leer = ctx.measureText(" ").width;
-      var zeilen = [], akt = [], breite = 0;
+      var zeilen = [], akt = [], breite = 0, letzteFrage = -1, fragen = 0;
+      for (var q = 0; q < woerter.length - 1; q++) if (/\?[„“"']*$/.test(woerter[q].t)) { letzteFrage = q; fragen++; }
       for (var i = 0; i < woerter.length; i++) {
         ctx.font = schriftArt(px, woerter[i].fett);
         var wb = ctx.measureText(woerter[i].t).width;
@@ -779,8 +787,15 @@
         if (neuB > maxB && akt.length) { zeilen.push({ w: akt, b: breite }); akt = []; breite = 0; neuB = wb; }
         akt.push({ t: woerter[i].t, fett: woerter[i].fett, b: wb });
         breite = neuB;
-        // Nach dem Vorspann (dem Doppelpunkt) beginnt eine neue Zeile – ohne Extra-Abstand.
-        if (woerter[i].fett && i + 1 < woerter.length && !woerter[i + 1].fett) { zeilen.push({ w: akt, b: breite }); akt = []; breite = 0; }
+        // Nach dem Vorspann (dem Doppelpunkt) und nach einem Fragezeichen mitten im
+        // Spruch beginnt eine neue Zeile – ohne Extra-Abstand.
+        var vorspannEnde = woerter[i].fett && i + 1 < woerter.length && !woerter[i + 1].fett;
+        // Bei mehreren Fragen im Spruch steht jede Frage mit ihrer Antwort auf einer Zeile
+        // (Umbruch nach der Antwort, also nach dem Satzende), und nur die letzte Frage
+        // bricht direkt nach dem Fragezeichen um, damit die Schlussantwort allein steht.
+        var frageEnde = /\?[„“"']*$/.test(woerter[i].t) && i + 1 < woerter.length && i === letzteFrage;
+        var antwortEnde = fragen > 1 && /[.!][„“"']*$/.test(woerter[i].t) && i + 1 < woerter.length && i < letzteFrage;
+        if (vorspannEnde || frageEnde || antwortEnde) { zeilen.push({ w: akt, b: breite }); akt = []; breite = 0; }
       }
       if (akt.length) zeilen.push({ w: akt, b: breite });
       return { zeilen: zeilen, leer: leer };
