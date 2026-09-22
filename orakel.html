@@ -759,41 +759,60 @@
 
     // Spruch
     // Obere Hälfte gehört allein dem Spruch: die Schrift wächst, bis sie die Hälfte füllt.
-    // Ein Satz bleibt ein Satz – gleiche Grösse, gleiche Stärke, gleicher Zeilenabstand.
-    // Nur ein Doppelpunkt setzt den Vorspann ab: er steht fett, der Rest normal.
+    // Ein Satz bleibt ein Satz – gleiche Grösse, gleicher Zeilenabstand.
+    // Ein Doppelpunkt setzt den Vorspann fett ab: gleiche Grösse, gleicher Zeilenabstand,
+    // danach beginnt eine neue Zeile – kein zusätzlicher Absatz, es liest sich wie Fliesstext.
     var teil = teilen(spruch);
+    var woerter = [];
+    if (teil.vor) teil.vor.split(" ").forEach(function (w) { if (w) woerter.push({ t: w, fett: true }); });
+    teil.text.split(" ").forEach(function (w) { if (w) woerter.push({ t: w, fett: false }); });
+    function schriftArt(px, fett) { return (fett ? "600 " : "400 ") + px + 'px "Montserrat", Arial, sans-serif'; }
+    // Wörter mit Fett/Normal auf Zeilen verteilen; jedes Wort in seiner eigenen Stärke gemessen.
+    function umbrechenGemischt(px) {
+      ctx.font = schriftArt(px, false);
+      var leer = ctx.measureText(" ").width;
+      var zeilen = [], akt = [], breite = 0;
+      for (var i = 0; i < woerter.length; i++) {
+        ctx.font = schriftArt(px, woerter[i].fett);
+        var wb = ctx.measureText(woerter[i].t).width;
+        var neuB = akt.length ? breite + leer + wb : wb;
+        if (neuB > maxB && akt.length) { zeilen.push({ w: akt, b: breite }); akt = []; breite = 0; neuB = wb; }
+        akt.push({ t: woerter[i].t, fett: woerter[i].fett, b: wb });
+        breite = neuB;
+        // Nach dem Vorspann (dem Doppelpunkt) beginnt eine neue Zeile – ohne Extra-Abstand.
+        if (woerter[i].fett && i + 1 < woerter.length && !woerter[i + 1].fett) { zeilen.push({ w: akt, b: breite }); akt = []; breite = 0; }
+      }
+      if (akt.length) zeilen.push({ w: akt, b: breite });
+      return { zeilen: zeilen, leer: leer };
+    }
     // Rand oben wie an den Seiten, unten Luft zum Kristall; der Block sitzt
     // mittig in dem, was dazwischen übrig bleibt.
     // Druckversion (Tanjas Ansicht): Gedruckt zoomt niemand nach – ohne die
     // Adresszeile darf der Spruch mehr als die Hälfte bekommen und grösser werden.
     var bandOben = S * 0.125, bandUnten = druck ? S * 0.52 : S * 0.44;
-    var band = bandUnten - bandOben, zeilAb = 1.28, absatz = 0.45;
-    var gross = Math.round((druck ? 120 : 96) * sk), klein = Math.round(30 * sk), g, gV, zV = [], zT = [];
+    var band = bandUnten - bandOben, zeilAb = 1.28;
+    var gross = Math.round((druck ? 120 : 96) * sk), klein = Math.round(30 * sk), g, satz;
     for (g = gross; g >= klein; g -= 2) {
-      // Vorspann fett bei 80 % der Satzgrösse; beide Blöcke werden getrennt gemessen.
-      gV = Math.max(12, Math.round(g * 0.8));
-      ctx.font = "600 " + gV + 'px "Montserrat", Arial, sans-serif';
-      zV = teil.vor ? umbrechen(ctx, teil.vor, maxB) : [];
-      ctx.font = "400 " + g + 'px "Montserrat", Arial, sans-serif';
-      zT = umbrechen(ctx, teil.text, maxB);
-      var hoehe = zV.length * gV * zeilAb + (zV.length ? absatz * g * zeilAb : 0) + zT.length * g * zeilAb;
-      if (hoehe <= band) break;
+      satz = umbrechenGemischt(g);
+      if (satz.zeilen.length * g * zeilAb <= band) break;
     }
 
-    var blockHoehe = zV.length * gV * zeilAb + (zV.length ? absatz * g * zeilAb : 0) + zT.length * g * zeilAb;
+    var blockHoehe = satz.zeilen.length * g * zeilAb;
     var y = (bandOben + bandUnten) / 2 - blockHoehe / 2;
 
-    ctx.textAlign = "center";
+    ctx.textAlign = "left";
     ctx.textBaseline = "top";
     ctx.fillStyle = spruchFarbe;
 
-    if (zV.length) {
-      ctx.font = "600 " + gV + 'px "Montserrat", Arial, sans-serif';
-      for (var k = 0; k < zV.length; k++) ctx.fillText(zV[k], S / 2, y + k * gV * zeilAb);
-      y += zV.length * gV * zeilAb + absatz * g * zeilAb;
+    for (var j = 0; j < satz.zeilen.length; j++) {
+      var zl = satz.zeilen[j], x = S / 2 - zl.b / 2, zy = y + j * g * zeilAb;
+      for (var k = 0; k < zl.w.length; k++) {
+        ctx.font = schriftArt(g, zl.w[k].fett);
+        ctx.fillText(zl.w[k].t, x, zy);
+        x += zl.w[k].b + satz.leer;
+      }
     }
-    ctx.font = "400 " + g + 'px "Montserrat", Arial, sans-serif';
-    for (var j = 0; j < zT.length; j++) ctx.fillText(zT[j], S / 2, y + j * g * zeilAb);
+    ctx.textAlign = "center";
 
     // Untere Hälfte: Kristall, Farbname, Logo, Adresse
     // In der Druckversion rückt die Gruppe tiefer, weil der Spruch mehr Platz hat
