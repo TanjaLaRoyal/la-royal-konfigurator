@@ -225,6 +225,7 @@
 
 </div>
 
+<script src="orakel-fotos.js"></script>
 <script>
 
 (function () {
@@ -448,6 +449,34 @@
     return frei[Math.floor(Math.random() * frei.length)];
   }
 
+  // ---------- Kristalle als Fotos (seit 10.10.2026) ----------
+  // Die Fotos liegen in der zweiten Datei orakel-fotos.js (gleicher Ordner, muss
+  // mit auf GitHub liegen), damit diese Datei klein und lesbar bleibt. Farben ohne
+  // Foto werden weiter gezeichnet; fehlt die Fotodatei ganz, wird alles gezeichnet.
+  // Sehr helle Kristalle haben eine feine Linie und einen weichen Schatten am Rand,
+  // damit sie auf hellem Grund sichtbar bleiben. Für die graue Auswahl gibt es je
+  // Form ein einheitlich graues Foto.
+  // FOTOS_AN auf false stellen: alles wird wieder gezeichnet wie früher.
+  var FOTOS_AN = true;
+  var FOTO_SRC = window.ORAKEL_FOTOS || {};
+  var GRAU_SRC = window.ORAKEL_FOTOS_GRAU || {};
+  var FOTO = {}, FOTO_GRAU = {};
+  function bildLaden(ziel, name, quelle) {
+    var i = new Image();
+    i.onload = function () { neuMalen(); };
+    i.src = quelle; ziel[name] = i;
+  }
+  function fotoZeichnen(ctx, cx, cy, w, h, bild) {
+    if (!FOTOS_AN || !bild || !bild.complete || !bild.naturalWidth) return false;
+    var s = Math.max(w, h) * 1.04;
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(bild, cx - s / 2, cy - s / 2, s, s);
+    ctx.restore();
+    return true;
+  }
+
   // ---------- Kristall zeichnen ----------
   function istAb(name) { return / AB$/.test(name); }
 
@@ -659,6 +688,7 @@
       ctx.fillStyle = g;
       ctx.beginPath(); ctx.ellipse(cx, cy + h * 0.56, w * 0.95, h * 0.28, 0, 0, Math.PI * 2); ctx.fill();
     }
+    if (fotoZeichnen(ctx, cx, cy, w, h, grau ? FOTO_GRAU[f[2] === "rund" ? "rund" : "bicone"] : FOTO[f[0]])) return;
     if (f[2] === "rund") {
       // leichte Eigendrehung je Farbe, damit nicht alle Perlen identisch liegen
       var d = 0, i;
@@ -670,10 +700,14 @@
   }
 
   // ---------- Auslegen ----------
-  function auslegen() {
+  var aktuelleVier = [];
+  function auslegen() { aktuelleVier = vierFarben(); auslegenMalen(); }
+  // zeichnet die aktuellen vier und das Kärtchen neu, sobald ein Foto geladen ist
+  function neuMalen() { if (aktuelleVier.length) auslegenMalen(); malen(); }
+  function auslegenMalen() {
     var box = $("kristalle");
     box.innerHTML = "";
-    vierFarben().forEach(function (f) {
+    aktuelleVier.forEach(function (f) {
       var b = document.createElement("button");
       b.type = "button";
       b.className = "kristall";
@@ -733,7 +767,9 @@
     spruchFarbe = "#191919";
 
     var g = ctx.createLinearGradient(0, 0, S * 0.7, S);
-    g.addColorStop(0, mischen(grund, "#000000", 0.07));
+    // Kein Schwarz mehr im Verlauf (10.10.2026): die 7 % Schwarz oben links
+    // liessen das Kärtchen grau und schmutzig wirken.
+    g.addColorStop(0, grund);
     g.addColorStop(1, mischen(grund, "#FFFFFF", 0.05));
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, S, S);
@@ -768,7 +804,9 @@
       var erst = woerter.length ? woerter[teil.vor.split(" ").filter(Boolean).length] : null;
       if (erst) erst.t = erst.t.replace(/^([„"'(]*)(\S)/, function (m, a, b) { return a + b.toUpperCase(); });
     }
-    function schriftArt(px, fett) { return (fett ? "600 " : "400 ") + px + 'px "Montserrat", Arial, sans-serif'; }
+    // Spruch in Stärke 500, Vorspann vor dem Doppelpunkt in 700 (Tanjas Wahl 10.10.2026:
+    // 400 war ihr zu dünn, 600 für einen ganzen Spruch zu fett).
+    function schriftArt(px, fett) { return (fett ? "700 " : "500 ") + px + 'px "Montserrat", Arial, sans-serif'; }
     // Wörter mit Fett/Normal auf Zeilen verteilen; jedes Wort in seiner eigenen Stärke gemessen.
     function umbrechenGemischt(px) {
       ctx.font = schriftArt(px, false);
@@ -904,12 +942,15 @@
   });
 
   auslegen();
+  Object.keys(FOTO_SRC).forEach(function (n) { bildLaden(FOTO, n, FOTO_SRC[n]); });
+  Object.keys(GRAU_SRC).forEach(function (n) { bildLaden(FOTO_GRAU, n, GRAU_SRC[n]); });
 
   if (document.fonts && document.fonts.load) {
     Promise.all([
       document.fonts.load('700 60px "Montserrat"'),
       document.fonts.load('600 40px "Montserrat"'),
       document.fonts.load('400 40px "Montserrat"'),
+      document.fonts.load('500 40px "Montserrat"'),
       document.fonts.load('500 60px "Playfair Display"')
     ]).then(malen).catch(function () {});
   }
