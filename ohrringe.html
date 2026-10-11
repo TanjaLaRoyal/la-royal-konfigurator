@@ -396,8 +396,8 @@ function metall(ctx, mc, x0, x1) {
 
 // Klappverschluss (12 mm bei 6-mm-Perlen): runder Bügel, unten links das Gehäuse
 // mit Niet am Scharnier, unten die Lasche mit Öse. Rückgabe: Unterkante der Öse.
-function drawKlappVerschluss(ctx, cx, startY, mc) {
-  const P = Math.PI, r = 19, cy = startY + 1 + r;
+function drawKlappVerschluss(ctx, cx, startY, mc, r = 19) {
+  const P = Math.PI, cy = startY + 1 + r;
   ctx.save(); ctx.lineCap = 'round';
   ctx.strokeStyle = metall(ctx, mc, cx - r, cx + r); ctx.lineWidth = 2.6;
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, P * 2); ctx.stroke();
@@ -519,11 +519,15 @@ function drawBuendel(ctx, cx, oeseY, mc, kristall) {
   ctx.restore();
 }
 
+// Am Bündel wird der Klappverschluss etwas kleiner gezeichnet als am Stab (dort 19).
+// Grund: Neben dem breiten Bündel wirkt er in voller Grösse zu wuchtig.
+const KLAPP_R_BUENDEL = 16.5;
+
 function drawBuendelEarring(ctx, cx, startY) {
   const mc = getMetalColor();
   const y = state.clasp === 'haken'
     ? drawOhrhaken(ctx, cx, startY, mc)
-    : drawKlappVerschluss(ctx, cx, startY, mc);
+    : drawKlappVerschluss(ctx, cx, startY, mc, KLAPP_R_BUENDEL);
   drawBuendel(ctx, cx, y - 4.1, mc, i => getCrystalAt(i, 8));   // y - 4.1 = Mitte der Öse
 }
 
@@ -532,7 +536,8 @@ function drawBuendelEarring(ctx, cx, startY) {
 function getEarringHeight() {
   const claspH = state.clasp === 'haken' ? 50 : 49;   // Verschluss bis Unterkante Öse
   if (state.design === 'buendel') {
-    return claspH - 4.1 + BUENDEL_HOEHE;
+    const h = state.clasp === 'haken' ? 50 : 2 * KLAPP_R_BUENDEL + 11;
+    return h - 4.1 + BUENDEL_HOEHE;
   } else {
     return claspH + 124; // spacers + lava + 4 Kristalle + letzter Spacer
   }
