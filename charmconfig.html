@@ -73,7 +73,7 @@ header { text-align: center; margin-bottom: 36px; }
 
 <div class="card">
   <div class="charm-wrap">
-    <canvas id="charm-canvas" width="300" height="205"></canvas>
+    <canvas id="charm-canvas" width="900" height="615" style="width:300px;height:205px;"></canvas>
     <div class="preview-label" id="preview-label">Wähle dein Edelstahl und deine Kristallfarben.</div>
   </div>
 
@@ -141,7 +141,7 @@ header { text-align: center; margin-bottom: 36px; }
 <script>
 const COLORS = [
   { name: 'Weisser Opal',                  hex: '#F5F3EE', shimmer: '#F9F8F5', shape: 'round'  },
-  { name: 'Schimmer Perle',                hex: '#FEFEFC', shimmer: '#FEFEFD', shape: 'round'  },
+  { name: 'Schimmer Perle',                hex: '#FEFEFC', shimmer: '#FEFEFD', shape: 'round', stop: 'klar' },
   { name: 'Silbermine AB',                    hex: '#67655F', shimmer: '#D4D4D2', shape: 'bicone', stop: 0.75 },
   { name: 'Himmelblau AB',                 hex: '#99D6F8', shimmer: '#C2E6FB', shape: 'bicone' },
   { name: 'Capri Blau AB',                 hex: '#013CAC', shimmer: '#678ACD', shape: 'round'  },
@@ -254,7 +254,76 @@ function darken(hex, f) {
   return `rgb(${[1,3,5].map(i => Math.round(parseInt(hex.slice(i,i+2),16)*f)).join(',')})`;
 }
 
+// Durchsichtiger Kristall (Schimmer Perle, seit 11.10.2026): Man sieht den Hintergrund
+// durch, dazu liegt ein ganz zarter Regenbogenschleier (AB) darüber. Tanjas Wahl, weil
+// die Schimmer Perle sonst wie der Weisse Opal aussah. Ausgelöst durch stop: 'klar' in COLORS.
+// Schimmer Perle: durchsichtiger, geschliffener Kristall. Deckt ab, was dahinter liegt.
+function drawKlar(ctx, x, y, r) {
+  ctx.save();
+  ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = '#000';
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  drawKlarGlas(ctx, x, y, r);
+  drawKlarFacetten(ctx, x, y, r);
+}
+
+function drawKlarFacetten(ctx, x, y, r) {
+  ctx.save();
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.clip();
+  // vier Reihen Schliffflächen, abwechselnd hell und leicht grau
+  const B = [-1, -.52, 0, .52, 1];
+  for (let b = 0; b < 4; b++) {
+    const y0 = B[b], y1 = B[b + 1], ym = (y0 + y1) / 2;
+    const w = Math.sqrt(Math.max(0, 1 - ym * ym)), n = (b === 0 || b === 3) ? 3 : 5;
+    const sw = 2 * w / n, off = (b % 2) * sw * .5 - w;
+    for (let i = -1; i <= n; i++) {
+      const xa = off + i * sw, xb = xa + sw;
+      ctx.beginPath();
+      ctx.moveTo(x + xa * r, y + y0 * r); ctx.lineTo(x + xb * r, y + y0 * r);
+      ctx.lineTo(x + (xb + sw * .25) * r, y + y1 * r); ctx.lineTo(x + (xa + sw * .25) * r, y + y1 * r);
+      ctx.closePath();
+      ctx.fillStyle = ((i + b) % 2 === 0) ? 'rgba(255,255,255,.34)' : 'rgba(120,135,160,.10)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.45)'; ctx.lineWidth = Math.max(.4, r * .035); ctx.stroke();
+    }
+  }
+  // kleine AB-Lichter wie am echten Kristall
+  [[-.35, .3, 'rgba(70,130,255,.45)'], [.42, -.28, 'rgba(255,205,90,.5)'], [.1, .55, 'rgba(255,140,200,.35)']].forEach(([dx, dy, c]) => {
+    const g = ctx.createRadialGradient(x + dx * r, y + dy * r, 0, x + dx * r, y + dy * r, r * .3);
+    g.addColorStop(0, c); g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  });
+  ctx.restore();
+}
+
+function drawKlarGlas(ctx, x, y, r) {
+  ctx.save();
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.clip();
+  // Glaskörper: fast durchsichtig
+  ctx.fillStyle = 'rgba(255,255,255,0.22)'; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  // Regenbogenschleier, ganz zart
+  const s = ctx.createLinearGradient(x - r, y - r, x + r, y + r);
+  s.addColorStop(0,   'rgba(120,220,255,.14)');
+  s.addColorStop(.32, 'rgba(200,160,255,.119)');
+  s.addColorStop(.58, 'rgba(255,225,150,.126)');
+  s.addColorStop(.82, 'rgba(150,255,210,.105)');
+  s.addColorStop(1,   'rgba(255,170,220,.126)');
+  ctx.fillStyle = s; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  // Rand: nur aussen etwas dunkler, damit die Kugel Form hat
+  const e = ctx.createRadialGradient(x, y, r * .62, x, y, r);
+  e.addColorStop(0, 'rgba(120,130,150,0)'); e.addColorStop(.8, 'rgba(120,130,150,.14)'); e.addColorStop(1, 'rgba(95,105,125,.42)');
+  ctx.fillStyle = e; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  // Glanzpunkt oben links, kleiner Lichtreflex unten rechts (Glas)
+  const h = ctx.createRadialGradient(x - r * .3, y - r * .34, 0, x - r * .3, y - r * .34, r * .42);
+  h.addColorStop(0, 'rgba(255,255,255,.95)'); h.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = h; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  const l = ctx.createRadialGradient(x + r * .38, y + r * .42, 0, x + r * .38, y + r * .42, r * .34);
+  l.addColorStop(0, 'rgba(255,255,255,.55)'); l.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = l; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  ctx.restore();
+}
+
 function drawSphere(ctx, x, y, r, base, shimmer, gloss, stop = 0.42) {
+  if (stop === 'klar') return drawKlar(ctx, x, y, r);
   const g = ctx.createRadialGradient(x-r*.35,y-r*.38,r*.04,x+r*.1,y+r*.1,r*1.05);
   g.addColorStop(0,shimmer); g.addColorStop(stop,base); g.addColorStop(1,darken(base,.48));
   ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
@@ -282,9 +351,17 @@ function drawBicone(ctx, x, y, r, base, shimmer, gloss) {
 
 // ── Karabiner ────────────────────────────────────────────────
 
+// Metallglanz: Verlauf von hell nach dunkel quer über das Teil
+function metall(ctx, mc, x0, x1) {
+  const g = ctx.createLinearGradient(x0, 0, x1, 0);
+  g.addColorStop(0, mc.shimmer); g.addColorStop(.45, mc.hex); g.addColorStop(1, darken(mc.hex, .62));
+  return g;
+}
+
 function drawKarabiner(ctx, cx, startY, mc) {
   ctx.save();
-  ctx.strokeStyle = mc.hex;
+  const glanz = metall(ctx, mc, cx - 14, cx + 16);
+  ctx.strokeStyle = glanz;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
 
@@ -317,7 +394,7 @@ function drawKarabiner(ctx, cx, startY, mc) {
   ctx.lineTo(cx, tipY);                 // Spitze unten
   ctx.lineTo(gapRX - 1, gapRY - 1);   // oben rechts
   ctx.closePath();
-  ctx.fillStyle = mc.hex;
+  ctx.fillStyle = glanz;
   ctx.fill();
   ctx.lineWidth = 2.5;
   ctx.stroke();
@@ -330,7 +407,7 @@ function drawKarabiner(ctx, cx, startY, mc) {
   ctx.stroke();
 
   // Ösenring unten
-  const ringR = 5;
+  const ringR = 3.3;   // kleine Öse, in der der erste Ring des Bündels hängt
   const ringY = tipY + ringR;
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -341,89 +418,85 @@ function drawKarabiner(ctx, cx, startY, mc) {
   return ringY + ringR + 2;
 }
 
-// ── Bündel Cluster ───────────────────────────────────────────
-
-const BUENDEL_POS = [
-  [-17,  0], [17,  0],
-  [  0, 11],
-  [-15, 24], [15, 24],
-  [-10, 40], [10, 40],
-  [  0, 58],
+// ── Bündel ───────────────────────────────────────────────────
+// Aufbau wie am echten Stück: In der Öse des Verschlusses hängt der erste Ring,
+// darunter vier weitere als Kette. Am 1. Ring hängen zwei Perlen, am 2. eine,
+// am 3. zwei, am 4. zwei, am 5. eine. Jede Perle sitzt auf einem Stift mit Kugel
+// unten; oben ist der Stift zur ovalen Schlaufe gebogen, die im Ring hängt.
+// Perle: [x, y unter dem ersten Ring, Nummer des Rings]
+const BUENDEL = [
+  [-15, 13, 0], [15, 13, 0],
+  [  0, 25, 1],
+  [-14, 32, 2], [14, 33, 2],
+  [ -9, 46, 3], [ 9, 47, 3],
+  [  0, 59, 4],
 ];
+const BUENDEL_HOEHE = 79;   // von der Mitte der Öse bis unter die unterste Kugel
 
-const BUENDEL_CONNECTIONS = [
-  [0, 2], [1, 2],
-  [2, 3], [2, 4],
-  [3, 5], [4, 6],
-  [5, 7], [6, 7],
-];
+// Bicone von der Seite: Mittelkante quer zum Stift, abgeflachte Spitzen am Stift
+function drawBiconeSeite(ctx, x, y, r, c, t) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(-t);
+  const w = r * 1.08, h = r * .98, k = .34 * w;
+  const pfad = () => { ctx.beginPath(); ctx.moveTo(-k, -h); ctx.lineTo(k, -h); ctx.lineTo(w, 0); ctx.lineTo(k, h); ctx.lineTo(-k, h); ctx.lineTo(-w, 0); ctx.closePath(); };
+  pfad();
+  const g = ctx.createRadialGradient(-w * .38, -h * .4, h * .05, w * .1, h * .1, h * 1.25);
+  g.addColorStop(0, c.shimmer); g.addColorStop(.42, c.hex); g.addColorStop(1, darken(c.hex, .5));
+  ctx.fillStyle = g; ctx.fill();
+  ctx.save(); pfad(); ctx.clip();
+  ctx.fillStyle = 'rgba(255,255,255,.16)'; ctx.beginPath(); ctx.moveTo(-w, 0); ctx.lineTo(-k, -h); ctx.lineTo(0, -h); ctx.lineTo(-w * .25, 0); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,.13)'; ctx.beginPath(); ctx.moveTo(w, 0); ctx.lineTo(k, h); ctx.lineTo(0, h); ctx.lineTo(w * .25, 0); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = .7; ctx.beginPath(); ctx.moveTo(-w, 0); ctx.lineTo(w, 0); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.lineWidth = .5; ctx.beginPath(); ctx.moveTo(-w * .25, 0); ctx.lineTo(0, -h); ctx.moveTo(w * .25, 0); ctx.lineTo(0, h); ctx.stroke();
+  const sh = ctx.createRadialGradient(-w * .32, -h * .36, 0, -w * .32, -h * .36, h * .5);
+  sh.addColorStop(0, 'rgba(255,255,255,.7)'); sh.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = sh; ctx.fillRect(-w, -h, 2 * w, 2 * h);
+  ctx.restore(); ctx.restore();
+}
 
-function drawCharmRings(ctx, cx, clusterTop) {
-  const mc = getMetalColor();
-  ctx.save();
-  ctx.strokeStyle = mc.hex;
-  ctx.lineWidth = 2;
-
-  BUENDEL_CONNECTIONS.forEach(([a, b]) => {
-    const ax = cx + BUENDEL_POS[a][0], ay = clusterTop + BUENDEL_POS[a][1];
-    const bx = cx + BUENDEL_POS[b][0], by = clusterTop + BUENDEL_POS[b][1];
-    ctx.beginPath();
-    ctx.arc((ax+bx)/2, (ay+by)/2, 4, 0, Math.PI * 2);
-    ctx.stroke();
+// oeseY = Mitte der Öse am Verschluss. kristall(i) liefert die Farbe der Perle i (0 bis 7).
+function drawBuendel(ctx, cx, oeseY, mc, kristall) {
+  const R = 10, D = 9, y0 = oeseY + 4.5;
+  const ringY = i => y0 + i * D;
+  ctx.save(); ctx.lineCap = 'round';
+  ctx.lineWidth = 1.7; ctx.strokeStyle = metall(ctx, mc, cx - 6, cx + 6);
+  for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.ellipse(cx, ringY(i), (i % 2 ? 1.9 : 4.2), 6.0, 0, 0, Math.PI * 2); ctx.stroke(); }
+  // aussen hängende Perlen zuerst, die mittleren liegen davor
+  [0, 1, 3, 4, 5, 6, 2, 7].forEach(i => {
+    const c = kristall(i), p = BUENDEL[i];
+    const ax = cx + (p[0] < 0 ? -2.5 : p[0] > 0 ? 2.5 : 0), ay = ringY(p[2]) + 3.5;
+    const bx = cx + p[0], by = y0 + p[1];
+    const L = Math.hypot(bx - ax, by - ay), dx = (bx - ax) / L, dy = (by - ay) / L, t = Math.atan2(dx, dy);
+    ctx.strokeStyle = mc.hex; ctx.lineWidth = 1.1;
+    ctx.beginPath(); ctx.moveTo(ax + dx * 5, ay + dy * 5); ctx.lineTo(bx, by); ctx.stroke();                    // Stift
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.ellipse(ax + dx * 1.6, ay + dy * 1.6, 2.1, 3.7, -t, 0, Math.PI * 2); ctx.stroke();     // ovale Schlaufe
+    drawSphere(ctx, bx + dx * (R + 2.3), by + dy * (R + 2.3), 2.9, mc.hex, mc.shimmer, 0.75);                  // Kugel am Stiftende
+    if (c.shape === 'lava') (state.lava === 'Helles Kupfer' ? drawLavaKupfer : drawLava)(ctx, bx, by, R);
+    else if (c.shape === 'bicone') drawBiconeSeite(ctx, bx, by, R, c, t);
+    else drawSphere(ctx, bx, by, R, c.hex, c.shimmer, 0.65, c.stop);
   });
-
-  // Mittelring zwischen Perlen 4+5
-  const midX = cx + (BUENDEL_POS[3][0] + BUENDEL_POS[4][0]) / 2;
-  const midY = clusterTop + (BUENDEL_POS[3][1] + BUENDEL_POS[4][1]) / 2 + 5;
-  ctx.beginPath();
-  ctx.arc(midX, midY, 7, 0, Math.PI * 2);
-  ctx.stroke();
-
   ctx.restore();
 }
 
 function drawCharm(ctx, cx, startY) {
   const mc = getMetalColor();
-  const R_CRYSTAL = 10;
-
-  let y = drawKarabiner(ctx, cx, startY, mc);
-
-  // Verbindungsring Karabiner → Cluster
-  const bigR = 8;
-  ctx.beginPath();
-  ctx.arc(cx, y + bigR, bigR, 0, Math.PI * 2);
-  ctx.strokeStyle = mc.hex; ctx.lineWidth = 2; ctx.stroke();
-  y -= 6; // Ring überlappt leicht mit Öse
-
-  const clusterTop = y + R_CRYSTAL;
-
-  drawCharmRings(ctx, cx, clusterTop);
-
-  BUENDEL_POS.forEach((pos, i) => {
-    const c  = getCrystalAt(i);
-    const bx = cx + pos[0];
-    const by = clusterTop + pos[1];
-    if (c.shape === 'lava') {
-      (state.lava === 'Helles Kupfer' ? drawLavaKupfer : drawLava)(ctx, bx, by, R_CRYSTAL);
-    } else if (c.shape === 'bicone') {
-      drawBicone(ctx, bx, by, R_CRYSTAL * 1.1, c.hex, c.shimmer, 0.72);
-    } else {
-      drawSphere(ctx, bx, by, R_CRYSTAL, c.hex, c.shimmer, 0.65, c.stop);
-    }
-  });
+  const y = drawKarabiner(ctx, cx, startY, mc);
+  drawBuendel(ctx, cx, y - 5.3, mc, getCrystalAt);   // y - 5.3 = Mitte der Öse
 }
 
 function drawCanvas() {
   const canvas = document.getElementById('charm-canvas');
   const ctx    = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const s = 1.3;
+  const Q = 3;   // Schärfe: die Zeichenfläche hat Q-mal so viele Bildpunkte wie ihre Grösse auf der Seite
+  ctx.setTransform(Q, 0, 0, Q, 0, 0);
+  ctx.clearRect(0, 0, canvas.width / Q, canvas.height / Q);
+  const s = 1.45;
   const cx = 150;
   ctx.save();
   ctx.translate(cx, 0);
   ctx.scale(s, s);
   ctx.translate(-cx, 0);
-  drawCharm(ctx, 150, 20);
+  drawCharm(ctx, 150, 8);
   ctx.restore();
   updateLabel();
   updateSummary();
