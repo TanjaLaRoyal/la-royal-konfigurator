@@ -91,6 +91,11 @@ header { text-align: center; margin-bottom: 36px; }
 .next-step-steps li.extras-step { display: none; background: #fbf5e8; border-left: 3px solid var(--gold); padding: 10px 12px; margin-left: -12px; }
 .next-step-steps li.extras-step.visible { display: flex; }
 .next-step-steps li.extras-step .next-step-num { background: var(--gold); }
+.save-row { display: none; justify-content: center; margin-top: 6px; }
+.save-row.visible { display: flex; }
+.save-btn { display: inline-flex; align-items: center; gap: 9px; padding: 7px 18px; background: transparent; color: #a8843f; border: 1px solid #c9a96e; border-radius: 24px; font-family: 'Jost', sans-serif; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; }
+.save-btn:hover { background: #f3ead8; }
+.save-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
 .order-btn { display: block; width: fit-content; margin: 0 auto; padding: 10px 22px; background: #c9a96e; color: #fff; border: none; border-radius: 20px; font-family: 'Jost', sans-serif; font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; text-align: center; text-decoration: none; transition: background 0.2s; }
 .order-btn:hover { background: #b8924f; }
 </style>
@@ -106,6 +111,12 @@ header { text-align: center; margin-bottom: 36px; }
   <div class="bracelet-wrap">
     <canvas id="bracelet-canvas" width="1020" height="1020" style="width:340px;height:340px;"></canvas>
     <div class="preview-label" id="preview-label">Wähle dein Design + Wunschkristalle – das Armband füllt sich mit deinen Farben.</div>
+    <div class="save-row" id="save-row">
+      <button type="button" class="save-btn" id="btn-speichern" onclick="bildSpeichern()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/></svg>
+        <span id="btn-speichern-text">Bild speichern</span>
+      </button>
+    </div>
   </div>
 
   <div class="progress" id="progress"></div>
@@ -266,6 +277,7 @@ const state = {
   design: null,
   count:  null,
   slots:  [],
+  merk:   [],             // Farben, die beim Design-Wechsel gemerkt werden
   metal:  null,
   lava:   null,           // 'Schwarz' | 'Helles Kupfer' (nur wenn LAVA_KUPFER_VERFUEGBAR)
   ePos:   [0, 0, 1],
@@ -275,18 +287,19 @@ const state = {
   noExtras:     false,
 };
 
+// Metallfarben (seit 12.10.2026 satter: Gold wärmer, Silber heller und kühler, Roségold kräftiger – Tanjas Wahl "M2")
 function metalColor() {
-  if (state.metal === 'Gold')     return { hex: '#c9a96e', shimmer: '#e8d49a' };
-  if (state.metal === 'Rosegold') return { hex: '#d4937a', shimmer: '#ecbfad' };
-  return { hex: '#a8b0b8', shimmer: '#d0d6da' };
+  if (state.metal === 'Gold')     return { hex: '#d2a038', shimmer: '#f7e2a0' };
+  if (state.metal === 'Rosegold') return { hex: '#d88c74', shimmer: '#f8d2c2' };
+  return { hex: '#aab3bd', shimmer: '#f1f4f7' };
 }
 
 function barrelColor() {
   // Die Grosslochperle (längliche Edelstahlperle) gibt es nur in Silber und Gold –
   // bei Roségold wird sie schwarz dargestellt.
-  if (state.metal === 'Gold')     return { hex: '#c9a96e', shimmer: '#e8d49a' };
+  if (state.metal === 'Gold')     return { hex: '#d2a038', shimmer: '#f7e2a0' };
   if (state.metal === 'Rosegold') return { hex: '#2a2a2a', shimmer: '#8a8a8a' };
-  return { hex: '#a8b0b8', shimmer: '#d0d6da' };
+  return { hex: '#aab3bd', shimmer: '#f1f4f7' };
 }
 
 function colorByName(name) {
@@ -327,8 +340,13 @@ function buildSequence() {
       len += beadLen(b);
     }
     if (state.placeholders === 'eine') {
-      // Eine einzelne Platzhalter Perle, gegenüber der Grosslochperle
-      const mid = Math.round(seq.length / 2);
+      // Eine einzelne Platzhalter Perle, gegenüber der Grosslochperle – und immer
+      // zwischen zwei Kristallen, nie neben einer Lavaperle (so fädelt Tanja).
+      let mid = Math.round(seq.length / 2);
+      for (const d of [0, 1, -1, 2, -2]) {
+        const a = seq[mid + d - 1], b = seq[mid + d];
+        if (a && b && a.type === 'crystal' && b.type === 'crystal') { mid += d; break; }
+      }
       seq = [...seq.slice(0, mid), { type: 'metal', ...metalColor(), small: true }, ...seq.slice(mid)];
     }
   }
@@ -462,17 +480,24 @@ function drawBracelet() {
     const b = seq[i];
     if      (b.type === 'lava')    (state.lava === 'Helles Kupfer' ? drawLavaKupfer : drawLava)(ctx, x, y, R_LAVA);
     else if (b.type === 'barrel')  drawBarrel(ctx, x, y, R_CRYSTAL, b.hex, b.shimmer, 0.82, angles[i]);
-    else if (b.type === 'metal')   drawSphere(ctx, x, y, R_METAL,   b.hex, b.shimmer, 0.55);
-    else if (b.shape === 'bicone') drawBicone(ctx, x, y, R_CRYSTAL, b.hex, b.shimmer, 0.72, angles[i] + Math.PI / 2);
-    else                           drawSphere(ctx, x, y, R_CRYSTAL, b.hex, b.shimmer, 0.65, b.stop);
+    else if (b.type === 'metal')   drawMetallKugel(ctx, x, y, R_METAL, b.hex, b.shimmer);
+    else if (b.shape === 'bicone') drawBiconeBand(ctx, x, y, R_CRYSTAL, b, angles[i]);
+    else                           drawRund(ctx, x, y, R_CRYSTAL, b, angles[i]);
   }
   updateLabel();
   updateSummary();
   updateProgress();
 }
 
+// Zeile unter dem Armband: zeigt die ganze Auswahl so, wie sie bestellt wird –
+// Lava-Farbe (auch Schwarz), Kristalle statt Lava mit Farbe, Platzhalter-Wunsch.
 function lavaLabel() {
-  return state.lava === 'Helles Kupfer' ? ' · Lava Helles Kupfer' : '';
+  const teile = [];
+  if (state.lavaReplace) teile.push(`Kristalle statt Lava: ${state.lavaColor}`);
+  else                   teile.push(`Lava ${state.lava || 'Schwarz'}`);
+  if (state.placeholders === 'keine') teile.push('ohne Platzhalter Perlen');
+  if (state.placeholders === 'eine')  teile.push('nur eine Platzhalter Perle');
+  return teile.map(t => ' · ' + t).join('');
 }
 
 function updateLabel() {
@@ -572,6 +597,53 @@ function updateSummary() {
     document.getElementById('next-step').classList.remove('visible');
   }
   updateExtrasStep();
+  updateBild();
+}
+
+// ---- Fertiges Armband als Bild speichern (seit 12.10.2026, wie im Funkel Orakel) ----
+// Das Bild zeigt nur, was die Kundin auch sieht: das Armband und die Auswahl-Zeile darunter.
+// Bewusst nur "Bild speichern", kein "Teilen" (Tanjas Entscheidung).
+let auswahlBlob = null;
+function updateBild() {
+  const fertig = !!isReady();
+  document.getElementById('save-row').classList.toggle('visible', fertig);
+  auswahlBlob = null;
+  if (fertig) auswahlBild().toBlob(b => { auswahlBlob = b; }, 'image/png');
+}
+
+function auswahlBild() {
+  const quelle = document.getElementById('bracelet-canvas');
+  const S = 1080, c = document.createElement('canvas');
+  c.width = c.height = S;
+  const g = c.getContext('2d');
+  g.fillStyle = '#f4f3ef'; g.fillRect(0, 0, S, S);
+  // Auswahl-Zeile an den Trennpunkten umbrechen
+  g.font = "400 36px 'Cormorant Garamond', Georgia, serif";
+  const teile = document.getElementById('preview-label').textContent.split(' · ');
+  const zeilen = [];
+  let z = '';
+  teile.forEach(t => {
+    const probe = z ? z + ' · ' + t : t;
+    if (z && g.measureText(probe).width > S - 120) { zeilen.push(z + ' ·'); z = t; } else z = probe;
+  });
+  if (z) zeilen.push(z);
+  const zh = 48, textH = zeilen.length * zh;
+  const B = Math.min(S - 40, S - textH - 70);          // Platz für das Armband
+  g.drawImage(quelle, (S - B) / 2, 10, B, B);
+  g.fillStyle = '#111'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  zeilen.forEach((t, i) => g.fillText(t, S / 2, S - 40 - textH + zh / 2 + i * zh));
+  return c;
+}
+
+function bildSpeichern() {
+  if (!auswahlBlob) return;
+  const url = URL.createObjectURL(auswahlBlob), a = document.createElement('a');
+  a.href = url; a.download = 'mein-wunscharmband.png';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  const txt = document.getElementById('btn-speichern-text');
+  txt.textContent = 'Gespeichert';
+  setTimeout(() => { txt.textContent = 'Bild speichern'; }, 2000);
 }
 
 // Hinweis: Extras müssen auf der Produktseite nochmals angeklickt werden,
@@ -719,7 +791,142 @@ function drawBicone(ctx, x, y, r, base, shimmer, gloss, angle) {
   ctx.restore();
 }
 
+// ---- Kristalle am Armband mit Schliffflächen (seit 12.10.2026) ----
+// Grundton und Lichtpunkt kommen unverändert aus COLORS. Darüber liegen nur helle und
+// dunkle Schliffflächen. Bewusst OHNE Linien und OHNE bunten AB-Schimmer: Tanjas Wahl,
+// weil Linien die Felder zu hart machen und der Schimmer die Farbe verfälscht.
+// Die kleinen Kristalle in den Farbknöpfen (colorDot) nutzen weiter drawSphere/drawBicone.
+const LICHT = [-0.6, -0.8];      // Licht kommt von oben links
+const SCHLIFF_RUND   = 0.7;      // Stärke der Waben am runden Kristall ("weich")
+const SCHLIFF_BICONE = 0.65;     // Stärke der Flächen am Doppelkegel ("zart")
+
+// Runder Kristall: grosse sechseckige Schliffflächen (Waben), kantiger Umriss, zarter Fadenkanal.
+// ang = Lage auf dem Band; die Spitzen der Waben zeigen in Fadenrichtung.
+function drawRund(ctx, x, y, r, c, ang) {
+  if (c.stop === 'klar') return drawKlar(ctx, x, y, r);
+  const K = SCHLIFF_RUND;
+  const umriss = () => { ctx.beginPath(); for (let i = 0; i < 12; i++) { const a = ang + Math.PI / 12 + i * Math.PI / 6; ctx[i ? 'lineTo' : 'moveTo'](x + Math.cos(a) * r * 1.02, y + Math.sin(a) * r * 1.02); } ctx.closePath(); };
+  umriss();
+  const g = ctx.createRadialGradient(x - r * .35, y - r * .38, r * .04, x + r * .1, y + r * .1, r * 1.05);
+  g.addColorStop(0, c.shimmer); g.addColorStop(typeof c.stop === 'number' ? c.stop : .42, c.hex); g.addColorStop(1, darken(c.hex, .48));
+  ctx.fillStyle = g; ctx.fill();
+  ctx.save(); umriss(); ctx.clip();
+  ctx.translate(x, y); ctx.rotate(ang);
+  const s = r * .46, dx = Math.sqrt(3) * s, dy = 1.5 * s, ox = dx * .25, oy = -s * .38;
+  for (let j = -3; j <= 3; j++) for (let i = -3; i <= 3; i++) {
+    const hx = ox + dx * (i + (((j % 2) + 2) % 2) * .5), hy = oy + dy * j;
+    if (Math.hypot(hx, hy) > r + s) continue;
+    ctx.beginPath();
+    for (let k = 0; k < 6; k++) { const a = Math.PI / 6 + k * Math.PI / 3; ctx[k ? 'lineTo' : 'moveTo'](hx + Math.cos(a) * s * 1.01, hy + Math.sin(a) * s * 1.01); }
+    ctx.closePath();
+    // Helligkeit je Fläche: Lage zum Licht plus ein fester Zufallswert je Wabe
+    const gx = (hx * Math.cos(ang) - hy * Math.sin(ang)) / r, gy = (hx * Math.sin(ang) + hy * Math.cos(ang)) / r;
+    const z = Math.sin(i * 12.9898 + j * 78.233) * 43758.5453, zf = (z - Math.floor(z)) * 2 - 1;
+    const d = (gx * LICHT[0] + gy * LICHT[1]) * .55 + zf * .5;
+    ctx.fillStyle = d > 0 ? `rgba(255,255,255,${Math.min(1, d * .34 * K)})` : `rgba(0,0,0,${Math.min(1, -d * .26 * K)})`;
+    ctx.fill();
+  }
+  // Fadenkanal: zarter heller Streifen längs durch die Mitte
+  const k = ctx.createLinearGradient(-r * .2, 0, r * .2, 0);
+  k.addColorStop(0, 'rgba(255,255,255,0)'); k.addColorStop(.5, `rgba(255,255,255,${.10 * K})`); k.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = k; ctx.fillRect(-r * .2, -r * 1.1, r * .4, r * 2.2);
+  ctx.restore();
+  ctx.save(); umriss(); ctx.clip();
+  const sh = ctx.createRadialGradient(x - r * .3, y - r * .34, 0, x - r * .3, y - r * .34, r * .34);
+  sh.addColorStop(0, 'rgba(255,255,255,.7)'); sh.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = sh; ctx.fillRect(x - r * 1.1, y - r * 1.1, 2.2 * r, 2.2 * r);
+  ctx.restore();
+}
+
+// Doppelkegel von der Seite: die Spitzen liegen am Faden, die breite Mitte steht quer dazu.
+// Je Kegel drei Schliffflächen. Keine Mittellinie: die Kante entsteht nur aus hell und dunkel.
+function drawBiconeBand(ctx, x, y, r, c, ang) {
+  const S = SCHLIFF_BICONE;
+  const w = r * 1.12, h = r * .98, k = .30 * w, m = w * .36;
+  const P = (px, py) => [x + px * Math.cos(ang) - py * Math.sin(ang), y + px * Math.sin(ang) + py * Math.cos(ang)];
+  const poly = pts => { ctx.beginPath(); pts.forEach(([px, py], i) => { const q = P(px, py); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }); ctx.closePath(); };
+  const aussen = [[-k, -h], [k, -h], [w, 0], [k, h], [-k, h], [-w, 0]];
+  poly(aussen);
+  const g = ctx.createRadialGradient(x - r * .4, y - r * .42, r * .05, x + r * .1, y + r * .1, r * 1.3);
+  g.addColorStop(0, c.shimmer); g.addColorStop(.42, c.hex); g.addColorStop(1, darken(c.hex, .48));
+  ctx.fillStyle = g; ctx.fill();
+  ctx.save(); poly(aussen); ctx.clip();
+  [-1, 1].forEach(s => {
+    [[[-w, 0], [-k, s * h], [-m, 0]], [[-m, 0], [-k, s * h], [k, s * h], [m, 0]], [[m, 0], [k, s * h], [w, 0]]].forEach((f, i) => {
+      const n = [[-1, s * .55], [0, s * 1], [1, s * .55]][i], l = Math.hypot(n[0], n[1]);
+      const gx = (n[0] * Math.cos(ang) - n[1] * Math.sin(ang)) / l, gy = (n[0] * Math.sin(ang) + n[1] * Math.cos(ang)) / l;
+      const d = gx * LICHT[0] + gy * LICHT[1];
+      poly(f);
+      ctx.fillStyle = d > 0 ? `rgba(255,255,255,${Math.min(1, d * .42 * S)})` : `rgba(0,0,0,${Math.min(1, -d * .30 * S)})`;
+      ctx.fill();
+      ctx.strokeStyle = `rgba(255,255,255,${Math.min(1, .28 * S)})`; ctx.lineWidth = Math.max(.35, r * .03); ctx.stroke();
+    });
+  });
+  const sh = ctx.createRadialGradient(x - r * .3, y - r * .34, 0, x - r * .3, y - r * .34, r * .4);
+  sh.addColorStop(0, 'rgba(255,255,255,.6)'); sh.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = sh; ctx.fillRect(x - 1.3 * r, y - 1.3 * r, 2.6 * r, 2.6 * r);
+  ctx.restore();
+}
+
+// Grosslochperle in Gold und Silber (seit 12.10.2026): leicht bauchiger Körper mit einem Rand
+// an beiden Enden und einem hellen Glanzstreifen längs – so sieht die echte Edelstahlperle aus.
+// Die schwarze Perle (bei Roségold) hat keine Ränder und bleibt glatt: drawBarrelGlatt.
+const BARREL_RAND = .3;   // Länge eines Randes als Anteil der halben Perlenlänge (Tanjas Wahl "G2")
 function drawBarrel(ctx, x, y, r, base, shimmer, gloss, angle) {
+  if (state.metal === 'Rosegold') return drawBarrelGlatt(ctx, x, y, r, base, shimmer, gloss, angle);
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle || 0);
+  const w = r * 0.95, h = r * 1.25, hk = h * (1 - BARREL_RAND), wr = w * .88;
+  // Metallglanz quer über die Perle: scharfer heller Streifen, daneben ein dunkler Spiegelstreifen, unten wieder Licht
+  const g = ctx.createLinearGradient(w, 0, -w, 0);
+  g.addColorStop(0, darken(base, .6)); g.addColorStop(.1, base); g.addColorStop(.22, shimmer); g.addColorStop(.29, '#ffffff');
+  g.addColorStop(.36, shimmer); g.addColorStop(.5, base); g.addColorStop(.62, darken(base, .45)); g.addColorStop(.74, base);
+  g.addColorStop(.9, shimmer); g.addColorStop(1, darken(base, .6));
+  // Körper: leicht bauchig
+  ctx.beginPath();
+  ctx.moveTo(-w * .8, -hk);
+  ctx.bezierCurveTo(-w * 1.06, -hk * .4, -w * 1.06, hk * .4, -w * .8, hk);
+  ctx.lineTo(w * .8, hk);
+  ctx.bezierCurveTo(w * 1.06, hk * .4, w * 1.06, -hk * .4, w * .8, -hk);
+  ctx.closePath(); ctx.fillStyle = g; ctx.fill();
+  // Ränder an beiden Enden
+  const rand = (ya, yb) => {
+    const y0 = Math.min(ya, yb), hh = Math.abs(yb - ya), rr = hh * .45;
+    ctx.beginPath();
+    ctx.moveTo(-wr + rr, y0); ctx.lineTo(wr - rr, y0); ctx.quadraticCurveTo(wr, y0, wr, y0 + rr);
+    ctx.lineTo(wr, y0 + hh - rr); ctx.quadraticCurveTo(wr, y0 + hh, wr - rr, y0 + hh);
+    ctx.lineTo(-wr + rr, y0 + hh); ctx.quadraticCurveTo(-wr, y0 + hh, -wr, y0 + hh - rr);
+    ctx.lineTo(-wr, y0 + rr); ctx.quadraticCurveTo(-wr, y0, -wr + rr, y0);
+    ctx.closePath(); ctx.fillStyle = g; ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.22)'; ctx.lineWidth = Math.max(.4, r * .04); ctx.stroke();
+  };
+  rand(-h, -hk); rand(hk, h);
+  ctx.restore();
+}
+
+// Polierte Metallkugel (Platzhalter Perle, seit 12.10.2026): oben hell, in der Mitte ein dunkler
+// Spiegelstreifen, unten wieder Licht, dazu ein scharfer Spiegelpunkt. Metall wirkt nur metallisch,
+// wenn Hell und Dunkel hart nebeneinanderliegen – ein weicher Verlauf sieht matt aus.
+function drawMetallKugel(ctx, x, y, r, base, shimmer) {
+  ctx.save();
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.clip();
+  const g = ctx.createLinearGradient(0, y - r, 0, y + r);
+  g.addColorStop(0, '#ffffff'); g.addColorStop(.18, shimmer); g.addColorStop(.42, base);
+  g.addColorStop(.55, darken(base, .42)); g.addColorStop(.68, base); g.addColorStop(.88, shimmer); g.addColorStop(1, darken(base, .7));
+  ctx.fillStyle = g; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  // Rand rundum dunkler, damit die Kugel Form hat
+  const e = ctx.createRadialGradient(x, y, r * .55, x, y, r);
+  e.addColorStop(0, 'rgba(0,0,0,0)'); e.addColorStop(1, 'rgba(0,0,0,.38)');
+  ctx.fillStyle = e; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  // scharfer Spiegelpunkt
+  const s = ctx.createRadialGradient(x - r * .32, y - r * .4, 0, x - r * .32, y - r * .4, r * .34);
+  s.addColorStop(0, 'rgba(255,255,255,1)'); s.addColorStop(.45, 'rgba(255,255,255,.75)'); s.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = s; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  ctx.restore();
+}
+
+function drawBarrelGlatt(ctx, x, y, r, base, shimmer, gloss, angle) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle || 0);
@@ -849,30 +1056,43 @@ function resetExtras() {
   document.getElementById('lava-color-block').style.display = 'none';
 }
 
+// Design wechseln, ohne dass die Auswahl verloren geht (seit 12.10.2026):
+// Lava, Edelstahl und Extra Funkel-Wünsche bleiben immer. Einfarbig und Zweifarbig gibt es
+// in beiden Designs, sie bleiben mit ihren Farben. Dreifarbig (nur Energie) und Vierfarbig
+// (nur Doppel Kristall) muss die Kundin neu anklicken – die Farben sind dann vorausgefüllt.
 function setDesign(design, btn) {
+  if (state.design === design) return;
+  const behalten = state.count === 1 || state.count === 2;
   state.design = design;
-  state.count  = null;
-  state.slots  = [];
-  state.metal  = null;
-  state.lava   = null;
   state.ePos   = [0, 1, 0];
-  document.querySelectorAll('.design-btn').forEach(b => b.classList.remove('active'));
+  if (!behalten) {
+    state.merk  = state.slots.filter(Boolean);   // Farben merken, bis die Anzahl neu gewählt ist
+    state.count = null;
+    state.slots = [];
+  }
+  document.querySelectorAll('button[onclick^="setDesign"]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.metal-btn').forEach(b => b.classList.remove('active'));
   if (LAVA_KUPFER_VERFUEGBAR) document.getElementById('lava-section').style.display = 'block';
+  const sec = design === 'dk' ? 'dk-count-section' : 'en-count-section';
   document.getElementById('dk-count-section').style.display = design === 'dk'      ? 'block' : 'none';
   document.getElementById('en-count-section').style.display = design === 'energie' ? 'block' : 'none';
-  document.getElementById('color-section').style.display    = 'none';
-  document.getElementById('metal-section').style.display    = 'none';
-  document.getElementById('extras-section').style.display   = 'none';
-  resetExtras();
+  if (behalten) {
+    const cb = document.querySelector(`#${sec} button[onclick="setCount(${state.count},this)"]`);
+    if (cb) cb.classList.add('active');
+    renderSlots();
+  }
+  ['color-section', 'metal-section', 'extras-section'].forEach(id =>
+    document.getElementById(id).style.display = behalten ? 'block' : 'none');
   drawBracelet();
 }
 
 function setCount(n, btn) {
+  // Bisher gewählte (oder beim Design-Wechsel gemerkte) Farben bleiben, soweit sie passen
+  const bisher = state.slots.some(Boolean) ? state.slots : (state.merk || []);
   state.count = n;
-  state.slots = Array(n).fill(null);
+  state.slots = Array.from({ length: n }, (_, i) => bisher[i] || null);
+  state.merk  = [];
   if (state.design === 'energie') state.ePos = [0, 1, 0];
   document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -917,7 +1137,7 @@ function renderSlots() {
     const container = document.getElementById(`slot-${i}`);
     COLORS.forEach(c => {
       const chip = document.createElement('button');
-      chip.className = 'color-chip';
+      chip.className = 'color-chip' + (state.slots[i] === c.name ? ' active' : '');
       chip.appendChild(colorDot(c));
       chip.appendChild(document.createTextNode(c.name));
       chip.onclick = () => {
