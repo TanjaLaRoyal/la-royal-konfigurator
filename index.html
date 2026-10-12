@@ -96,6 +96,10 @@ header { text-align: center; margin-bottom: 36px; }
 .save-btn { display: inline-flex; align-items: center; gap: 9px; padding: 7px 18px; background: transparent; color: #a8843f; border: 1px solid #c9a96e; border-radius: 24px; font-family: 'Jost', sans-serif; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; }
 .save-btn:hover { background: #f3ead8; }
 .save-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+.save-bild { display: none; width: 100%; max-width: 300px; border: 1px solid #e8e5df; margin-top: 6px; }
+.save-bild.visible { display: block; }
+.save-hint { display: none; font-size: 14px; color: #111; text-align: center; line-height: 1.5; max-width: 340px; }
+.save-hint.visible { display: block; }
 .order-btn { display: block; width: fit-content; margin: 0 auto; padding: 10px 22px; background: #c9a96e; color: #fff; border: none; border-radius: 20px; font-family: 'Jost', sans-serif; font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; text-align: center; text-decoration: none; transition: background 0.2s; }
 .order-btn:hover { background: #b8924f; }
 </style>
@@ -117,6 +121,8 @@ header { text-align: center; margin-bottom: 36px; }
         <span id="btn-speichern-text">Bild speichern</span>
       </button>
     </div>
+    <img class="save-bild" id="save-bild" alt="Dein Wunscharmband als Bild">
+    <div class="save-hint" id="save-hint">Am Handy: lange auf das Bild tippen und <strong>Bild sichern</strong> wählen. Am Rechner: Rechtsklick auf das Bild und <strong>Bild sichern unter</strong> wählen.</div>
   </div>
 
   <div class="progress" id="progress"></div>
@@ -607,6 +613,9 @@ let auswahlBlob = null;
 function updateBild() {
   const fertig = !!isReady();
   document.getElementById('save-row').classList.toggle('visible', fertig);
+  // Ändert sich die Auswahl, verschwindet das zuvor angezeigte Bild wieder
+  document.getElementById('save-bild').classList.remove('visible');
+  document.getElementById('save-hint').classList.remove('visible');
   auswahlBlob = null;
   if (fertig) auswahlBild().toBlob(b => { auswahlBlob = b; }, 'image/png');
 }
@@ -635,15 +644,23 @@ function auswahlBild() {
   return c;
 }
 
+// Im Shop sitzt der Konfigurator in einem Rahmen, in dem der Browser das Herunterladen
+// nicht zulässt. Deshalb zeigt der Knopf das Bild zusätzlich als echtes Bild an (wie das
+// Kärtchen im Funkel Orakel): Von dort lässt es sich überall mit langem Tippen oder
+// Rechtsklick sichern. Direkt aufgerufen wird es ausserdem wie bisher heruntergeladen.
 function bildSpeichern() {
+  if (!isReady()) return;
+  const bild = document.getElementById('save-bild');
+  bild.src = auswahlBild().toDataURL('image/png');
+  bild.classList.add('visible');
+  document.getElementById('save-hint').classList.add('visible');
   if (!auswahlBlob) return;
-  const url = URL.createObjectURL(auswahlBlob), a = document.createElement('a');
-  a.href = url; a.download = 'mein-wunscharmband.png';
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
-  const txt = document.getElementById('btn-speichern-text');
-  txt.textContent = 'Gespeichert';
-  setTimeout(() => { txt.textContent = 'Bild speichern'; }, 2000);
+  try {
+    const url = URL.createObjectURL(auswahlBlob), a = document.createElement('a');
+    a.href = url; a.download = 'mein-wunscharmband.png';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  } catch (e) {}
 }
 
 // Hinweis: Extras müssen auf der Produktseite nochmals angeklickt werden,
