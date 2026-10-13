@@ -67,6 +67,13 @@ header { text-align: center; margin-bottom: 36px; }
 }
 .order-btn { display: block; width: fit-content; margin: 0 auto; padding: 10px 22px; background: #b8924f; color: #fff; border: none; border-radius: 20px; font-family: 'Jost', sans-serif; font-weight: 500; font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; text-align: center; text-decoration: none; transition: background 0.2s; }
 .order-btn:hover { background: #a37f3f; }
+.save-row { display: none; flex-direction: column; align-items: center; margin-top: 6px; }
+.save-row.visible { display: flex; }
+.save-btn { display: inline-flex; align-items: center; gap: 9px; padding: 7px 18px; background: transparent; color: #a8843f; border: 1px solid #c9a96e; border-radius: 24px; font-family: 'Jost', sans-serif; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; }
+.save-btn:hover { background: #f3ead8; }
+.save-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+.save-hint { font-family: 'Jost', sans-serif; font-size: 13px; color: #777; margin: 6px 0 0; text-align: center; min-height: 1em; }
+
 </style>
 </head>
 <body>
@@ -79,6 +86,13 @@ header { text-align: center; margin-bottom: 36px; }
   <div class="bracelet-wrap">
     <canvas id="bracelet-canvas" width="1020" height="1020" style="width:340px;height:340px;"></canvas>
     <div class="preview-label" id="preview-label">Wähle deine Kristallfarben und deine Edelstahlperle.</div>
+    <div class="save-row" id="save-row">
+      <button type="button" class="save-btn" id="btn-speichern" onclick="bildSpeichern()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/></svg>
+        <span id="btn-speichern-text">Bild speichern</span>
+      </button>
+      <p class="save-hint" id="save-hint"></p>
+    </div>
   </div>
 
   <div class="progress" id="progress"></div>
@@ -164,8 +178,8 @@ const state = { metal: null, count: null, slots: [] };
 // ── Farben ───────────────────────────────────────────────────
 
 function getMetalColor() {
-  if (state.metal === 'Gold') return { hex: '#c9a96e', shimmer: '#e8d49a' };
-  return { hex: '#a8b0b8', shimmer: '#d0d6da' };
+  if (state.metal === 'Gold') return { hex: '#d2a038', shimmer: '#f7e2a0' };
+  return { hex: '#aab3bd', shimmer: '#f1f4f7' };
 }
 
 function getCrystalAt(crystalIdx) {
@@ -281,27 +295,115 @@ function drawBicone(ctx, x, y, r, base, shimmer, gloss, angle) {
   ctx.restore();
 }
 
+// Kristalle mit Schliffflächen, Grosslochperle mit Rändern und Metallglanz:
+// dieselben Funktionen wie im Wunscharmband (index.html).
+const LICHT = [-0.6, -0.8];      // Licht kommt von oben links
+const SCHLIFF_RUND   = 0.7;      // Stärke der Waben am runden Kristall ("weich")
+const SCHLIFF_BICONE = 0.65;     // Stärke der Flächen am Doppelkegel ("zart")
+
+// Runder Kristall: grosse sechseckige Schliffflächen (Waben), kantiger Umriss, zarter Fadenkanal.
+// ang = Lage auf dem Band; die Spitzen der Waben zeigen in Fadenrichtung.
+function drawRund(ctx, x, y, r, c, ang) {
+  if (c.stop === 'klar') return drawKlar(ctx, x, y, r);
+  const K = SCHLIFF_RUND;
+  const umriss = () => { ctx.beginPath(); ctx.arc(x, y, r * 1.02, 0, Math.PI * 2); ctx.closePath(); };   // runder Umriss (13.10.2026), die Waben liegen innen
+  umriss();
+  const g = ctx.createRadialGradient(x - r * .35, y - r * .38, r * .04, x + r * .1, y + r * .1, r * 1.05);
+  g.addColorStop(0, c.shimmer); g.addColorStop(typeof c.stop === 'number' ? c.stop : .42, c.hex); g.addColorStop(1, darken(c.hex, .48));
+  ctx.fillStyle = g; ctx.fill();
+  ctx.save(); umriss(); ctx.clip();
+  ctx.translate(x, y); ctx.rotate(ang);
+  const s = r * .46, dx = Math.sqrt(3) * s, dy = 1.5 * s, ox = dx * .25, oy = -s * .38;
+  for (let j = -3; j <= 3; j++) for (let i = -3; i <= 3; i++) {
+    const hx = ox + dx * (i + (((j % 2) + 2) % 2) * .5), hy = oy + dy * j;
+    if (Math.hypot(hx, hy) > r + s) continue;
+    ctx.beginPath();
+    for (let k = 0; k < 6; k++) { const a = Math.PI / 6 + k * Math.PI / 3; ctx[k ? 'lineTo' : 'moveTo'](hx + Math.cos(a) * s * 1.01, hy + Math.sin(a) * s * 1.01); }
+    ctx.closePath();
+    // Helligkeit je Fläche: Lage zum Licht plus ein fester Zufallswert je Wabe
+    const gx = (hx * Math.cos(ang) - hy * Math.sin(ang)) / r, gy = (hx * Math.sin(ang) + hy * Math.cos(ang)) / r;
+    const z = Math.sin(i * 12.9898 + j * 78.233) * 43758.5453, zf = (z - Math.floor(z)) * 2 - 1;
+    const d = (gx * LICHT[0] + gy * LICHT[1]) * .55 + zf * .5;
+    ctx.fillStyle = d > 0 ? `rgba(255,255,255,${Math.min(1, d * .34 * K)})` : `rgba(0,0,0,${Math.min(1, -d * .26 * K)})`;
+    ctx.fill();
+  }
+  // Fadenkanal: zarter heller Streifen längs durch die Mitte
+  const k = ctx.createLinearGradient(-r * .2, 0, r * .2, 0);
+  k.addColorStop(0, 'rgba(255,255,255,0)'); k.addColorStop(.5, `rgba(255,255,255,${.10 * K})`); k.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = k; ctx.fillRect(-r * .2, -r * 1.1, r * .4, r * 2.2);
+  ctx.restore();
+  ctx.save(); umriss(); ctx.clip();
+  const sh = ctx.createRadialGradient(x - r * .3, y - r * .34, 0, x - r * .3, y - r * .34, r * .34);
+  sh.addColorStop(0, 'rgba(255,255,255,.7)'); sh.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = sh; ctx.fillRect(x - r * 1.1, y - r * 1.1, 2.2 * r, 2.2 * r);
+  ctx.restore();
+}
+
+// Doppelkegel von der Seite: die Spitzen liegen am Faden, die breite Mitte steht quer dazu.
+// Je Kegel drei Schliffflächen. Keine Mittellinie: die Kante entsteht nur aus hell und dunkel.
+function drawBiconeBand(ctx, x, y, r, c, ang) {
+  const S = SCHLIFF_BICONE;
+  const w = r * 1.12, h = r * .98, k = .30 * w, m = w * .36;
+  const P = (px, py) => [x + px * Math.cos(ang) - py * Math.sin(ang), y + px * Math.sin(ang) + py * Math.cos(ang)];
+  const poly = pts => { ctx.beginPath(); pts.forEach(([px, py], i) => { const q = P(px, py); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }); ctx.closePath(); };
+  const aussen = [[-k, -h], [k, -h], [w, 0], [k, h], [-k, h], [-w, 0]];
+  poly(aussen);
+  const g = ctx.createRadialGradient(x - r * .4, y - r * .42, r * .05, x + r * .1, y + r * .1, r * 1.3);
+  g.addColorStop(0, c.shimmer); g.addColorStop(.42, c.hex); g.addColorStop(1, darken(c.hex, .48));
+  ctx.fillStyle = g; ctx.fill();
+  ctx.save(); poly(aussen); ctx.clip();
+  [-1, 1].forEach(s => {
+    [[[-w, 0], [-k, s * h], [-m, 0]], [[-m, 0], [-k, s * h], [k, s * h], [m, 0]], [[m, 0], [k, s * h], [w, 0]]].forEach((f, i) => {
+      const n = [[-1, s * .55], [0, s * 1], [1, s * .55]][i], l = Math.hypot(n[0], n[1]);
+      const gx = (n[0] * Math.cos(ang) - n[1] * Math.sin(ang)) / l, gy = (n[0] * Math.sin(ang) + n[1] * Math.cos(ang)) / l;
+      const d = gx * LICHT[0] + gy * LICHT[1];
+      poly(f);
+      ctx.fillStyle = d > 0 ? `rgba(255,255,255,${Math.min(1, d * .42 * S)})` : `rgba(0,0,0,${Math.min(1, -d * .30 * S)})`;
+      ctx.fill();
+      ctx.strokeStyle = `rgba(255,255,255,${Math.min(1, .28 * S)})`; ctx.lineWidth = Math.max(.35, r * .03); ctx.stroke();
+    });
+  });
+  const sh = ctx.createRadialGradient(x - r * .3, y - r * .34, 0, x - r * .3, y - r * .34, r * .4);
+  sh.addColorStop(0, 'rgba(255,255,255,.6)'); sh.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = sh; ctx.fillRect(x - 1.3 * r, y - 1.3 * r, 2.6 * r, 2.6 * r);
+  ctx.restore();
+}
+
+// Grosslochperle in Gold und Silber (seit 12.10.2026): leicht bauchiger Körper mit einem Rand
+// an beiden Enden und einem hellen Glanzstreifen längs – so sieht die echte Edelstahlperle aus.
+const BARREL_RAND = .3;   // Länge eines Randes als Anteil der halben Perlenlänge (Tanjas Wahl "G2")
 function drawBarrel(ctx, x, y, r, base, shimmer, gloss, angle) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle || 0);
-  const w = r * 0.92, h = r * 1.25;
-  const we = r * 0.62;
+  const w = r * 0.95, h = r * 1.25, hk = h * (1 - BARREL_RAND), wr = w * .88;
+  // Metallglanz quer über die Perle: scharfer heller Streifen, daneben ein dunkler Spiegelstreifen, unten wieder Licht
+  const g = ctx.createLinearGradient(w, 0, -w, 0);
+  g.addColorStop(0, darken(base, .6)); g.addColorStop(.1, base); g.addColorStop(.22, shimmer); g.addColorStop(.29, '#ffffff');
+  g.addColorStop(.36, shimmer); g.addColorStop(.5, base); g.addColorStop(.62, darken(base, .45)); g.addColorStop(.74, base);
+  g.addColorStop(.9, shimmer); g.addColorStop(1, darken(base, .6));
+  // Körper: leicht bauchig
   ctx.beginPath();
-  ctx.moveTo(0, -h);
-  ctx.bezierCurveTo( we*1.3, -h*.88,  w, -h*.32,  w, 0);
-  ctx.bezierCurveTo( w,  h*.32,  we*1.3,  h*.88,  0,  h);
-  ctx.bezierCurveTo(-we*1.3,  h*.88, -w,  h*.32, -w, 0);
-  ctx.bezierCurveTo(-w, -h*.32, -we*1.3, -h*.88,  0, -h);
-  ctx.closePath();
-  const g = ctx.createRadialGradient(-w*.3,-h*.3,h*.04, w*.1, h*.1, h);
-  g.addColorStop(0,shimmer); g.addColorStop(.42,base); g.addColorStop(1,darken(base,.48));
-  ctx.fillStyle=g; ctx.fill();
-  const sh = ctx.createRadialGradient(-w*.28,-h*.28,0,-w*.28,-h*.28,h*.4);
-  sh.addColorStop(0,`rgba(255,255,255,${gloss})`); sh.addColorStop(1,'rgba(255,255,255,0)');
-  ctx.fillStyle=sh; ctx.fill();
+  ctx.moveTo(-w * .8, -hk);
+  ctx.bezierCurveTo(-w * 1.06, -hk * .4, -w * 1.06, hk * .4, -w * .8, hk);
+  ctx.lineTo(w * .8, hk);
+  ctx.bezierCurveTo(w * 1.06, hk * .4, w * 1.06, -hk * .4, w * .8, -hk);
+  ctx.closePath(); ctx.fillStyle = g; ctx.fill();
+  // Ränder an beiden Enden
+  const rand = (ya, yb) => {
+    const y0 = Math.min(ya, yb), hh = Math.abs(yb - ya), rr = hh * .45;
+    ctx.beginPath();
+    ctx.moveTo(-wr + rr, y0); ctx.lineTo(wr - rr, y0); ctx.quadraticCurveTo(wr, y0, wr, y0 + rr);
+    ctx.lineTo(wr, y0 + hh - rr); ctx.quadraticCurveTo(wr, y0 + hh, wr - rr, y0 + hh);
+    ctx.lineTo(-wr + rr, y0 + hh); ctx.quadraticCurveTo(-wr, y0 + hh, -wr, y0 + hh - rr);
+    ctx.lineTo(-wr, y0 + rr); ctx.quadraticCurveTo(-wr, y0, -wr + rr, y0);
+    ctx.closePath(); ctx.fillStyle = g; ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.22)'; ctx.lineWidth = Math.max(.4, r * .04); ctx.stroke();
+  };
+  rand(-h, -hk); rand(hk, h);
   ctx.restore();
 }
+
 
 // ── Armband zeichnen ──────────────────────────────────────────
 
@@ -347,12 +449,8 @@ function drawCanvas() {
       drawBarrel(ctx, x, y, R_BARREL, mc.hex, mc.shimmer, 0.82, rot - Math.PI / 2);
     } else {
       const c = getCrystalAt(idx - 1);
-      if (c.shape === 'bicone') {
-        drawBicone(ctx, x, y, R_CRYSTAL, c.hex, c.shimmer, 0.72, rot);
-      } else {
-        // Runde Kristalle: ebenfalls rotieren (symmetrisch, kein sichtbarer Effekt)
-        drawSphere(ctx, x, y, R_CRYSTAL, c.hex, c.shimmer, 0.65, c.stop);
-      }
+      if (c.shape === 'bicone') drawBiconeBand(ctx, x, y, R_CRYSTAL, c, rot - Math.PI / 2);
+      else                      drawRund(ctx, x, y, R_CRYSTAL, c, rot - Math.PI / 2);
     }
   });
 
@@ -467,6 +565,7 @@ function updateSummary() {
   } else {
     document.getElementById('summary-box').classList.remove('visible');
   }
+  updateBild();
 }
 
 function buildSummary() {
@@ -481,6 +580,64 @@ function buildSummary() {
     }
   }
   return `Kristall Pur\n${colorLines}\nEdelstahl: ${state.metal}\nPreis: 50 €`;
+}
+
+// Fertiges Armband als Bild speichern (wie im Wunscharmband). Im Shop nur mit dem Einbau-Code ohne Abschottung.
+let auswahlBlob = null;
+function updateBild() {
+  const fertig = !!isReady();
+  document.getElementById('save-row').classList.toggle('visible', fertig);
+  auswahlBlob = null;
+  document.getElementById('save-hint').textContent = '';
+  if (fertig) auswahlBild().toBlob(b => { auswahlBlob = b; }, 'image/png');
+}
+
+function auswahlBild() {
+  const quelle = document.getElementById('bracelet-canvas');
+  const S = 1080, c = document.createElement('canvas');
+  c.width = c.height = S;
+  const g = c.getContext('2d');
+  g.fillStyle = '#f4f3ef'; g.fillRect(0, 0, S, S);
+  // Auswahl-Zeile an den Trennpunkten umbrechen
+  g.font = "400 36px 'Cormorant Garamond', Georgia, serif";
+  const teile = document.getElementById('preview-label').textContent.split(' · ');
+  const zeilen = [];
+  let z = '';
+  teile.forEach(t => {
+    const probe = z ? z + ' · ' + t : t;
+    if (z && g.measureText(probe).width > S - 120) { zeilen.push(z + ' ·'); z = t; } else z = probe;
+  });
+  if (z) zeilen.push(z);
+  const zh = 48, textH = zeilen.length * zh;
+  const B = Math.min(S - 40, S - textH - 70);          // Platz für das Armband
+  g.drawImage(quelle, (S - B) / 2, 10, B, B);
+  g.fillStyle = '#111'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  zeilen.forEach((t, i) => g.fillText(t, S / 2, S - 40 - textH + zh / 2 + i * zh));
+  return c;
+}
+
+const istIPhone = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+function bildSpeichern() {
+  if (!auswahlBlob) return;
+  const hinweis = document.getElementById('save-hint');
+  if (istIPhone) {
+    let datei = null;
+    try { datei = new File([auswahlBlob], 'mein-kristall-pur-armband.png', { type: 'image/png' }); } catch (e) {}
+    if (datei && navigator.canShare && navigator.canShare({ files: [datei] })) {
+      navigator.share({ files: [datei] }).catch(() => {});
+      hinweis.innerHTML = 'Im Menü auf <strong>Bild sichern</strong> tippen, dann liegt dein Armband in deinen Fotos.';
+      return;
+    }
+  }
+  const url = URL.createObjectURL(auswahlBlob), a = document.createElement('a');
+  a.href = url; a.download = 'mein-kristall-pur-armband.png';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  const txt = document.getElementById('btn-speichern-text');
+  txt.textContent = 'Gespeichert';
+  setTimeout(() => { txt.textContent = 'Bild speichern'; }, 2000);
 }
 
 // "Jetzt bestellen" (wie im Wunscharmband): öffnet die Bestellseite in der Shop-Seite selbst (target="_top").
