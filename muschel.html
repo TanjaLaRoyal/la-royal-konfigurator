@@ -53,6 +53,8 @@ body { background: transparent; color: var(--text); font-family: 'Jost', sans-se
 .copy-btn { margin-top: 14px; display: inline-block; border: 1px solid #111; background: transparent; padding: 9px 18px; font-family: 'Jost', sans-serif; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; color: #111; transition: all 0.2s; border-radius: 1px; }
 .copy-btn:hover { background: #111; color: #fff; }
 .copy-btn.copied { background: #111; color: #fff; }
+.order-btn { display: block; width: fit-content; margin: 0 auto; padding: 10px 22px; background: #c9a96e; color: #fff; border: none; border-radius: 20px; font-family: 'Jost', sans-serif; font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; text-align: center; text-decoration: none; transition: background 0.2s; }
+.order-btn:hover { background: #b8924f; }
 .next-step { display: none; background: #fff; color: #111; border: 1px solid #e8e5df; border-radius: 1px; padding: 22px 20px 12px; }
 .next-step.visible { display: block; }
 .next-step-title { font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; font-weight: 500; margin-bottom: 16px; }
@@ -123,10 +125,10 @@ body { background: transparent; color: var(--text); font-family: 'Jost', sans-se
   <div class="next-step" id="next-step">
     <div class="next-step-title">So bestellst du</div>
     <ol class="next-step-steps">
-      <li><span class="next-step-num">1</span><span class="step-text">Kopiere deine Auswahl mit dem Button <strong>"Text kopieren"</strong>.</span></li>
-      <li><span class="next-step-num">2</span><span class="step-text">Klicke unten auf <strong>"Jetzt bestellen"</strong> und gehe zur Produktseite.</span></li>
-      <li><span class="next-step-num">3</span><span class="step-text">Füge den kopierten Text in das Feld <strong>"Auswahl einfügen"</strong> ein.</span></li>
+      <li><span class="next-step-num">1</span><span class="step-text">Klicke auf <strong>"Jetzt bestellen"</strong>. Deine Auswahl steht dann schon auf der Bestellseite.</span></li>
+      <li><span class="next-step-num">2</span><span class="step-text">Prüfe sie kurz und lege die Ohrringe in den Warenkorb.</span></li>
     </ol>
+    <a class="order-btn" id="order-btn" href="https://laroyallanzarote.com/products/sternschnuppen-ohrringe-wunschanfertigung" target="_top">Jetzt bestellen</a>
   </div>
 
 </div>
@@ -525,6 +527,7 @@ function updateSummary() {
     const s = buildSummary();
     document.getElementById('summary-text').innerHTML = '<strong>' + s.split('\n')[0] + '</strong>\n' + s.split('\n').slice(1).join('\n');
     document.getElementById('next-step').classList.add('visible');
+    document.getElementById('order-btn').href = bestellLink();
   } else {
     document.getElementById('summary-box').classList.remove('visible');
     document.getElementById('next-step').classList.remove('visible');
@@ -542,6 +545,15 @@ function buildSummary() {
     colorLines = state.slots.map((s, i) => `Farbe ${i+1}: ${s}`).join('\n');
   }
   return `Sternschnuppen Ohrringe\n${colorLines}\nEdelstahl: ${state.metal}\nVerschluss: ${claspName}\nPreis: 45 €`;
+}
+
+// "Jetzt bestellen" (seit 13.10.2026): öffnet die Bestellseite in der Shop-Seite selbst (target="_top").
+// Das Shop-Skript in Ecwid liest t (Auswahltext) und v (Verschluss) aus der Adresse und füllt die Bestellseite aus,
+// genau wie bei den Bestelllinks der Funkel-Galerie. Klappt im Shop nur ohne Abschottung (sandbox) des Rahmens.
+const BESTELLSEITE = 'https://laroyallanzarote.com/products/sternschnuppen-ohrringe-wunschanfertigung';
+function bestellLink() {
+  const v = state.clasp === 'haken' ? 'Ohrhaken' : 'Klapp-Verschluss';
+  return BESTELLSEITE + '?t=' + encodeURIComponent(buildSummary()) + '&v=' + encodeURIComponent(v);
 }
 
 function copyText() {
