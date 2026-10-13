@@ -74,25 +74,23 @@ header { text-align: center; margin-bottom: 36px; }
 .metal-swatch.schwarz   { background: radial-gradient(circle at 35% 35%, #585858, #1a1a1a 60%, #0a0a0a); }
 .metal-swatch.kupfer  { background: radial-gradient(circle at 35% 35%, #fff5ea, #efcfaa 40%, #cf9a6c 80%, #8f6040); }
 .design-btn.locked { opacity: 0.3; pointer-events: none; }
-.summary-box { display: none; background: #f4f3ef; border: 1px solid #e8e5df; border-radius: 1px; padding: 18px 20px; margin-bottom: 20px; }
+.summary-box { display: none; position: relative; background: #fdfcfa; border: 1px solid #e8e5df; border-radius: 1px; padding: 18px 20px; margin-bottom: 20px; }
 .summary-box.visible { display: block; }
-.summary-title { font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; font-weight: 500; margin-bottom: 10px; }
-.summary-text { font-size: 16px; color: #111; line-height: 1.7; white-space: pre-line; font-family: 'Jost', sans-serif; }
-.copy-btn { margin-top: 14px; display: inline-block; border: 1px solid #111; background: transparent; padding: 9px 18px; font-family: 'Jost', sans-serif; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; color: #111; transition: all 0.2s; border-radius: 1px; }
-.copy-btn:hover { background: #111; color: #fff; }
-.copy-btn.copied { background: #111; color: #fff; }
-.next-step { display: none; background: #fff; color: #111; border: 1px solid #e8e5df; border-radius: 1px; padding: 22px 20px 12px; }
-.next-step.visible { display: block; }
-.next-step-title { font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; font-weight: 500; margin-bottom: 16px; }
-.next-step-steps { list-style: none; padding: 0; margin: 0 0 20px; display: flex; flex-direction: column; gap: 10px; }
-.next-step-steps li { display: flex; align-items: flex-start; gap: 12px; font-size: 17px; color: #111; line-height: 1.5; }
-.next-step-steps li span.step-text { flex: 1; min-width: 0; }
-.next-step-num { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: #111; color: #fff; font-size: 12px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
-.next-step-steps li.extras-step { display: none; background: #fbf5e8; border-left: 3px solid var(--gold); padding: 10px 12px; margin-left: -12px; }
-.next-step-steps li.extras-step.visible { display: flex; }
-.next-step-steps li.extras-step .next-step-num { background: var(--gold); }
-.order-btn { display: block; width: fit-content; margin: 0 auto; padding: 10px 22px; background: #c9a96e; color: #fff; border: none; border-radius: 20px; font-family: 'Jost', sans-serif; font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; text-align: center; text-decoration: none; transition: background 0.2s; }
-.order-btn:hover { background: #b8924f; }
+.summary-title { font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; color: #111; font-weight: 500; margin-bottom: 10px; }
+.summary-text { font-size: 16px; color: #000; font-weight: 400; line-height: 1.7; white-space: pre-line; font-family: 'Jost', sans-serif; }
+.copy-btn { position: absolute; top: 14px; right: 14px; margin: 0; padding: 6px; border: none; background: transparent; color: #111; cursor: pointer; line-height: 0; }
+.copy-btn svg { width: 18px; height: 18px; }
+.order-hint { font-family: 'Jost', sans-serif; font-size: 15px; color: #000; font-weight: 400; text-align: center; margin: 10px 0 0; }
+.auswahl-zeile { display: flex; flex-direction: column; gap: 14px; }
+.auswahl-zeile .summary-text { order: 1; }
+.mini-vorschau { order: 2; align-self: center; width: 150px; height: auto; display: block; background: #f4f3ef; border: 1px solid #ece9e3; }
+@media (min-width: 560px) {
+  .auswahl-zeile { flex-direction: row; align-items: center; justify-content: center; gap: 32px; }
+  .mini-vorschau { order: 0; width: 170px; }
+  .summary-title { text-align: center; }
+}
+.order-btn { display: block; width: fit-content; margin: 0 auto; padding: 10px 22px; background: #b8924f; color: #fff; border: none; border-radius: 20px; font-family: 'Jost', sans-serif; font-weight: 500; font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; text-align: center; text-decoration: none; transition: background 0.2s; }
+.order-btn:hover { background: #a37f3f; }
 .save-row { display: none; flex-direction: column; align-items: center; margin-top: 6px; }
 .save-row.visible { display: flex; }
 .save-btn { display: inline-flex; align-items: center; gap: 9px; padding: 7px 18px; background: transparent; color: #a8843f; border: 1px solid #c9a96e; border-radius: 24px; font-family: 'Jost', sans-serif; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; }
@@ -221,18 +219,13 @@ header { text-align: center; margin-bottom: 36px; }
 
     <div class="summary-box" id="summary-box">
       <div class="summary-title">Deine Auswahl</div>
-      <div class="summary-text" id="summary-text"></div>
-      <button class="copy-btn" id="copy-btn" onclick="copyText()">Text kopieren</button>
-    </div>
-
-    <div class="next-step" id="next-step">
-      <div class="next-step-title">So bestellst du</div>
-      <ol class="next-step-steps">
-        <li><span class="next-step-num">1</span><span class="step-text">Kopiere deine Auswahl mit dem Button <strong>"Text kopieren"</strong>.</span></li>
-        <li><span class="next-step-num">2</span><span class="step-text">Klicke auf <strong>"Jetzt bestellen"</strong> und gehe zur Bestellseite.</span></li>
-        <li><span class="next-step-num">3</span><span class="step-text">Füge den kopierten Text in das Feld <strong>"Auswahl einfügen"</strong> ein.</span></li>
-        <li class="extras-step" id="extras-step"><span class="next-step-num">4</span><span class="step-text" id="extras-step-text"></span></li>
-      </ol>
+      <div class="auswahl-zeile">
+        <img class="mini-vorschau" id="mini-vorschau" alt="Dein Armband">
+        <div class="summary-text" id="summary-text"></div>
+      </div>
+      <button class="copy-btn" id="copy-btn" onclick="copyText()" title="Auswahl kopieren" aria-label="Auswahl kopieren"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg></button>
+      <a class="order-btn" id="order-btn" href="https://laroyallanzarote.com/products/energie--doppel-kristall-armband-wunschfarben" target="_top" style="margin-top:18px">Jetzt bestellen</a>
+      <p class="order-hint">Im nächsten Schritt wählst du nur noch deine Grösse und legst dein Armband in den Warenkorb.</p>
     </div>
 
   </div><!-- /options-col -->
@@ -592,13 +585,14 @@ function updateSummary() {
   if (isReady()) {
     document.getElementById('summary-box').classList.add('visible');
     const s = buildSummary();
-    document.getElementById('summary-text').innerHTML = '<strong>' + s.split('\n')[0] + '</strong>\n' + s.split('\n').slice(1).join('\n');
-    document.getElementById('next-step').classList.add('visible');
+    // Erste Zeile bewusst nicht fett, alles in derselben Schrift (Tanjas Wahl 13.10.2026).
+    // Kopiert und in den Link übernommen wird immer buildSummary().
+    document.getElementById('summary-text').textContent = s;
+    document.getElementById('order-btn').href = bestellLink();
+    document.getElementById('mini-vorschau').src = document.getElementById('bracelet-canvas').toDataURL('image/png');
   } else {
     document.getElementById('summary-box').classList.remove('visible');
-    document.getElementById('next-step').classList.remove('visible');
   }
-  updateExtrasStep();
   updateBild();
 }
 
@@ -663,20 +657,6 @@ function bildSpeichern() {
   const txt = document.getElementById('btn-speichern-text');
   txt.textContent = 'Gespeichert';
   setTimeout(() => { txt.textContent = 'Bild speichern'; }, 2000);
-}
-
-// Hinweis: Extras müssen auf der Produktseite nochmals angeklickt werden,
-// sonst rechnet der Shop den Aufpreis nicht – der Konfigurator-Text allein ändert den Preis nicht.
-function updateExtrasStep() {
-  const li       = document.getElementById('extras-step');
-  const anyExtra = state.lavaReplace || state.placeholders !== 'alle';
-  const show     = anyExtra && isReady();
-  li.classList.toggle('visible', show);
-  if (!show) return;
-  document.getElementById('extras-step-text').innerHTML =
-    '<strong>Wichtig bei Extra Funkel-Wünschen:</strong> Wähle beim Bestellen bei ' +
-    '"Extra Funkel-Wünsche" <strong>Ja</strong> und klicke deine Extras dort nochmals an. ' +
-    'Nur so erfährt Tanja von deinem Wunsch.';
 }
 
 function drawLava(ctx, x, y, r) {
@@ -1255,9 +1235,24 @@ function buildSummary() {
   }
 }
 
+// "Jetzt bestellen" (seit 13.10.2026, wie in den Sternschnuppen): öffnet die Bestellseite
+// in der Shop-Seite selbst (target="_top"). Das Shop-Skript in Ecwid füllt den Auswahltext (t)
+// ins Feld und klickt den Preis (p: 45, 50 oder 55) an. Die Grösse wählt die Kundin dort selbst.
+const BESTELLSEITE = 'https://laroyallanzarote.com/products/energie--doppel-kristall-armband-wunschfarben';
+function bestellLink() {
+  return BESTELLSEITE + '?t=' + encodeURIComponent(buildSummary()) + '&p=' + totalPrice();
+}
+
+// Kopieren ist nur noch Reserve: kleines Symbol oben rechts im Kasten (seit 13.10.2026).
+const KOPIER_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg>';
+const KOPIER_HAKEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 function copyText() {
-  const text = document.getElementById('summary-text').innerText;
+  const text = buildSummary();
   const btn = document.getElementById('copy-btn');
+  function fertig() {
+    btn.innerHTML = KOPIER_HAKEN;
+    setTimeout(() => { btn.innerHTML = KOPIER_ICON; }, 2000);
+  }
   function fallback() {
     const ta = document.createElement('textarea');
     ta.value = text; ta.style.position = 'fixed'; ta.style.top = '-9999px';
@@ -1265,16 +1260,10 @@ function copyText() {
     document.body.appendChild(ta); ta.select();
     try { document.execCommand('copy'); } catch(e) {}
     document.body.removeChild(ta);
-    btn.textContent = 'Kopiert!';
-    btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'Text kopieren'; btn.classList.remove('copied'); }, 2000);
+    fertig();
   }
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => {
-      btn.textContent = 'Kopiert!';
-      btn.classList.add('copied');
-      setTimeout(() => { btn.textContent = 'Text kopieren'; btn.classList.remove('copied'); }, 2000);
-    }).catch(() => fallback());
+    navigator.clipboard.writeText(text).then(fertig).catch(() => fallback());
   } else {
     fallback();
   }
