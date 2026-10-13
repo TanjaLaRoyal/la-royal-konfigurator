@@ -51,30 +51,49 @@ header { text-align: center; margin-bottom: 36px; }
 .color-chip:hover { border-color: #111; }
 .color-chip.active { border-color: #111; background: #f4f3ef; }
 .color-dot { width: 18px; height: 18px; flex-shrink: 0; }
-.summary-box { display: none; background: #f4f3ef; border: 1px solid #e8e5df; border-radius: 1px; padding: 24px; margin-bottom: 20px; }
+.seiten-titel { font-family: 'Jost', sans-serif; font-weight: 300; font-size: clamp(1.4rem, 3.5vw, 2rem); letter-spacing: 0.18em; line-height: 1.35; text-transform: uppercase; text-align: center; color: #111; margin-bottom: 52px; }
+@media (max-width: 420px) { .seiten-titel { font-size: 1.25rem; letter-spacing: 0.1em; } }
+.summary-box { display: none; position: relative; background: #fdfcfa; border: 1px solid #e8e5df; border-radius: 1px; padding: 18px 20px; margin-bottom: 20px; }
 .summary-box.visible { display: block; }
-.summary-title { font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; font-weight: 500; margin-bottom: 10px; }
-.summary-text { font-size: 16px; color: #111; line-height: 1.7; white-space: pre-line; margin-bottom: 16px; font-family: 'Jost', sans-serif; }
-.copy-btn { border: 1px solid #111; background: transparent; padding: 10px 24px; border-radius: 1px; cursor: pointer; font-family: 'Jost', sans-serif; font-size: 14px; letter-spacing: 0.1em; color: #111; transition: all 0.2s; }
-.copy-btn:hover { background: #111; color: #fff; }
-.next-step { display: none; background: #fff; color: #111; border: 1px solid #e8e5df; border-radius: 1px; padding: 22px 20px 12px; }
-.next-step.visible { display: block; }
-.next-step-title { font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; font-weight: 500; margin-bottom: 16px; }
-.next-step-steps { list-style: none; padding: 0; margin: 0 0 20px; display: flex; flex-direction: column; gap: 10px; }
-.next-step-steps li { display: flex; align-items: flex-start; gap: 12px; font-size: 17px; color: #111; line-height: 1.5; }
-.next-step-steps li span.step-text { flex: 1; min-width: 0; }
-.next-step-num { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: #111; color: #fff; font-size: 12px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+.summary-title { font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; color: #111; font-weight: 500; margin-bottom: 10px; }
+.summary-text { font-size: 16px; color: #000; font-weight: 400; line-height: 1.7; white-space: pre-line; font-family: 'Jost', sans-serif; }
+.copy-btn { position: absolute; top: 14px; right: 14px; margin: 0; padding: 6px; border: none; background: transparent; color: #111; cursor: pointer; line-height: 0; }
+.copy-btn svg { width: 18px; height: 18px; }
+.order-hint { font-family: 'Jost', sans-serif; font-size: 15px; color: #000; font-weight: 400; text-align: center; margin: 10px 0 0; }
+.auswahl-zeile { display: flex; flex-direction: column; gap: 14px; }
+.auswahl-zeile .summary-text { order: 1; }
+.mini-vorschau { order: 2; align-self: center; width: 150px; height: auto; display: block; background: #f4f3ef; border: 1px solid #ece9e3; }
+@media (min-width: 560px) {
+  .auswahl-zeile { flex-direction: row; align-items: center; justify-content: center; gap: 32px; }
+  .mini-vorschau { order: 0; width: 170px; }
+  .summary-title { text-align: center; }
+}
+.order-btn { display: block; width: fit-content; margin: 0 auto; padding: 10px 22px; background: #b8924f; color: #fff; border: none; border-radius: 20px; font-family: 'Jost', sans-serif; font-weight: 500; font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; text-align: center; text-decoration: none; transition: background 0.2s; }
+.order-btn:hover { background: #a37f3f; }
+.save-row { display: none; flex-direction: column; align-items: center; margin-top: 6px; }
+.save-row.visible { display: flex; }
+.save-btn { display: inline-flex; align-items: center; gap: 9px; padding: 7px 18px; background: transparent; color: #a8843f; border: 1px solid #c9a96e; border-radius: 24px; font-family: 'Jost', sans-serif; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; }
+.save-btn:hover { background: #f3ead8; }
+.save-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+.save-hint { font-family: 'Jost', sans-serif; font-size: 13px; color: #777; margin: 6px 0 0; text-align: center; min-height: 1em; }
 </style>
 </head>
 <body>
 
 <div style="width:48px; height:1px; background:#c9a96e; margin:60px auto 16px;"></div>
-<h2 style="font-family:'Jost',sans-serif; font-weight:300; font-size:clamp(1.4rem,3.5vw,2rem); letter-spacing:0.18em; text-transform:uppercase; text-align:center; color:#111; margin-bottom:52px;">Gestalte deinen Bündel Charm</h2>
+<h2 class="seiten-titel">Bündel Charm</h2>
 
 <div class="card">
   <div class="charm-wrap">
     <canvas id="charm-canvas" width="900" height="615" style="width:300px;height:205px;"></canvas>
     <div class="preview-label" id="preview-label">Wähle dein Edelstahl und deine Kristallfarben.</div>
+    <div class="save-row" id="save-row">
+      <button type="button" class="save-btn" id="btn-speichern" onclick="bildSpeichern()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/></svg>
+        <span id="btn-speichern-text">Bild speichern</span>
+      </button>
+      <p class="save-hint" id="save-hint"></p>
+    </div>
   </div>
 
   <div class="progress" id="progress"></div>
@@ -123,17 +142,13 @@ header { text-align: center; margin-bottom: 36px; }
 
   <div class="summary-box" id="summary-box">
     <div class="summary-title">Deine Auswahl</div>
-    <div class="summary-text" id="summary-text"></div>
-    <button class="copy-btn" id="copy-btn" onclick="copyText()">Text kopieren</button>
-  </div>
-
-  <div class="next-step" id="next-step">
-    <div class="next-step-title">So bestellst du</div>
-    <ol class="next-step-steps">
-      <li><span class="next-step-num">1</span><span class="step-text">Kopiere deine Auswahl mit dem Button <strong>"Text kopieren"</strong>.</span></li>
-      <li><span class="next-step-num">2</span><span class="step-text">Klicke auf <strong>"Jetzt bestellen"</strong> und gehe zur Produktseite.</span></li>
-      <li><span class="next-step-num">3</span><span class="step-text">Füge den kopierten Text in das Feld <strong>"Auswahl einfügen"</strong> ein.</span></li>
-    </ol>
+    <div class="auswahl-zeile">
+      <img class="mini-vorschau" id="mini-vorschau" alt="Dein Charm">
+      <div class="summary-text" id="summary-text"></div>
+    </div>
+    <button class="copy-btn" id="copy-btn" onclick="copyText()" title="Auswahl kopieren" aria-label="Auswahl kopieren"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg></button>
+    <a class="order-btn" id="order-btn" href="https://laroyallanzarote.com/products/bundel-charm-wunschanfertigung" target="_top" style="margin-top:18px">Jetzt bestellen</a>
+    <p class="order-hint">Im nächsten Schritt legst du deinen Charm in den Warenkorb.</p>
   </div>
 
 </div>
@@ -644,12 +659,14 @@ function updateSummary() {
   if (isReady()) {
     document.getElementById('summary-box').classList.add('visible');
     const s = buildSummary();
-    document.getElementById('summary-text').innerHTML = '<strong>' + s.split('\n')[0] + '</strong>\n' + s.split('\n').slice(1).join('\n');
-    document.getElementById('next-step').classList.add('visible');
+    // Erste Zeile nicht fett, alles in derselben Schrift; kopiert und verlinkt wird immer buildSummary()
+    document.getElementById('summary-text').textContent = s;
+    document.getElementById('order-btn').href = bestellLink();
+    document.getElementById('mini-vorschau').src = document.getElementById('charm-canvas').toDataURL('image/png');
   } else {
     document.getElementById('summary-box').classList.remove('visible');
-    document.getElementById('next-step').classList.remove('visible');
   }
+  updateBild();
 }
 
 function buildSummary() {
@@ -673,9 +690,82 @@ function buildSummary() {
   return `Bündel Charm\n${colorLines}${modeLine}\nEdelstahl: ${state.metal}${lavaLine}\nPreis: 35 €`;
 }
 
+// Fertigen Charm als Bild speichern (wie im Wunscharmband). Im Shop nur mit dem Einbau-Code ohne Abschottung.
+let auswahlBlob = null;
+function updateBild() {
+  const fertig = !!isReady();
+  document.getElementById('save-row').classList.toggle('visible', fertig);
+  auswahlBlob = null;
+  document.getElementById('save-hint').textContent = '';
+  if (fertig) auswahlBild().toBlob(b => { auswahlBlob = b; }, 'image/png');
+}
+
+function auswahlBild() {
+  const quelle = document.getElementById('charm-canvas');
+  const S = 1080, c = document.createElement('canvas');
+  c.width = c.height = S;
+  const g = c.getContext('2d');
+  g.fillStyle = '#f4f3ef'; g.fillRect(0, 0, S, S);
+  // Auswahl-Zeile an den Trennpunkten umbrechen
+  g.font = "400 36px 'Cormorant Garamond', Georgia, serif";
+  const teile = document.getElementById('preview-label').textContent.split(' · ');
+  const zeilen = [];
+  let z = '';
+  teile.forEach(t => {
+    const probe = z ? z + ' · ' + t : t;
+    if (z && g.measureText(probe).width > S - 120) { zeilen.push(z + ' ·'); z = t; } else z = probe;
+  });
+  if (z) zeilen.push(z);
+  const zh = 48, textH = zeilen.length * zh;
+  const B = Math.min(S - 40, S - textH - 70);          // Platz für den Charm
+  const bw = Math.min(S - 40, B * quelle.width / quelle.height), bh = bw * quelle.height / quelle.width;
+  g.drawImage(quelle, (S - bw) / 2, 10 + (B - bh) / 2, bw, bh);
+  g.fillStyle = '#111'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  zeilen.forEach((t, i) => g.fillText(t, S / 2, S - 40 - textH + zh / 2 + i * zh));
+  return c;
+}
+
+const istIPhone = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+function bildSpeichern() {
+  if (!auswahlBlob) return;
+  const hinweis = document.getElementById('save-hint');
+  if (istIPhone) {
+    let datei = null;
+    try { datei = new File([auswahlBlob], 'mein-buendel-charm.png', { type: 'image/png' }); } catch (e) {}
+    if (datei && navigator.canShare && navigator.canShare({ files: [datei] })) {
+      navigator.share({ files: [datei] }).catch(() => {});
+      hinweis.innerHTML = 'Im Menü auf <strong>Bild sichern</strong> tippen, dann liegt dein Charm in deinen Fotos.';
+      return;
+    }
+  }
+  const url = URL.createObjectURL(auswahlBlob), a = document.createElement('a');
+  a.href = url; a.download = 'mein-buendel-charm.png';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  const txt = document.getElementById('btn-speichern-text');
+  txt.textContent = 'Gespeichert';
+  setTimeout(() => { txt.textContent = 'Bild speichern'; }, 2000);
+}
+
+// "Jetzt bestellen" (wie im Wunscharmband): öffnet die Bestellseite in der Shop-Seite selbst (target="_top").
+// Das Shop-Skript füllt den Auswahltext (t) ins Feld; mehr gibt es auf der Bestellseite nicht zu wählen.
+const BESTELLSEITE = 'https://laroyallanzarote.com/products/bundel-charm-wunschanfertigung';
+function bestellLink() {
+  return BESTELLSEITE + '?t=' + encodeURIComponent(buildSummary());
+}
+
+// Kopieren ist nur noch Reserve: kleines Symbol oben rechts im Kasten.
+const KOPIER_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg>';
+const KOPIER_HAKEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 function copyText() {
-  const text = document.getElementById('summary-text').innerText;
+  const text = buildSummary();
   const btn = document.getElementById('copy-btn');
+  function fertig() {
+    btn.innerHTML = KOPIER_HAKEN;
+    setTimeout(() => { btn.innerHTML = KOPIER_ICON; }, 2000);
+  }
   function fallback() {
     const ta = document.createElement('textarea');
     ta.value = text; ta.style.position = 'fixed'; ta.style.top = '-9999px';
@@ -683,15 +773,13 @@ function copyText() {
     document.body.appendChild(ta); ta.select();
     try { document.execCommand('copy'); } catch(e) {}
     document.body.removeChild(ta);
-    btn.textContent = 'Kopiert ✓';
-    setTimeout(() => { btn.textContent = 'Text kopieren'; }, 2000);
+    fertig();
   }
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => {
-      btn.textContent = 'Kopiert ✓';
-      setTimeout(() => { btn.textContent = 'Text kopieren'; }, 2000);
-    }).catch(() => fallback());
-  } else { fallback(); }
+    navigator.clipboard.writeText(text).then(fertig).catch(() => fallback());
+  } else {
+    fallback();
+  }
 }
 
 
