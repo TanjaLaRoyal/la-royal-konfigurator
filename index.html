@@ -93,6 +93,12 @@ header { text-align: center; margin-bottom: 36px; }
 .next-step-steps li.extras-step .next-step-num { background: var(--gold); }
 .order-btn { display: block; width: fit-content; margin: 0 auto; padding: 10px 22px; background: #c9a96e; color: #fff; border: none; border-radius: 20px; font-family: 'Jost', sans-serif; font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; text-align: center; text-decoration: none; transition: background 0.2s; }
 .order-btn:hover { background: #b8924f; }
+.save-row { display: none; flex-direction: column; align-items: center; margin-top: 6px; }
+.save-row.visible { display: flex; }
+.save-btn { display: inline-flex; align-items: center; gap: 9px; padding: 7px 18px; background: transparent; color: #a8843f; border: 1px solid #c9a96e; border-radius: 24px; font-family: 'Jost', sans-serif; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; }
+.save-btn:hover { background: #f3ead8; }
+.save-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+.save-hint { font-family: 'Jost', sans-serif; font-size: 13px; color: #777; margin: 6px 0 0; text-align: center; min-height: 1em; }
 </style>
 </head>
 <body>
@@ -106,6 +112,13 @@ header { text-align: center; margin-bottom: 36px; }
   <div class="bracelet-wrap">
     <canvas id="bracelet-canvas" width="1020" height="1020" style="width:340px;height:340px;"></canvas>
     <div class="preview-label" id="preview-label">Wähle dein Design + Wunschkristalle – das Armband füllt sich mit deinen Farben.</div>
+    <div class="save-row" id="save-row">
+      <button type="button" class="save-btn" id="btn-speichern" onclick="bildSpeichern()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/></svg>
+        <span id="btn-speichern-text">Bild speichern</span>
+      </button>
+      <p class="save-hint" id="save-hint"></p>
+    </div>
   </div>
 
   <div class="progress" id="progress"></div>
@@ -586,8 +599,71 @@ function updateSummary() {
     document.getElementById('next-step').classList.remove('visible');
   }
   updateExtrasStep();
+  updateBild();
 }
 
+
+// ---- Fertiges Armband als Bild speichern (wieder seit 13.10.2026, wie im Funkel Orakel) ----
+// Das Bild zeigt nur, was die Kundin auch sieht: das Armband und die Auswahl-Zeile darunter.
+// Bewusst nur "Bild speichern", kein "Teilen" (Tanjas Entscheidung).
+// Im Shop klappt das Herunterladen nur, weil der Einbau-Code bei Ecwid die Abschottung (sandbox) entfernt.
+// Am iPhone/iPad öffnet der Knopf das Teilen-Menü: nur über "Bild sichern" kommt das Bild in die Fotos.
+let auswahlBlob = null;
+function updateBild() {
+  const fertig = !!isReady();
+  document.getElementById('save-row').classList.toggle('visible', fertig);
+  auswahlBlob = null;
+  document.getElementById('save-hint').textContent = '';
+  if (fertig) auswahlBild().toBlob(b => { auswahlBlob = b; }, 'image/png');
+}
+
+function auswahlBild() {
+  const quelle = document.getElementById('bracelet-canvas');
+  const S = 1080, c = document.createElement('canvas');
+  c.width = c.height = S;
+  const g = c.getContext('2d');
+  g.fillStyle = '#f4f3ef'; g.fillRect(0, 0, S, S);
+  // Auswahl-Zeile an den Trennpunkten umbrechen
+  g.font = "400 36px 'Cormorant Garamond', Georgia, serif";
+  const teile = document.getElementById('preview-label').textContent.split(' · ');
+  const zeilen = [];
+  let z = '';
+  teile.forEach(t => {
+    const probe = z ? z + ' · ' + t : t;
+    if (z && g.measureText(probe).width > S - 120) { zeilen.push(z + ' ·'); z = t; } else z = probe;
+  });
+  if (z) zeilen.push(z);
+  const zh = 48, textH = zeilen.length * zh;
+  const B = Math.min(S - 40, S - textH - 70);          // Platz für das Armband
+  g.drawImage(quelle, (S - B) / 2, 10, B, B);
+  g.fillStyle = '#111'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  zeilen.forEach((t, i) => g.fillText(t, S / 2, S - 40 - textH + zh / 2 + i * zh));
+  return c;
+}
+
+const istIPhone = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+function bildSpeichern() {
+  if (!auswahlBlob) return;
+  const hinweis = document.getElementById('save-hint');
+  if (istIPhone) {
+    let datei = null;
+    try { datei = new File([auswahlBlob], 'mein-wunscharmband.png', { type: 'image/png' }); } catch (e) {}
+    if (datei && navigator.canShare && navigator.canShare({ files: [datei] })) {
+      navigator.share({ files: [datei] }).catch(() => {});
+      hinweis.innerHTML = 'Im Menü auf <strong>Bild sichern</strong> tippen, dann liegt dein Armband in deinen Fotos.';
+      return;
+    }
+  }
+  const url = URL.createObjectURL(auswahlBlob), a = document.createElement('a');
+  a.href = url; a.download = 'mein-wunscharmband.png';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  const txt = document.getElementById('btn-speichern-text');
+  txt.textContent = 'Gespeichert';
+  setTimeout(() => { txt.textContent = 'Bild speichern'; }, 2000);
+}
 
 // Hinweis: Extras müssen auf der Produktseite nochmals angeklickt werden,
 // sonst rechnet der Shop den Aufpreis nicht – der Konfigurator-Text allein ändert den Preis nicht.
@@ -748,7 +824,7 @@ const SCHLIFF_BICONE = 0.65;     // Stärke der Flächen am Doppelkegel ("zart")
 function drawRund(ctx, x, y, r, c, ang) {
   if (c.stop === 'klar') return drawKlar(ctx, x, y, r);
   const K = SCHLIFF_RUND;
-  const umriss = () => { ctx.beginPath(); for (let i = 0; i < 12; i++) { const a = ang + Math.PI / 12 + i * Math.PI / 6; ctx[i ? 'lineTo' : 'moveTo'](x + Math.cos(a) * r * 1.02, y + Math.sin(a) * r * 1.02); } ctx.closePath(); };
+  const umriss = () => { ctx.beginPath(); ctx.arc(x, y, r * 1.02, 0, Math.PI * 2); ctx.closePath(); };   // runder Umriss (13.10.2026), die Waben liegen innen
   umriss();
   const g = ctx.createRadialGradient(x - r * .35, y - r * .38, r * .04, x + r * .1, y + r * .1, r * 1.05);
   g.addColorStop(0, c.shimmer); g.addColorStop(typeof c.stop === 'number' ? c.stop : .42, c.hex); g.addColorStop(1, darken(c.hex, .48));
