@@ -53,6 +53,14 @@ body { background: transparent; color: var(--text); font-family: 'Jost', sans-se
 .copy-btn { position: absolute; top: 14px; right: 14px; margin: 0; padding: 6px; border: none; background: transparent; color: #111; cursor: pointer; line-height: 0; }
 .copy-btn svg { width: 18px; height: 18px; }
 .order-hint { font-family: 'Jost', sans-serif; font-size: 15px; color: #111; text-align: center; margin: 10px 0 0; }
+.auswahl-zeile { display: flex; flex-direction: column; gap: 14px; }
+.auswahl-zeile .summary-text { order: 1; }
+.mini-vorschau { order: 2; align-self: center; width: 150px; height: auto; display: block; background: #f4f3ef; border: 1px solid #ece9e3; }
+@media (min-width: 560px) {
+  .auswahl-zeile { flex-direction: row; align-items: center; justify-content: center; gap: 32px; }
+  .mini-vorschau { order: 0; width: 170px; }
+  .summary-title { text-align: center; }
+}
 .order-btn { display: block; width: fit-content; margin: 0 auto; padding: 10px 22px; background: #c9a96e; color: #fff; border: none; border-radius: 20px; font-family: 'Jost', sans-serif; font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; text-align: center; text-decoration: none; transition: background 0.2s; }
 .order-btn:hover { background: #b8924f; }
 .save-row { display: none; flex-direction: column; align-items: center; margin-top: 6px; }
@@ -124,7 +132,10 @@ body { background: transparent; color: var(--text); font-family: 'Jost', sans-se
 
   <div class="summary-box" id="summary-box">
     <div class="summary-title">Deine Auswahl</div>
-    <div class="summary-text" id="summary-text"></div>
+    <div class="auswahl-zeile">
+      <img class="mini-vorschau" id="mini-vorschau" alt="Deine Ohrringe">
+      <div class="summary-text" id="summary-text"></div>
+    </div>
     <button class="copy-btn" id="copy-btn" onclick="copyText()" title="Auswahl kopieren" aria-label="Auswahl kopieren"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg></button>
     <a class="order-btn" id="order-btn" href="https://laroyallanzarote.com/products/sternschnuppen-ohrringe-wunschanfertigung" target="_top" style="margin-top:18px">Jetzt bestellen</a>
     <p class="order-hint">Im nächsten Schritt legst du deine Ohrringe in den Warenkorb.</p>
@@ -526,6 +537,7 @@ function updateSummary() {
     const s = buildSummary();
     document.getElementById('summary-text').innerHTML = '<strong>' + s.split('\n')[0] + '</strong>\n' + s.split('\n').slice(1).join('\n');
     document.getElementById('order-btn').href = bestellLink();
+    document.getElementById('mini-vorschau').src = document.getElementById('earring-canvas').toDataURL('image/png');
   } else {
     document.getElementById('summary-box').classList.remove('visible');
   }
