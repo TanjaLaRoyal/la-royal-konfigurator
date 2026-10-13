@@ -74,6 +74,9 @@ header { text-align: center; margin-bottom: 36px; }
 .metal-swatch.schwarz   { background: radial-gradient(circle at 35% 35%, #585858, #1a1a1a 60%, #0a0a0a); }
 .metal-swatch.kupfer  { background: radial-gradient(circle at 35% 35%, #fff5ea, #efcfaa 40%, #cf9a6c 80%, #8f6040); }
 .design-btn.locked { opacity: 0.3; pointer-events: none; }
+.seiten-titel { font-family: 'Jost', sans-serif; font-weight: 300; font-size: clamp(1.4rem, 3.5vw, 2rem); letter-spacing: 0.18em; line-height: 1.35; text-transform: uppercase; text-align: center; color: #111; margin-bottom: 52px; }
+/* Schmale Handys: etwas enger, damit "Energie · Doppel Kristall" auf einer Zeile bleibt */
+@media (max-width: 420px) { .seiten-titel { font-size: 1.25rem; letter-spacing: 0.1em; } }
 .summary-box { display: none; position: relative; background: #fdfcfa; border: 1px solid #e8e5df; border-radius: 1px; padding: 18px 20px; margin-bottom: 20px; }
 .summary-box.visible { display: block; }
 .summary-title { font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; color: #111; font-weight: 500; margin-bottom: 10px; }
@@ -101,8 +104,8 @@ header { text-align: center; margin-bottom: 36px; }
 </head>
 <body>
 
-<h2 style="font-family:'Jost',sans-serif; font-weight:300; font-size:clamp(1.4rem,3.5vw,2rem); letter-spacing:0.18em; text-transform:uppercase; text-align:center; color:#111; margin-top:60px; margin-bottom:16px;">Gestalte dein Wunscharmband</h2>
-<div style="width:48px; height:1px; background:#c9a96e; margin:0 auto 52px;"></div>
+<div style="width:48px; height:1px; background:#c9a96e; margin:60px auto 16px;"></div>
+<h2 class="seiten-titel">Energie · Doppel Kristall<br>Armband</h2>
 
 <div class="card">
 
