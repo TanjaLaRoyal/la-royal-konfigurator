@@ -916,8 +916,20 @@
     window.scrollTo({ top: 0, behavior: "auto" });
   });
 
+  var istIPhone = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
   $("btnSpeichern").addEventListener("click", function () {
     if (!letzterBlob) return;
+    if (istIPhone) {
+      var datei = null;
+      try { datei = new File([letzterBlob], "funkel-orakel.png", { type: "image/png" }); } catch (e) {}
+      if (datei && navigator.canShare && navigator.canShare({ files: [datei] })) {
+        navigator.share({ files: [datei] }).then(function () {}).catch(function () {});
+        $("hinweis").innerHTML = "Im Menü auf <strong>Bild sichern</strong> tippen, dann liegt das Kärtchen in deinen Fotos.";
+        return;
+      }
+    }
     try {
       var url = URL.createObjectURL(letzterBlob);
       var a = document.createElement("a");
