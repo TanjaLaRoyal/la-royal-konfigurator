@@ -86,10 +86,12 @@ header { text-align: center; margin-bottom: 36px; }
 .order-hint { font-family: 'Jost', sans-serif; font-size: 15px; color: #000; font-weight: 400; text-align: center; margin: 10px 0 0; }
 .auswahl-zeile { display: flex; flex-direction: column; gap: 14px; }
 .auswahl-zeile .summary-text { order: 1; }
-.mini-vorschau { order: 2; align-self: center; width: 150px; height: auto; display: block; background: #f4f3ef; border: 1px solid #ddd; }
+.mini-vorschau { order: 2; align-self: center; width: 190px; height: auto; display: block; background: #f4f3ef; border: 1px solid #ddd; }
 @media (min-width: 560px) {
-  .auswahl-zeile { flex-direction: row; align-items: center; justify-content: center; gap: 32px; }
-  .mini-vorschau { order: 0; width: 170px; }
+  /* Bild und Text oben bündig, Text mit fester Breite: so springt das Bild nicht, wenn der Text wächst (14.10.2026) */
+  .auswahl-zeile { flex-direction: row; align-items: flex-start; justify-content: center; gap: 32px; }
+  .auswahl-zeile .summary-text { flex: 0 0 340px; }
+  .mini-vorschau { order: 0; width: 210px; align-self: flex-start; }
   .summary-title { text-align: center; }
 }
 .order-btn { display: block; width: fit-content; margin: 0 auto; padding: 10px 22px; background: #a8843f; color: #fff; border: none; border-radius: 20px; font-family: 'Jost', sans-serif; font-weight: 500; font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; text-align: center; text-decoration: none; transition: background 0.2s; }
@@ -117,12 +119,14 @@ header { text-align: center; margin-bottom: 36px; }
 .summary-text .fertig::before { content: '\2713  '; color: #a8843f; }
 .order-btn.gesperrt { background: #ddd; color: #111; pointer-events: none; }
 .copy-btn.versteckt { display: none; }
+/* Kristall Pur im Wunscharmband (seit 14.10.2026): Hinweis zur Reihenfolge ab 4 Farben */
+.sequence-hint { font-size: 13px; color: #111; letter-spacing: 0.05em; margin-bottom: 14px; }
 </style>
 </head>
 <body>
 
 <div style="width:48px; height:1px; background:#a8843f; margin:60px auto 16px;"></div>
-<h2 class="seiten-titel">Energie · Doppel Kristall<br>Armband</h2>
+<h2 class="seiten-titel">Energie · Doppel Kristall<br>Kristall Pur Armband</h2>
 
 <div class="card">
 
@@ -154,6 +158,10 @@ header { text-align: center; margin-bottom: 36px; }
           <span class="design-btn-name">Energie Armband</span>
           <span class="design-btn-desc">Platzhalter Perle · Lavaperle · Platzhalter Perle · 3 Kristalle – 1, 2 oder 3 Farben</span>
         </button>
+        <button class="design-btn" onclick="setDesign('pur', this)">
+          <span class="design-btn-name">Kristall Pur Armband</span>
+          <span class="design-btn-desc">Nur Kristalle, rundherum – 1 bis 5 Farben</span>
+        </button>
       </div>
     </div>
 
@@ -166,7 +174,7 @@ header { text-align: center; margin-bottom: 36px; }
         <button class="metal-btn" onclick="setMetal('Gold',this)">
           <span class="metal-swatch gold"></span> Gold
         </button>
-        <button class="metal-btn" onclick="setMetal('Roségold',this)">
+        <button class="metal-btn" id="rosegold-btn" onclick="setMetal('Roségold',this)">
           <span class="metal-swatch rosegold"></span> Roségold
         </button>
       </div>
@@ -199,6 +207,17 @@ header { text-align: center; margin-bottom: 36px; }
         <button class="count-btn" onclick="setCount(1,this)">Einfarbig</button>
         <button class="count-btn" onclick="setCount(2,this)">Zweifarbig</button>
         <button class="count-btn" onclick="setCount(3,this)">Dreifarbig</button>
+      </div>
+    </div>
+
+    <div class="section" id="pur-count-section" style="display:none">
+      <div class="section-label count-section-label">4 · Wie viele Kristallfarben?</div>
+      <div class="count-options">
+        <button class="count-btn" onclick="setCount(1,this)">Einfarbig</button>
+        <button class="count-btn" onclick="setCount(2,this)">2 Farben</button>
+        <button class="count-btn" onclick="setCount(3,this)">3 Farben</button>
+        <button class="count-btn" onclick="setCount(4,this)">4 Farben</button>
+        <button class="count-btn" onclick="setCount(5,this)">5 Farben</button>
       </div>
     </div>
 
@@ -451,6 +470,8 @@ function drawBracelet() {
   ctx.setTransform(Q, 0, 0, Q, 0, 0);
   const W = canvas.width / Q, H = canvas.height / Q;
   ctx.clearRect(0, 0, W, H);
+  if (!state.design)          { drawStart(ctx, W, H); return nachDemZeichnen(); }
+  if (state.design === 'pur') { drawPur(ctx, W, H); return nachDemZeichnen(); }
   const seq = buildSequence();
   const N   = seq.length;
   const cx  = W / 2, cy = H / 2;
@@ -499,10 +520,102 @@ function drawBracelet() {
     else if (b.shape === 'bicone') drawBiconeBand(ctx, x, y, R_CRYSTAL, b, angles[i]);
     else                           drawRund(ctx, x, y, R_CRYSTAL, b, angles[i]);
   }
+  nachDemZeichnen();
+}
+
+function nachDemZeichnen() {
   updateLabel();
   updateSummary();
   updateProgress();
   updateHeadings();
+}
+
+// ---- Kristall Pur (seit 14.10.2026 im Wunscharmband, vorher eigene Datei Kristallpur.html) ----
+// Gezeichnet wie in Kristallpur.html: 31 gleich grosse Perlen, oben die Grosslochperle, dann 30 Kristalle
+// (normale Armbandgrösse). Die Farben wiederholen sich in ihrer Reihenfolge rund ums Armband.
+// Roségold gibt es bei Kristall Pur nicht, deshalb immer die Grosslochperle in Silber oder Gold.
+const PUR_PERLEN = 31;
+const PUR_R      = 12;
+const PUR_LEER   = { ...GREY, shape: 'bicone' };   // dasselbe Grau wie im Wunscharmband (keine neuen Farbwerte)
+const PUR_COUNTS = { dk: [1, 2, 4], energie: [1, 2, 3], pur: [1, 2, 3, 4, 5] };
+
+function purKristall(i) {
+  if (!state.count || state.slots.length === 0) return PUR_LEER;
+  const name = state.slots[i % state.count];
+  return name ? (COLORS.find(c => c.name === name) || PUR_LEER) : PUR_LEER;
+}
+
+// Startbild vor der Design-Wahl (Tanjas Wunsch 14.10.2026): ein neutraler grauer Kreis wie eine leere
+// Leinwand. Alle Perlen gleich, glatt und grau, so dass man nicht sieht, ob es Lava oder Kristalle sind.
+// Oben die Grosslochperle, die jedes Armband hat, ebenfalls grau und matt statt silbern.
+function drawStart(ctx, W, H) {
+  const cx = W / 2, cy = H / 2;
+  const ringR = Math.min(PUR_R / Math.sin(Math.PI / PUR_PERLEN), W / 2 - PUR_R - 8);
+  ctx.beginPath();
+  ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(120,110,100,0.1)';
+  ctx.lineWidth   = 1.5;
+  ctx.stroke();
+  const perlen = [];
+  for (let i = 0; i < PUR_PERLEN; i++) {
+    const a = (i / PUR_PERLEN) * 2 * Math.PI - Math.PI / 2;
+    perlen.push({ x: cx + ringR * Math.cos(a), y: cy + ringR * Math.sin(a), rot: a + Math.PI / 2, idx: i });
+  }
+  perlen.slice().sort((a, b) => a.y - b.y).forEach(({ x, y, rot, idx }) => {
+    if (idx === 0) drawBarrelGrau(ctx, x, y, PUR_R, rot - Math.PI / 2);
+    else           drawSphere(ctx, x, y, PUR_R, GREY.hex, GREY.shimmer, 0.35);
+  });
+}
+
+// Grosslochperle für das Startbild: Form wie drawBarrel (mit Rändern), aber matt grau ohne Metallstreifen
+function drawBarrelGrau(ctx, x, y, r, angle) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle || 0);
+  const w = r * 0.95, h = r * 1.25, hk = h * (1 - BARREL_RAND), wr = w * .88;
+  const g = ctx.createLinearGradient(w, 0, -w, 0);
+  g.addColorStop(0, darken(GREY.hex, .75)); g.addColorStop(.35, GREY.shimmer); g.addColorStop(1, darken(GREY.hex, .75));
+  ctx.beginPath();
+  ctx.moveTo(-w * .8, -hk);
+  ctx.bezierCurveTo(-w * 1.06, -hk * .4, -w * 1.06, hk * .4, -w * .8, hk);
+  ctx.lineTo(w * .8, hk);
+  ctx.bezierCurveTo(w * 1.06, hk * .4, w * 1.06, -hk * .4, w * .8, -hk);
+  ctx.closePath(); ctx.fillStyle = g; ctx.fill();
+  const rand = (ya, yb) => {
+    const y0 = Math.min(ya, yb), hh = Math.abs(yb - ya), rr = hh * .45;
+    ctx.beginPath();
+    ctx.moveTo(-wr + rr, y0); ctx.lineTo(wr - rr, y0); ctx.quadraticCurveTo(wr, y0, wr, y0 + rr);
+    ctx.lineTo(wr, y0 + hh - rr); ctx.quadraticCurveTo(wr, y0 + hh, wr - rr, y0 + hh);
+    ctx.lineTo(-wr + rr, y0 + hh); ctx.quadraticCurveTo(-wr, y0 + hh, -wr, y0 + hh - rr);
+    ctx.lineTo(-wr, y0 + rr); ctx.quadraticCurveTo(-wr, y0, -wr + rr, y0);
+    ctx.closePath(); ctx.fillStyle = g; ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.15)'; ctx.lineWidth = Math.max(.4, r * .04); ctx.stroke();
+  };
+  rand(-h, -hk); rand(hk, h);
+  ctx.restore();
+}
+
+function drawPur(ctx, W, H) {
+  const cx = W / 2, cy = H / 2;
+  const ringR = Math.min(PUR_R / Math.sin(Math.PI / PUR_PERLEN), W / 2 - PUR_R - 8);
+  ctx.beginPath();
+  ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(120,110,100,0.1)';
+  ctx.lineWidth   = 1.5;
+  ctx.stroke();
+  const mc = state.metal === 'Gold' ? { hex: '#d2a038', shimmer: '#f7e2a0' } : { hex: '#aab3bd', shimmer: '#f1f4f7' };
+  const perlen = [];
+  for (let i = 0; i < PUR_PERLEN; i++) {
+    const a = (i / PUR_PERLEN) * 2 * Math.PI - Math.PI / 2;
+    perlen.push({ x: cx + ringR * Math.cos(a), y: cy + ringR * Math.sin(a), rot: a + Math.PI / 2, idx: i });
+  }
+  // Oben (weit) zuerst, unten (nah) zuletzt
+  perlen.slice().sort((a, b) => a.y - b.y).forEach(({ x, y, rot, idx }) => {
+    if (idx === 0) { drawBarrel(ctx, x, y, PUR_R, mc.hex, mc.shimmer, 0.82, rot - Math.PI / 2); return; }
+    const c = purKristall(idx - 1);
+    if (c.shape === 'bicone') drawBiconeBand(ctx, x, y, PUR_R, c, rot - Math.PI / 2);
+    else                      drawRund(ctx, x, y, PUR_R, c, rot - Math.PI / 2);
+  });
 }
 
 // Zeile unter dem Armband: zeigt die ganze Auswahl so, wie sie bestellt wird –
@@ -524,6 +637,10 @@ function updateLabel() {
   if (!state.design) {
     label.textContent = 'Wähle dein Design + Wunschkristalle – das Armband füllt sich mit deinen Farben.';
     label.className   = 'preview-label';
+  } else if (ready && state.design === 'pur') {
+    const colorStr = state.count === 1 ? state.slots[0] : state.slots.join(' · ');
+    label.textContent = `Kristall Pur · ${colorStr} · ${state.metal}`;
+    label.className   = 'preview-label filled';
   } else if (ready) {
     const designName = state.design === 'dk' ? 'Doppel Kristall' : 'Energie';
     if (state.design === 'energie' && state.count >= 2) {
@@ -556,6 +673,9 @@ function updateLabel() {
 }
 
 function isReady() {
+  if (state.design === 'pur') {
+    return state.count && state.metal && state.slots.length === state.count && state.slots.every(Boolean);
+  }
   return state.design &&
          state.count &&
          state.metal &&
@@ -575,18 +695,22 @@ function lavaComplete() {
   return !LAVA_KUPFER_VERFUEGBAR || !!state.lava;
 }
 
-const STEP_LABELS = LAVA_KUPFER_VERFUEGBAR
-  ? ['Design', 'Edelstahl', 'Lava', 'Farb-Anzahl', 'Farben', 'Funkel-Wünsche']
-  : ['Design', 'Edelstahl', 'Farb-Anzahl', 'Farben', 'Funkel-Wünsche'];
+// Der Fortschrittsbalken zeigt nur die Schritte des gewählten Designs (Kristall Pur: ohne Lava und Funkel-Wünsche)
+function stepLabels() {
+  if (state.design === 'pur') return ['Design', 'Edelstahl', 'Farb-Anzahl', 'Farben'];
+  return LAVA_KUPFER_VERFUEGBAR
+    ? ['Design', 'Edelstahl', 'Lava', 'Farb-Anzahl', 'Farben', 'Funkel-Wünsche']
+    : ['Design', 'Edelstahl', 'Farb-Anzahl', 'Farben', 'Funkel-Wünsche'];
+}
 
 function stepDone() {
   const steps = [!!state.design, !!state.metal];
-  if (LAVA_KUPFER_VERFUEGBAR) steps.push(!!state.lava);
+  if (LAVA_KUPFER_VERFUEGBAR && state.design !== 'pur') steps.push(!!state.lava);
   steps.push(
     !!state.count,
     !!state.count && state.slots.filter(Boolean).length === state.count,
-    extrasComplete(),
   );
+  if (state.design !== 'pur') steps.push(extrasComplete());
   return steps;
 }
 
@@ -594,7 +718,7 @@ function updateProgress() {
   const el = document.getElementById('progress');
   const done = stepDone();
   const current = done.indexOf(false);   // erster offener Schritt, -1 = alles fertig
-  el.innerHTML = STEP_LABELS.map((label, i) => {
+  el.innerHTML = stepLabels().map((label, i) => {
     const cls = done[i] ? 'p-step done' : (i === current ? 'p-step current' : 'p-step');
     const dot = done[i] ? '✓' : (i + 1);
     return `<div class="${cls}"><div class="p-dot">${dot}</div><div class="p-label">${label}</div></div>`;
@@ -684,12 +808,14 @@ function auswahlBild() {
 const istIPhone = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
+function bildName() { return state.design === 'pur' ? 'mein-kristall-pur-armband.png' : 'mein-wunscharmband.png'; }
+
 function bildSpeichern() {
   if (!auswahlBlob) return;
   const hinweis = document.getElementById('save-hint');
   if (istIPhone) {
     let datei = null;
-    try { datei = new File([auswahlBlob], 'mein-wunscharmband.png', { type: 'image/png' }); } catch (e) {}
+    try { datei = new File([auswahlBlob], bildName(), { type: 'image/png' }); } catch (e) {}
     if (datei && navigator.canShare && navigator.canShare({ files: [datei] })) {
       navigator.share({ files: [datei] }).catch(() => {});
       hinweis.innerHTML = 'Im Menü auf <strong>Bild sichern</strong> tippen, dann liegt dein Armband in deinen Fotos.';
@@ -697,7 +823,7 @@ function bildSpeichern() {
     }
   }
   const url = URL.createObjectURL(auswahlBlob), a = document.createElement('a');
-  a.href = url; a.download = 'mein-wunscharmband.png';
+  a.href = url; a.download = bildName();
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
   const txt = document.getElementById('btn-speichern-text');
@@ -1104,9 +1230,17 @@ function resetExtras() {
 // Lava, Edelstahl und Extra Funkel-Wünsche bleiben immer. Einfarbig und Zweifarbig gibt es
 // in beiden Designs, sie bleiben mit ihren Farben. Dreifarbig (nur Energie) und Vierfarbig
 // (nur Doppel Kristall) muss die Kundin neu anklicken – die Farben sind dann vorausgefüllt.
+// Kristall Pur (seit 14.10.2026): eigene Farb-Anzahl (1 bis 5), kein Lava-Schritt, keine Funkel-Wünsche,
+// kein Roségold. Ist Roségold gewählt und die Kundin wechselt zu Kristall Pur, wird Edelstahl wieder offen.
 function setDesign(design, btn) {
   if (state.design === design) return;
-  const behalten = state.count === 1 || state.count === 2;
+  const behalten = !!state.count && PUR_COUNTS[design].includes(state.count);
+  const pur = design === 'pur';
+  if (pur && state.metal === 'Roségold') {
+    state.metal = null;
+    document.querySelectorAll('.metal-btn:not(.lava-btn)').forEach(b => b.classList.remove('active'));
+  }
+  document.getElementById('rosegold-btn').style.display = pur ? 'none' : '';
   state.design = design;
   state.ePos   = [0, 1, 0];
   if (!behalten) {
@@ -1117,18 +1251,18 @@ function setDesign(design, btn) {
   document.querySelectorAll('button[onclick^="setDesign"]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
-  if (LAVA_KUPFER_VERFUEGBAR) document.getElementById('lava-section').style.display = 'block';
+  if (LAVA_KUPFER_VERFUEGBAR) document.getElementById('lava-section').style.display = pur ? 'none' : 'block';
   document.getElementById('metal-section').style.display = 'block';
-  const sec = design === 'dk' ? 'dk-count-section' : 'en-count-section';
-  document.getElementById('dk-count-section').style.display = design === 'dk'      ? 'block' : 'none';
-  document.getElementById('en-count-section').style.display = design === 'energie' ? 'block' : 'none';
+  const sec = { dk: 'dk-count-section', energie: 'en-count-section', pur: 'pur-count-section' }[design];
+  ['dk-count-section', 'en-count-section', 'pur-count-section'].forEach(id =>
+    document.getElementById(id).style.display = id === sec ? 'block' : 'none');
   if (behalten) {
     const cb = document.querySelector(`#${sec} button[onclick="setCount(${state.count},this)"]`);
     if (cb) cb.classList.add('active');
     renderSlots();
   }
-  ['color-section', 'extras-section'].forEach(id =>
-    document.getElementById(id).style.display = behalten ? 'block' : 'none');
+  document.getElementById('color-section').style.display  = behalten ? 'block' : 'none';
+  document.getElementById('extras-section').style.display = behalten && !pur ? 'block' : 'none';
   drawBracelet();
 }
 
@@ -1144,7 +1278,7 @@ function setCount(n, btn) {
   renderSlots();
   document.getElementById('color-section').style.display  = 'block';
   document.getElementById('metal-section').style.display  = 'block';
-  document.getElementById('extras-section').style.display = 'block';
+  document.getElementById('extras-section').style.display = state.design === 'pur' ? 'none' : 'block';
   drawBracelet();
 }
 
@@ -1170,6 +1304,13 @@ function renderSlots() {
   wrapper.innerHTML = '';
   const isEnergie   = state.design === 'energie';
   const n           = state.count;
+  // Kristall Pur: ab 4 Farben steht über den Feldern, dass sich die Reihenfolge wiederholt
+  if (state.design === 'pur' && n >= 4) {
+    const hint = document.createElement('div');
+    hint.className   = 'sequence-hint';
+    hint.textContent = `Die Reihenfolge ${Array.from({ length: n }, (_, i) => `Farbe ${i + 1}`).join(' → ')} wiederholt sich rund ums Armband.`;
+    wrapper.appendChild(hint);
+  }
   let labels;
   if (isEnergie && n === 3)  labels = ['Links', 'Mitte', 'Rechts'];
   else if (n === 1)          labels = ['Kristallfarbe'];
@@ -1267,7 +1408,20 @@ function totalPrice() {
   return p;
 }
 
+// Bestelltext für Kristall Pur: wörtlich wie in Kristallpur.html, damit Parser und Shop-Skript ihn weiter erkennen
+function buildSummaryPur() {
+  let colorLines;
+  if (state.count === 1) {
+    colorLines = `Kristallfarbe: ${state.slots[0]}`;
+  } else {
+    colorLines = state.slots.map((s, i) => `Farbe ${i + 1}: ${s}`).join('\n');
+    if (state.count >= 4) colorLines += `\nReihenfolge: ${state.slots.map((_, i) => `Farbe ${i + 1}`).join(' → ')}`;
+  }
+  return `Kristall Pur\n${colorLines}\nEdelstahl: ${state.metal}\nPreis: 50 €`;
+}
+
 function buildSummary() {
+  if (state.design === 'pur') return buildSummaryPur();
   const extras    = buildExtraLines();
   const extraPart = extras.length ? extras.join('\n') + '\n' : '';
   const lavaPart  = LAVA_KUPFER_VERFUEGBAR && state.lava ? `Lava: ${state.lava}\n` : '';
@@ -1285,7 +1439,10 @@ function buildSummary() {
 // in der Shop-Seite selbst (target="_top"). Das Shop-Skript in Ecwid füllt den Auswahltext (t)
 // ins Feld und klickt den Preis (p: 45, 50 oder 55) an. Die Grösse wählt die Kundin dort selbst.
 const BESTELLSEITE = 'https://laroyallanzarote.com/products/energie--doppel-kristall-armband-wunschfarben';
+// Kristall Pur führt auf seine eigene Bestellseite (fester Preis 50 €, eigene Bewertungen), nur mit dem Auswahltext.
+const BESTELLSEITE_PUR = 'https://laroyallanzarote.com/products/armband-kristall-pur-wunschfarben';
 function bestellLink() {
+  if (state.design === 'pur') return BESTELLSEITE_PUR + '?t=' + encodeURIComponent(buildSummary());
   return BESTELLSEITE + '?t=' + encodeURIComponent(buildSummary()) + '&p=' + totalPrice();
 }
 
@@ -1373,11 +1530,14 @@ function updateHeadings() {
 }
 
 function HEADING_WERTE() {
-  const countNames = { 1: 'Einfarbig', 2: 'Zweifarbig', 3: 'Dreifarbig', 4: 'Vierfarbig' };
+  const countNames = state.design === 'pur'
+    ? { 1: 'Einfarbig', 2: '2 Farben', 3: '3 Farben', 4: '4 Farben', 5: '5 Farben' }
+    : { 1: 'Einfarbig', 2: 'Zweifarbig', 3: 'Dreifarbig', 4: 'Vierfarbig' };
+  const designNamen = { dk: 'Doppel Kristall', energie: 'Energie', pur: 'Kristall Pur' };
   let extras = null;
   if (extrasComplete()) extras = state.noExtras ? 'Keine' : buildExtraLines().map(t => t.replace(/^Extra: /, '')).join(', ');
   const w = [
-    ['design-section-label', state.design ? (state.design === 'dk' ? 'Doppel Kristall' : 'Energie') : null],
+    ['design-section-label', state.design ? designNamen[state.design] : null],
     ['metal-section-label', state.metal],
     ['lava-section-label', state.lava],
     ['color-section-label', farbenWert()],
@@ -1394,6 +1554,12 @@ function HEADING_WERTE() {
 // Zeilen im Kasten "Deine Auswahl", solange noch etwas fehlt (nur die Schritte dieses Designs)
 function STAND_ZEILEN() {
   const W = Object.fromEntries(HEADING_WERTE());
+  if (state.design === 'pur') return [
+    ['Design', W['design-section-label']],
+    ['Edelstahl', W['metal-section-label']],
+    ['Farb-Anzahl', countWert()],
+    ['Farben', W['color-section-label']],
+  ];
   return [
     ['Design', W['design-section-label']],
     ['Edelstahl', W['metal-section-label']],

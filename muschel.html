@@ -55,10 +55,12 @@ body { background: transparent; color: var(--text); font-family: 'Jost', sans-se
 .order-hint { font-family: 'Jost', sans-serif; font-size: 15px; color: #000; font-weight: 400; text-align: center; margin: 10px 0 0; }
 .auswahl-zeile { display: flex; flex-direction: column; gap: 14px; }
 .auswahl-zeile .summary-text { order: 1; }
-.mini-vorschau { order: 2; align-self: center; width: 150px; height: auto; display: block; background: #f4f3ef; border: 1px solid #ddd; }
+.mini-vorschau { order: 2; align-self: center; width: 190px; height: auto; display: block; background: #f4f3ef; border: 1px solid #ddd; }
 @media (min-width: 560px) {
-  .auswahl-zeile { flex-direction: row; align-items: center; justify-content: center; gap: 32px; }
-  .mini-vorschau { order: 0; width: 170px; }
+  /* Bild und Text oben bündig, Text mit fester Breite: so springt das Bild nicht, wenn der Text wächst (14.10.2026) */
+  .auswahl-zeile { flex-direction: row; align-items: flex-start; justify-content: center; gap: 32px; }
+  .auswahl-zeile .summary-text { flex: 0 0 340px; }
+  .mini-vorschau { order: 0; width: 210px; align-self: flex-start; }
   .summary-title { text-align: center; }
 }
 .order-btn { display: block; width: fit-content; margin: 0 auto; padding: 10px 22px; background: #a8843f; color: #fff; border: none; border-radius: 20px; font-family: 'Jost', sans-serif; font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; text-align: center; text-decoration: none; transition: background 0.2s; }
