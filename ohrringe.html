@@ -86,6 +86,16 @@ header { text-align: center; margin-bottom: 36px; }
 .save-btn:hover { background: #f3ead8; }
 .save-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
 .save-hint { font-family: 'Jost', sans-serif; font-size: 13px; color: #777; margin: 6px 0 0; text-align: center; min-height: 1em; }
+
+/* Erledigte Schritte (seit 14.10.2026): Überschrift schwarz mit goldenem Haken, goldener Balken links,
+   zarter Goldschimmer dahinter, gewählter Wert in normaler Schrift. Gold nur als Fläche und Symbol,
+   nie als Lesetext – zu wenig Kontrast (Tanjas Regel: guter Kontrast geht vor). */
+.section-label.done, .slot-label.done { color: #111; border-left: 3px solid #c9a96e; background: linear-gradient(90deg, #f6efe0, rgba(246,239,224,0)); padding: 6px 10px; margin-left: -10px; }
+.section-label .haken, .slot-label .haken { color: #a8843f; }
+.section-label .wahl, .slot-label .wahl { font-weight: 400; letter-spacing: 0.04em; text-transform: none; }
+/* Gewählte Knöpfe: dunkler Goldrand (#a8843f, Kontrast 3,4:1) statt nur dunklem Rand */
+.design-btn.active, .metal-btn.active, .option-btn.active, .color-chip.active, .pos-btn.active { border-color: #a8843f; box-shadow: inset 0 0 0 1px #a8843f; background: #faf6ee; }
+.count-btn.active { background: #faf6ee; border-color: #a8843f; box-shadow: inset 0 0 0 1px #a8843f; color: #111; }
 </style>
 </head>
 <body>
@@ -111,7 +121,7 @@ header { text-align: center; margin-bottom: 36px; }
 
   <!-- 1: Design -->
   <div class="section">
-    <div class="section-label">1 · Design wählen</div>
+    <div class="section-label" id="design-section-label">1 · Design wählen</div>
     <div class="design-options">
       <button class="design-btn" onclick="setDesign('kristall', this)">
         <span class="design-btn-name">Stab Ohrringe</span>
@@ -126,7 +136,7 @@ header { text-align: center; margin-bottom: 36px; }
 
   <!-- 2: Lava (nur Stab Ohrringe) -->
   <div class="section" id="lava-section" style="display:none">
-    <div class="section-label">2 · Lava</div>
+    <div class="section-label" id="lava-section-label">2 · Lava</div>
     <div class="option-row" id="lava-row">
       <button class="option-btn" onclick="setLava('Schwarz', this)">
         <span class="metal-swatch schwarz"></span> Schwarz
@@ -139,7 +149,7 @@ header { text-align: center; margin-bottom: 36px; }
 
   <!-- 3: Edelstahl -->
   <div class="section">
-    <div class="section-label" data-nr="Edelstahl">3 · Edelstahl</div>
+    <div class="section-label" id="metal-section-label" data-nr="Edelstahl">3 · Edelstahl</div>
     <div class="option-row" id="metal-row">
       <button class="option-btn" onclick="setMetal('Silber', this)">
         <span class="metal-swatch silber"></span> Silber
@@ -155,7 +165,7 @@ header { text-align: center; margin-bottom: 36px; }
 
   <!-- 3: Verschluss -->
   <div class="section">
-    <div class="section-label" data-nr="Verschluss">4 · Verschluss</div>
+    <div class="section-label" id="clasp-section-label" data-nr="Verschluss">4 · Verschluss</div>
     <div class="option-row" id="clasp-row">
       <button class="option-btn" onclick="setClasp('klapp', this)">Klapp-Verschluss</button>
       <button class="option-btn" onclick="setClasp('haken', this)">Ohrhaken</button>
@@ -164,7 +174,7 @@ header { text-align: center; margin-bottom: 36px; }
 
   <!-- 4: Anzahl Farben -->
   <div class="section">
-    <div class="section-label" data-nr="Farb-Anzahl">5 · Wie viele Kristallfarben?</div>
+    <div class="section-label" id="count-section-label" data-nr="Farb-Anzahl">5 · Wie viele Kristallfarben?</div>
     <div class="count-options">
       <button class="count-btn" onclick="setCount(1, this)">Einfarbig</button>
       <button class="count-btn" onclick="setCount(2, this)">Zweifarbig</button>
@@ -174,7 +184,7 @@ header { text-align: center; margin-bottom: 36px; }
 
   <!-- 5: Anordnung (nur Bündel, mehrfarbig) -->
   <div class="section" id="mode-section" style="display:none">
-    <div class="section-label" data-nr="Anordnung">6 · Anordnung</div>
+    <div class="section-label" id="mode-section-label" data-nr="Anordnung">6 · Anordnung</div>
     <div class="option-row" id="mode-row">
       <button class="option-btn" onclick="setMode('mix', this)">Mix</button>
       <button class="option-btn" onclick="setMode('verlauf', this)">Farbverlauf</button>
@@ -183,7 +193,7 @@ header { text-align: center; margin-bottom: 36px; }
 
   <!-- 6: Farben -->
   <div class="section" id="color-section" style="display:none">
-    <div class="section-label" data-nr="Farben">7 · Kristallfarben wählen</div>
+    <div class="section-label" id="color-section-label" data-nr="Farben">7 · Kristallfarben wählen</div>
     <div id="slots-wrapper"></div>
   </div>
 
@@ -580,6 +590,7 @@ function drawEarrings() {
   updateLabel();
   updateSummary();
   updateProgress();
+  updateHeadings();
 }
 
 // ── UI-Logik ─────────────────────────────────────────────────
@@ -922,6 +933,62 @@ function updateProgress() {
     const dot = done[i] ? '\u2713' : (i + 1);
     return `<div class="${cls}"><div class="p-dot">${dot}</div><div class="p-label">${label}</div></div>`;
   }).join('');
+}
+
+
+// ---- Überschriften zeigen die Auswahl (seit 14.10.2026) ----
+// Jede Schritt-Überschrift wird nach der Wahl zu "✓ Name · Wert" (schwarz, Haken golden, Balken links).
+// Offene Schritte behalten ihre Nummer. Bei Einfarbig fällt die Feldzeile "Kristallfarbe" weg,
+// die Farbe steht dann in der Überschrift. Die Werte kommen aus HEADING_WERTE (je Datei).
+const HEAD_ORIG = {};
+function setHeading(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (HEAD_ORIG[id] === undefined) HEAD_ORIG[id] = el.textContent;
+  if (value) {
+    const name = HEAD_ORIG[id].replace(/^\d+ · /, '').replace(/ wählen$/, '').replace('Wie viele Kristallfarben?', 'Farb-Anzahl');
+    el.innerHTML = '<span class="haken">✓</span> ' + name + ' · <span class="wahl"></span>';
+    el.querySelector('.wahl').textContent = value;
+    el.classList.add('done');
+  } else {
+    el.textContent = HEAD_ORIG[id];
+    el.classList.remove('done');
+  }
+}
+function countWert() {
+  const b = document.querySelector('.count-btn.active');
+  return b ? b.textContent.trim() : null;
+}
+function farbenWert() {
+  if (!state.count || state.slots.length === 0 || !state.slots.every(Boolean)) return null;
+  return [...new Set(state.slots)].join(', ');
+}
+function updateHeadings() {
+  HEADING_WERTE().forEach(([id, wert]) => setHeading(id, wert));
+  document.querySelectorAll('.color-slot').forEach((div, i) => {
+    const lab = div.querySelector('.slot-label');
+    if (!lab) return;
+    if (state.count === 1) { lab.style.display = 'none'; return; }
+    lab.style.display = '';
+    if (lab.dataset.orig === undefined) lab.dataset.orig = lab.textContent;
+    if (state.slots[i]) {
+      lab.innerHTML = '<span class="haken">✓</span> ' + lab.dataset.orig + ' · <span class="wahl"></span>';
+      lab.querySelector('.wahl').textContent = state.slots[i];
+      lab.classList.add('done');
+    } else { lab.textContent = lab.dataset.orig; lab.classList.remove('done'); }
+  });
+}
+
+function HEADING_WERTE() {
+  return [
+    ['design-section-label', state.design ? (state.design === 'buendel' ? 'Bündel Ohrringe' : 'Stab Ohrringe') : null],
+    ['lava-section-label', state.lava],
+    ['metal-section-label', state.metal],
+    ['clasp-section-label', state.clasp ? (state.clasp === 'haken' ? 'Ohrhaken' : 'Klapp-Verschluss') : null],
+    ['count-section-label', countWert()],
+    ['mode-section-label', (state.mode && state.count > 1 && state.design === 'buendel') ? (state.mode === 'verlauf' ? 'Farbverlauf' : 'Mix') : null],
+    ['color-section-label', farbenWert()],
+  ];
 }
 
 drawEarrings();

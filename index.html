@@ -100,6 +100,16 @@ header { text-align: center; margin-bottom: 36px; }
 .save-btn:hover { background: #f3ead8; }
 .save-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
 .save-hint { font-family: 'Jost', sans-serif; font-size: 13px; color: #777; margin: 6px 0 0; text-align: center; min-height: 1em; }
+
+/* Erledigte Schritte (seit 14.10.2026): Überschrift schwarz mit goldenem Haken, goldener Balken links,
+   zarter Goldschimmer dahinter, gewählter Wert in normaler Schrift. Gold nur als Fläche und Symbol,
+   nie als Lesetext – zu wenig Kontrast (Tanjas Regel: guter Kontrast geht vor). */
+.section-label.done, .slot-label.done { color: #111; border-left: 3px solid #c9a96e; background: linear-gradient(90deg, #f6efe0, rgba(246,239,224,0)); padding: 6px 10px; margin-left: -10px; }
+.section-label .haken, .slot-label .haken { color: #a8843f; }
+.section-label .wahl, .slot-label .wahl { font-weight: 400; letter-spacing: 0.04em; text-transform: none; }
+/* Gewählte Knöpfe: dunkler Goldrand (#a8843f, Kontrast 3,4:1) statt nur dunklem Rand */
+.design-btn.active, .metal-btn.active, .option-btn.active, .color-chip.active, .pos-btn.active { border-color: #a8843f; box-shadow: inset 0 0 0 1px #a8843f; background: #faf6ee; }
+.count-btn.active { background: #faf6ee; border-color: #a8843f; box-shadow: inset 0 0 0 1px #a8843f; color: #111; }
 </style>
 </head>
 <body>
@@ -127,7 +137,7 @@ header { text-align: center; margin-bottom: 36px; }
   <div class="options-col">
 
     <div class="section">
-      <div class="section-label">1 · Design wählen</div>
+      <div class="section-label" id="design-section-label">1 · Design wählen</div>
       <div class="design-options">
         <button class="design-btn" onclick="setDesign('dk', this)">
           <span class="design-btn-name">Doppel Kristall Armband</span>
@@ -140,8 +150,23 @@ header { text-align: center; margin-bottom: 36px; }
       </div>
     </div>
 
+    <div class="section" id="metal-section" style="display:none">
+      <div class="section-label" id="metal-section-label">2 · Edelstahl</div>
+      <div class="metal-options">
+        <button class="metal-btn" onclick="setMetal('Silber',this)">
+          <span class="metal-swatch silber"></span> Silber
+        </button>
+        <button class="metal-btn" onclick="setMetal('Gold',this)">
+          <span class="metal-swatch gold"></span> Gold
+        </button>
+        <button class="metal-btn" onclick="setMetal('Rosegold',this)">
+          <span class="metal-swatch rosegold"></span> Rosegold
+        </button>
+      </div>
+    </div>
+
     <div class="section" id="lava-section" style="display:none">
-      <div class="section-label" id="lava-section-label">2 · Lava</div>
+      <div class="section-label" id="lava-section-label">3 · Lava</div>
       <div class="metal-options">
         <button class="metal-btn lava-btn" onclick="setLava('Schwarz',this)">
           <span class="metal-swatch schwarz"></span> Schwarz
@@ -153,7 +178,7 @@ header { text-align: center; margin-bottom: 36px; }
     </div>
 
     <div class="section" id="dk-count-section" style="display:none">
-      <div class="section-label count-section-label">3 · Wie viele Kristallfarben?</div>
+      <div class="section-label count-section-label">4 · Wie viele Kristallfarben?</div>
       <div class="count-options">
         <button class="count-btn" onclick="setCount(1,this)">Einfarbig</button>
         <button class="count-btn" onclick="setCount(2,this)">Zweifarbig</button>
@@ -162,7 +187,7 @@ header { text-align: center; margin-bottom: 36px; }
     </div>
 
     <div class="section" id="en-count-section" style="display:none">
-      <div class="section-label count-section-label">3 · Wie viele Kristallfarben?</div>
+      <div class="section-label count-section-label">4 · Wie viele Kristallfarben?</div>
       <div class="count-options">
         <button class="count-btn" onclick="setCount(1,this)">Einfarbig</button>
         <button class="count-btn" onclick="setCount(2,this)">Zweifarbig</button>
@@ -171,26 +196,11 @@ header { text-align: center; margin-bottom: 36px; }
     </div>
 
     <div class="section" id="color-section" style="display:none">
-      <div class="section-label" id="color-section-label">4 · Kristallfarben wählen</div>
+      <div class="section-label" id="color-section-label">5 · Kristallfarben wählen</div>
       <div id="slots-wrapper"></div>
       <div id="position-section" style="display:none">
         <div class="position-section-label">Position wählen</div>
         <div class="position-table" id="position-table"></div>
-      </div>
-    </div>
-
-    <div class="section" id="metal-section" style="display:none">
-      <div class="section-label" id="metal-section-label">5 · Edelstahl</div>
-      <div class="metal-options">
-        <button class="metal-btn" onclick="setMetal('Silber',this)">
-          <span class="metal-swatch silber"></span> Silber
-        </button>
-        <button class="metal-btn" onclick="setMetal('Gold',this)">
-          <span class="metal-swatch gold"></span> Gold
-        </button>
-        <button class="metal-btn" onclick="setMetal('Rosegold',this)">
-          <span class="metal-swatch rosegold"></span> Rosegold
-        </button>
       </div>
     </div>
 
@@ -485,6 +495,7 @@ function drawBracelet() {
   updateLabel();
   updateSummary();
   updateProgress();
+  updateHeadings();
 }
 
 // Zeile unter dem Armband: zeigt die ganze Auswahl so, wie sie bestellt wird –
@@ -528,8 +539,8 @@ function updateLabel() {
     label.className   = 'preview-label';
   } else if (state.count) {
     label.textContent = LAVA_KUPFER_VERFUEGBAR
-      ? 'Wähle Farben, Lava und Edelstahl – das Armband passt sich an.'
-      : 'Wähle Farben und Edelstahl – das Armband passt sich an.';
+      ? 'Wähle deine Farben – das Armband passt sich an.'
+      : 'Wähle deine Farben – das Armband passt sich an.';
     label.className   = 'preview-label';
   } else {
     label.textContent = 'Wähle unten deine Optionen – das Armband füllt sich mit deinen Farben.';
@@ -558,16 +569,15 @@ function lavaComplete() {
 }
 
 const STEP_LABELS = LAVA_KUPFER_VERFUEGBAR
-  ? ['Design', 'Lava', 'Farb-Anzahl', 'Farben', 'Edelstahl', 'Funkel-Wünsche']
-  : ['Design', 'Farb-Anzahl', 'Farben', 'Edelstahl', 'Funkel-Wünsche'];
+  ? ['Design', 'Edelstahl', 'Lava', 'Farb-Anzahl', 'Farben', 'Funkel-Wünsche']
+  : ['Design', 'Edelstahl', 'Farb-Anzahl', 'Farben', 'Funkel-Wünsche'];
 
 function stepDone() {
-  const steps = [!!state.design];
+  const steps = [!!state.design, !!state.metal];
   if (LAVA_KUPFER_VERFUEGBAR) steps.push(!!state.lava);
   steps.push(
     !!state.count,
     !!state.count && state.slots.filter(Boolean).length === state.count,
-    !!state.metal,
     extrasComplete(),
   );
   return steps;
@@ -978,9 +988,8 @@ function setLava(lava, btn) {
 function applyLavaSwitch() {
   if (LAVA_KUPFER_VERFUEGBAR) return;
   document.getElementById('lava-section').remove();
-  document.querySelectorAll('.count-section-label').forEach(el => el.textContent = '2 · Wie viele Kristallfarben?');
-  document.getElementById('color-section-label').textContent  = '3 · Kristallfarben wählen';
-  document.getElementById('metal-section-label').textContent  = '4 · Edelstahl';
+  document.querySelectorAll('.count-section-label').forEach(el => el.textContent = '3 · Wie viele Kristallfarben?');
+  document.getElementById('color-section-label').textContent  = '4 · Kristallfarben wählen';
   document.getElementById('extras-section-label').textContent = '5 · Extra Funkel-Wünsche';
 }
 applyLavaSwitch();
@@ -1076,6 +1085,7 @@ function setDesign(design, btn) {
   btn.classList.add('active');
   document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
   if (LAVA_KUPFER_VERFUEGBAR) document.getElementById('lava-section').style.display = 'block';
+  document.getElementById('metal-section').style.display = 'block';
   const sec = design === 'dk' ? 'dk-count-section' : 'en-count-section';
   document.getElementById('dk-count-section').style.display = design === 'dk'      ? 'block' : 'none';
   document.getElementById('en-count-section').style.display = design === 'energie' ? 'block' : 'none';
@@ -1084,7 +1094,7 @@ function setDesign(design, btn) {
     if (cb) cb.classList.add('active');
     renderSlots();
   }
-  ['color-section', 'metal-section', 'extras-section'].forEach(id =>
+  ['color-section', 'extras-section'].forEach(id =>
     document.getElementById(id).style.display = behalten ? 'block' : 'none');
   drawBracelet();
 }
@@ -1270,6 +1280,68 @@ function copyText() {
   } else {
     fallback();
   }
+}
+
+
+// ---- Überschriften zeigen die Auswahl (seit 14.10.2026) ----
+// Jede Schritt-Überschrift wird nach der Wahl zu "✓ Name · Wert" (schwarz, Haken golden, Balken links).
+// Offene Schritte behalten ihre Nummer. Bei Einfarbig fällt die Feldzeile "Kristallfarbe" weg,
+// die Farbe steht dann in der Überschrift. Die Werte kommen aus HEADING_WERTE (je Datei).
+const HEAD_ORIG = {};
+function setHeading(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (HEAD_ORIG[id] === undefined) HEAD_ORIG[id] = el.textContent;
+  if (value) {
+    const name = HEAD_ORIG[id].replace(/^\d+ · /, '').replace(/ wählen$/, '').replace('Wie viele Kristallfarben?', 'Farb-Anzahl');
+    el.innerHTML = '<span class="haken">✓</span> ' + name + ' · <span class="wahl"></span>';
+    el.querySelector('.wahl').textContent = value;
+    el.classList.add('done');
+  } else {
+    el.textContent = HEAD_ORIG[id];
+    el.classList.remove('done');
+  }
+}
+function countWert() {
+  const b = document.querySelector('.count-btn.active');
+  return b ? b.textContent.trim() : null;
+}
+function farbenWert() {
+  if (!state.count || state.slots.length === 0 || !state.slots.every(Boolean)) return null;
+  return [...new Set(state.slots)].join(', ');
+}
+function updateHeadings() {
+  HEADING_WERTE().forEach(([id, wert]) => setHeading(id, wert));
+  document.querySelectorAll('.color-slot').forEach((div, i) => {
+    const lab = div.querySelector('.slot-label');
+    if (!lab) return;
+    if (state.count === 1) { lab.style.display = 'none'; return; }
+    lab.style.display = '';
+    if (lab.dataset.orig === undefined) lab.dataset.orig = lab.textContent;
+    if (state.slots[i]) {
+      lab.innerHTML = '<span class="haken">✓</span> ' + lab.dataset.orig + ' · <span class="wahl"></span>';
+      lab.querySelector('.wahl').textContent = state.slots[i];
+      lab.classList.add('done');
+    } else { lab.textContent = lab.dataset.orig; lab.classList.remove('done'); }
+  });
+}
+
+function HEADING_WERTE() {
+  const countNames = { 1: 'Einfarbig', 2: 'Zweifarbig', 3: 'Dreifarbig', 4: 'Vierfarbig' };
+  let extras = null;
+  if (extrasComplete()) extras = state.noExtras ? 'Keine' : buildExtraLines().map(t => t.replace(/^Extra: /, '')).join(', ');
+  const w = [
+    ['design-section-label', state.design ? (state.design === 'dk' ? 'Doppel Kristall' : 'Energie') : null],
+    ['metal-section-label', state.metal],
+    ['lava-section-label', state.lava],
+    ['color-section-label', farbenWert()],
+    ['extras-section-label', extras],
+  ];
+  document.querySelectorAll('.count-section-label').forEach((el, i) => {
+    el.id = el.id || ('count-section-label-' + i);
+    w.push([el.id, state.count ? countNames[state.count] : null]);
+  });
+  return w;
 }
 
 drawBracelet();
