@@ -36,7 +36,7 @@ body { background: transparent; color: var(--text); font-family: 'Jost', sans-se
 .metal-swatch.silber { background: linear-gradient(135deg, #d4d8dc, #8a9299); }
 .metal-swatch.gold   { background: linear-gradient(135deg, #e8c97e, #b8863a); }
 .count-options { display: flex; gap: 10px; }
-.count-btn { flex: 1; border: 1px solid #ddd; background: transparent; padding: 12px 6px; font-family: 'Cormorant Garamond', serif; font-size: 17px; color: var(--text); cursor: pointer; border-radius: 1px; transition: all 0.2s; text-align: center; }
+.count-btn { flex: 1; border: 1px solid #ddd; background: transparent; padding: 12px 6px; font-family: 'Jost', sans-serif; font-size: 15px; font-weight: 300; letter-spacing: 0.04em; color: var(--text); cursor: pointer; border-radius: 1px; transition: all 0.2s; text-align: center; }
 .count-btn.active { border-color: #111; background: var(--gold); color: #fff; }
 .count-btn:hover:not(.active) { border-color: #111; }
 .color-slot { margin-bottom: 16px; }
@@ -49,10 +49,10 @@ body { background: transparent; color: var(--text); font-family: 'Jost', sans-se
 .summary-box { display: none; position: relative; background: #fdfcfa; border: 1px solid #e8e5df; border-radius: 1px; padding: 18px 20px; margin-bottom: 20px; }
 .summary-box.visible { display: block; }
 .summary-title { font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; color: #111; font-weight: 500; margin-bottom: 10px; }
-.summary-text { font-size: 16px; color: #111; line-height: 1.7; white-space: pre-line; font-family: 'Jost', sans-serif; }
+.summary-text { font-size: 16px; color: #000; font-weight: 400; line-height: 1.7; white-space: pre-line; font-family: 'Jost', sans-serif; }
 .copy-btn { position: absolute; top: 14px; right: 14px; margin: 0; padding: 6px; border: none; background: transparent; color: #111; cursor: pointer; line-height: 0; }
 .copy-btn svg { width: 18px; height: 18px; }
-.order-hint { font-family: 'Jost', sans-serif; font-size: 15px; color: #111; text-align: center; margin: 10px 0 0; }
+.order-hint { font-family: 'Jost', sans-serif; font-size: 15px; color: #000; font-weight: 400; text-align: center; margin: 10px 0 0; }
 .auswahl-zeile { display: flex; flex-direction: column; gap: 14px; }
 .auswahl-zeile .summary-text { order: 1; }
 .mini-vorschau { order: 2; align-self: center; width: 150px; height: auto; display: block; background: #f4f3ef; border: 1px solid #ece9e3; }
@@ -77,14 +77,16 @@ body { background: transparent; color: var(--text); font-family: 'Jost', sans-se
 .section-label .haken, .slot-label .haken { color: #a8843f; }
 .section-label .wahl, .slot-label .wahl { font-weight: 400; letter-spacing: 0.04em; text-transform: none; }
 /* Gewählte Knöpfe: dunkler Goldrand (#a8843f, Kontrast 3,4:1) statt nur dunklem Rand */
-.design-btn.active, .metal-btn.active, .option-btn.active, .color-chip.active, .pos-btn.active { border-color: #a8843f; box-shadow: inset 0 0 0 1px #a8843f; background: #faf6ee; }
+.design-btn.active, .metal-btn.active, .option-btn.active, .color-chip.active, .pos-btn.active { border-color: #a8843f; box-shadow: inset 0 0 0 1px #a8843f; background: #faf6ee; color: #111; }
 .count-btn.active { background: #faf6ee; border-color: #a8843f; box-shadow: inset 0 0 0 1px #a8843f; color: #111; }
+.seiten-titel { font-family: 'Jost', sans-serif; font-weight: 300; font-size: clamp(1.4rem, 3.5vw, 2rem); letter-spacing: 0.18em; line-height: 1.35; text-transform: uppercase; text-align: center; color: #111; margin-bottom: 52px; }
+@media (max-width: 420px) { .seiten-titel { font-size: 1.25rem; letter-spacing: 0.1em; } }
 </style>
 </head>
 <body>
 
 <div style="width:48px; height:1px; background:#c9a96e; margin:60px auto 16px;"></div>
-<h2 style="font-family:'Jost',sans-serif; font-weight:300; font-size:clamp(1.4rem,3.5vw,2rem); letter-spacing:0.18em; text-transform:uppercase; text-align:center; color:#111; margin-bottom:52px;">Designe deine Wunschohrringe</h2>
+<h2 class="seiten-titel">Sternschnuppen Ohrringe</h2>
 
 <div class="card">
 
@@ -465,8 +467,9 @@ function setClasp(clasp, btn) {
 }
 
 function setCount(n, btn) {
+  // Bisher gewählte Farben bleiben, soweit sie passen (seit 14.10.2026)
   state.count = n;
-  state.slots = Array(n).fill(null);
+  state.slots = Array.from({ length: n }, (_, i) => state.slots[i] || null);
   document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderSlots();
@@ -498,9 +501,9 @@ function renderSlots() {
   if (state.count === 1) {
     labels = ['Kristallfarbe'];
   } else if (state.count === 2) {
-    labels = ['Farbe A · Kristall 1 & 3', 'Farbe B · Kristall 2'];
+    labels = ['Farbe 1 · oben & unten', 'Farbe 2 · Mitte'];
   } else {
-    labels = ['Kristall 1 (oben)', 'Kristall 2 (Mitte)', 'Kristall 3 (unten)'];
+    labels = ['Kristall 1 · oben', 'Kristall 2 · Mitte', 'Kristall 3 · unten'];
   }
   for (let i = 0; i < state.count; i++) {
     const div = document.createElement('div');
@@ -510,7 +513,7 @@ function renderSlots() {
     const container = document.getElementById(`slot-${i}`);
     COLORS.forEach(c => {
       const chip = document.createElement('button');
-      chip.className = 'color-chip';
+      chip.className = 'color-chip' + (state.slots[i] === c.name ? ' active' : '');
       chip.appendChild(colorDot(c));
       chip.appendChild(document.createTextNode(c.name));
       chip.onclick = () => {
@@ -546,7 +549,8 @@ function updateSummary() {
   if (isReady()) {
     document.getElementById('summary-box').classList.add('visible');
     const s = buildSummary();
-    document.getElementById('summary-text').innerHTML = '<strong>' + s.split('\n')[0] + '</strong>\n' + s.split('\n').slice(1).join('\n');
+    // Erste Zeile nicht fett, alles in derselben Schrift; kopiert und verlinkt wird immer buildSummary()
+    document.getElementById('summary-text').textContent = s;
     document.getElementById('order-btn').href = bestellLink();
     document.getElementById('mini-vorschau').src = document.getElementById('earring-canvas').toDataURL('image/png');
   } else {
@@ -561,7 +565,7 @@ function buildSummary() {
   if (state.count === 1) {
     colorLines = `Kristallfarbe: ${state.slots[0]}`;
   } else if (state.count === 2) {
-    colorLines = `Farbe A: ${state.slots[0]}\nFarbe B: ${state.slots[1]}`;
+    colorLines = `Farbe 1: ${state.slots[0]}\nFarbe 2: ${state.slots[1]}`;
   } else {
     colorLines = state.slots.map((s, i) => `Farbe ${i+1}: ${s}`).join('\n');
   }
@@ -644,7 +648,7 @@ function bestellLink() {
 const KOPIER_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg>';
 const KOPIER_HAKEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 function copyText() {
-  const text = document.getElementById('summary-text').innerText;
+  const text = buildSummary();
   const btn = document.getElementById('copy-btn');
   function fallback() {
     const ta = document.createElement('textarea');
@@ -715,7 +719,20 @@ function farbenWert() {
   if (!state.count || state.slots.length === 0 || !state.slots.every(Boolean)) return null;
   return [...new Set(state.slots)].join(', ');
 }
+// Sichtbare Schritte werden fortlaufend nummeriert (seit 14.10.2026): fällt ein Schritt weg
+// (Lava bei Bündel, Anordnung bei Einfarbig), rücken die Nummern nach – keine Lücke wie "1, 2, 4".
+function nummerieren() {
+  let n = 0;
+  document.querySelectorAll('.section-label').forEach((el, i) => {
+    if (!el.id) el.id = 'section-label-' + i;
+    if (el.offsetParent === null) return;
+    n++;
+    const alt = HEAD_ORIG[el.id] !== undefined ? HEAD_ORIG[el.id] : el.textContent;
+    HEAD_ORIG[el.id] = n + ' · ' + alt.replace(/^\d+ · /, '');
+  });
+}
 function updateHeadings() {
+  nummerieren();
   HEADING_WERTE().forEach(([id, wert]) => setHeading(id, wert));
   document.querySelectorAll('.color-slot').forEach((div, i) => {
     const lab = div.querySelector('.slot-label');

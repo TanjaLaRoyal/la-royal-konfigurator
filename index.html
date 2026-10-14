@@ -43,7 +43,7 @@ header { text-align: center; margin-bottom: 36px; }
 .design-btn.dimmed { opacity: 0.3; }
 .design-btn-desc { font-size: 13px; color: #111; letter-spacing: 0.04em; }
 .count-options { display: flex; gap: 10px; }
-.count-btn { flex: 1; border: 1px solid #ddd; background: transparent; padding: 12px 6px; font-family: 'Cormorant Garamond', serif; font-size: 17px; color: var(--text); cursor: pointer; border-radius: 1px; transition: all 0.2s; text-align: center; }
+.count-btn { flex: 1; border: 1px solid #ddd; background: transparent; padding: 12px 6px; font-family: 'Jost', sans-serif; font-size: 15px; font-weight: 300; letter-spacing: 0.04em; color: var(--text); cursor: pointer; border-radius: 1px; transition: all 0.2s; text-align: center; }
 .count-btn.active { border-color: #111; background: var(--gold); color: #fff; }
 .count-btn:hover:not(.active) { border-color: #111; color: #111; }
 .color-slot { margin-bottom: 16px; }
@@ -108,7 +108,7 @@ header { text-align: center; margin-bottom: 36px; }
 .section-label .haken, .slot-label .haken { color: #a8843f; }
 .section-label .wahl, .slot-label .wahl { font-weight: 400; letter-spacing: 0.04em; text-transform: none; }
 /* Gewählte Knöpfe: dunkler Goldrand (#a8843f, Kontrast 3,4:1) statt nur dunklem Rand */
-.design-btn.active, .metal-btn.active, .option-btn.active, .color-chip.active, .pos-btn.active { border-color: #a8843f; box-shadow: inset 0 0 0 1px #a8843f; background: #faf6ee; }
+.design-btn.active, .metal-btn.active, .option-btn.active, .color-chip.active, .pos-btn.active { border-color: #a8843f; box-shadow: inset 0 0 0 1px #a8843f; background: #faf6ee; color: #111; }
 .count-btn.active { background: #faf6ee; border-color: #a8843f; box-shadow: inset 0 0 0 1px #a8843f; color: #111; }
 </style>
 </head>
@@ -159,8 +159,8 @@ header { text-align: center; margin-bottom: 36px; }
         <button class="metal-btn" onclick="setMetal('Gold',this)">
           <span class="metal-swatch gold"></span> Gold
         </button>
-        <button class="metal-btn" onclick="setMetal('Rosegold',this)">
-          <span class="metal-swatch rosegold"></span> Rosegold
+        <button class="metal-btn" onclick="setMetal('Roségold',this)">
+          <span class="metal-swatch rosegold"></span> Roségold
         </button>
       </div>
     </div>
@@ -298,7 +298,7 @@ const state = {
 // Metallfarben (seit 12.10.2026 satter: Gold wärmer, Silber heller und kühler, Roségold kräftiger – Tanjas Wahl "M2")
 function metalColor() {
   if (state.metal === 'Gold')     return { hex: '#d2a038', shimmer: '#f7e2a0' };
-  if (state.metal === 'Rosegold') return { hex: '#d88c74', shimmer: '#f8d2c2' };
+  if (state.metal === 'Roségold') return { hex: '#d88c74', shimmer: '#f8d2c2' };
   return { hex: '#aab3bd', shimmer: '#f1f4f7' };
 }
 
@@ -306,7 +306,7 @@ function barrelColor() {
   // Die Grosslochperle (längliche Edelstahlperle) gibt es nur in Silber und Gold –
   // bei Roségold wird sie schwarz dargestellt.
   if (state.metal === 'Gold')     return { hex: '#d2a038', shimmer: '#f7e2a0' };
-  if (state.metal === 'Rosegold') return { hex: '#2a2a2a', shimmer: '#8a8a8a' };
+  if (state.metal === 'Roségold') return { hex: '#2a2a2a', shimmer: '#8a8a8a' };
   return { hex: '#aab3bd', shimmer: '#f1f4f7' };
 }
 
@@ -885,7 +885,7 @@ function drawBiconeBand(ctx, x, y, r, c, ang) {
 // Die schwarze Perle (bei Roségold) hat keine Ränder und bleibt glatt: drawBarrelGlatt.
 const BARREL_RAND = .3;   // Länge eines Randes als Anteil der halben Perlenlänge (Tanjas Wahl "G2")
 function drawBarrel(ctx, x, y, r, base, shimmer, gloss, angle) {
-  if (state.metal === 'Rosegold') return drawBarrelGlatt(ctx, x, y, r, base, shimmer, gloss, angle);
+  if (state.metal === 'Roségold') return drawBarrelGlatt(ctx, x, y, r, base, shimmer, gloss, angle);
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle || 0);
@@ -1310,7 +1310,20 @@ function farbenWert() {
   if (!state.count || state.slots.length === 0 || !state.slots.every(Boolean)) return null;
   return [...new Set(state.slots)].join(', ');
 }
+// Sichtbare Schritte werden fortlaufend nummeriert (seit 14.10.2026): fällt ein Schritt weg
+// (Lava bei Bündel, Anordnung bei Einfarbig), rücken die Nummern nach – keine Lücke wie "1, 2, 4".
+function nummerieren() {
+  let n = 0;
+  document.querySelectorAll('.section-label').forEach((el, i) => {
+    if (!el.id) el.id = 'section-label-' + i;
+    if (el.offsetParent === null) return;
+    n++;
+    const alt = HEAD_ORIG[el.id] !== undefined ? HEAD_ORIG[el.id] : el.textContent;
+    HEAD_ORIG[el.id] = n + ' · ' + alt.replace(/^\d+ · /, '');
+  });
+}
 function updateHeadings() {
+  nummerieren();
   HEADING_WERTE().forEach(([id, wert]) => setHeading(id, wert));
   document.querySelectorAll('.color-slot').forEach((div, i) => {
     const lab = div.querySelector('.slot-label');

@@ -82,8 +82,11 @@ header { text-align: center; margin-bottom: 36px; }
 .section-label .haken, .slot-label .haken { color: #a8843f; }
 .section-label .wahl, .slot-label .wahl { font-weight: 400; letter-spacing: 0.04em; text-transform: none; }
 /* Gewählte Knöpfe: dunkler Goldrand (#a8843f, Kontrast 3,4:1) statt nur dunklem Rand */
-.design-btn.active, .metal-btn.active, .option-btn.active, .color-chip.active, .pos-btn.active { border-color: #a8843f; box-shadow: inset 0 0 0 1px #a8843f; background: #faf6ee; }
+.design-btn.active, .metal-btn.active, .option-btn.active, .color-chip.active, .pos-btn.active { border-color: #a8843f; box-shadow: inset 0 0 0 1px #a8843f; background: #faf6ee; color: #111; }
 .count-btn.active { background: #faf6ee; border-color: #a8843f; box-shadow: inset 0 0 0 1px #a8843f; color: #111; }
+.metal-swatch { display: inline-block; width: 13px; height: 13px; border-radius: 50%; margin-right: 8px; vertical-align: -1px; }
+.metal-swatch.silber { background: linear-gradient(135deg, #d4d8dc, #8a9299); }
+.metal-swatch.gold   { background: linear-gradient(135deg, #e8c97e, #b8863a); }
 </style>
 </head>
 <body>
@@ -111,8 +114,8 @@ header { text-align: center; margin-bottom: 36px; }
   <div class="section">
     <div class="section-label" id="metal-section-label">1 · Edelstahl</div>
     <div class="option-row" id="metal-row">
-      <button class="option-btn" onclick="setMetal('Silber', this)">Silber</button>
-      <button class="option-btn" onclick="setMetal('Gold', this)">Gold</button>
+      <button class="option-btn" onclick="setMetal('Silber', this)"><span class="metal-swatch silber"></span>Silber</button>
+      <button class="option-btn" onclick="setMetal('Gold', this)"><span class="metal-swatch gold"></span>Gold</button>
     </div>
   </div>
 
@@ -480,8 +483,9 @@ function setMetal(metal, btn) {
 }
 
 function setCount(n, btn) {
+  // Bisher gewählte Farben bleiben, soweit sie passen (seit 14.10.2026)
   state.count = n;
-  state.slots = Array(n).fill(null);
+  state.slots = Array.from({ length: n }, (_, i) => state.slots[i] || null);
   document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderSlots();
@@ -735,7 +739,20 @@ function farbenWert() {
   if (!state.count || state.slots.length === 0 || !state.slots.every(Boolean)) return null;
   return [...new Set(state.slots)].join(', ');
 }
+// Sichtbare Schritte werden fortlaufend nummeriert (seit 14.10.2026): fällt ein Schritt weg
+// (Lava bei Bündel, Anordnung bei Einfarbig), rücken die Nummern nach – keine Lücke wie "1, 2, 4".
+function nummerieren() {
+  let n = 0;
+  document.querySelectorAll('.section-label').forEach((el, i) => {
+    if (!el.id) el.id = 'section-label-' + i;
+    if (el.offsetParent === null) return;
+    n++;
+    const alt = HEAD_ORIG[el.id] !== undefined ? HEAD_ORIG[el.id] : el.textContent;
+    HEAD_ORIG[el.id] = n + ' · ' + alt.replace(/^\d+ · /, '');
+  });
+}
 function updateHeadings() {
+  nummerieren();
   HEADING_WERTE().forEach(([id, wert]) => setHeading(id, wert));
   document.querySelectorAll('.color-slot').forEach((div, i) => {
     const lab = div.querySelector('.slot-label');

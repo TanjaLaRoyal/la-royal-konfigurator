@@ -51,7 +51,7 @@ header { text-align: center; margin-bottom: 36px; }
 .metal-swatch.gold     { background: linear-gradient(135deg, #e8c97e, #b8863a); }
 .metal-swatch.rosegold { background: linear-gradient(135deg, #e8b09a, #c9816e); }
 .count-options { display: flex; gap: 10px; }
-.count-btn { flex: 1; border: 1px solid #ddd; background: transparent; padding: 12px 6px; font-family: 'Cormorant Garamond', serif; font-size: 17px; color: var(--text); cursor: pointer; border-radius: 1px; transition: all 0.2s; text-align: center; }
+.count-btn { flex: 1; border: 1px solid #ddd; background: transparent; padding: 12px 6px; font-family: 'Jost', sans-serif; font-size: 15px; font-weight: 300; letter-spacing: 0.04em; color: var(--text); cursor: pointer; border-radius: 1px; transition: all 0.2s; text-align: center; }
 .count-btn.active { border-color: #111; background: var(--gold); color: #fff; }
 .count-btn:hover:not(.active) { border-color: #111; }
 .color-slot { margin-bottom: 16px; }
@@ -94,7 +94,7 @@ header { text-align: center; margin-bottom: 36px; }
 .section-label .haken, .slot-label .haken { color: #a8843f; }
 .section-label .wahl, .slot-label .wahl { font-weight: 400; letter-spacing: 0.04em; text-transform: none; }
 /* Gewählte Knöpfe: dunkler Goldrand (#a8843f, Kontrast 3,4:1) statt nur dunklem Rand */
-.design-btn.active, .metal-btn.active, .option-btn.active, .color-chip.active, .pos-btn.active { border-color: #a8843f; box-shadow: inset 0 0 0 1px #a8843f; background: #faf6ee; }
+.design-btn.active, .metal-btn.active, .option-btn.active, .color-chip.active, .pos-btn.active { border-color: #a8843f; box-shadow: inset 0 0 0 1px #a8843f; background: #faf6ee; color: #111; }
 .count-btn.active { background: #faf6ee; border-color: #a8843f; box-shadow: inset 0 0 0 1px #a8843f; color: #111; }
 </style>
 </head>
@@ -595,16 +595,15 @@ function drawEarrings() {
 
 // ── UI-Logik ─────────────────────────────────────────────────
 
+// Design wechseln, ohne dass die Auswahl verloren geht (seit 14.10.2026): Farb-Anzahl, Farben,
+// Lava, Edelstahl und Verschluss bleiben. Beide Designs haben 1, 2 oder 4 Farben. Die Anordnung
+// (nur Bündel, mehrfarbig) fragt der Konfigurator nach, wenn sie noch fehlt.
 function setDesign(design, btn) {
+  if (state.design === design) return;
   state.design = design;
-  state.count  = null;
-  state.mode   = null;
-  state.slots  = [];
   document.querySelectorAll('.design-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   // Lava-Wahl nur bei Stab Ohrringe (Bündel hat keine Lavaperle)
-  state.lava = null;
-  document.querySelectorAll('#lava-row .option-btn').forEach(b => b.classList.remove('active'));
   if (LAVA_KUPFER_VERFUEGBAR) {
     document.getElementById('lava-section').style.display = design === 'kristall' ? 'block' : 'none';
   }
@@ -616,11 +615,20 @@ function setDesign(design, btn) {
   } else {
     rg.style.display = '';
   }
-  document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('#mode-row .option-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('mode-section').style.display = 'none';
-  document.getElementById('color-section').style.display = 'none';
+  if (state.count) zeigeFarben();
   drawEarrings();
+}
+
+// Nach Design- oder Anzahl-Wechsel: Anordnung nur bei Bündel mit mehr als einer Farbe; Farbfelder
+// erscheinen, sobald alles dafür gewählt ist. Gewählte Farben bleiben in state.slots stehen.
+function zeigeFarben() {
+  const needsMode = state.design === 'buendel' && state.count > 1;
+  if (!needsMode) state.mode = 'mix';
+  else if (state.mode === 'mix' && !document.querySelector('#mode-row .option-btn.active')) state.mode = null;
+  document.getElementById('mode-section').style.display = needsMode ? 'block' : 'none';
+  const fertig = !needsMode || !!state.mode;
+  document.getElementById('color-section').style.display = fertig ? 'block' : 'none';
+  if (fertig) renderSlots();
 }
 
 function updateMetalButtons() {
@@ -653,28 +661,18 @@ function setClasp(clasp, btn) {
 }
 
 function setCount(n, btn) {
+  // Bisher gewählte Farben bleiben, soweit sie passen (seit 14.10.2026)
   state.count = n;
-  state.mode  = null;
-  state.slots = [];
+  state.slots = Array.from({ length: n }, (_, i) => state.slots[i] || null);
   document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  document.querySelectorAll('#mode-row .option-btn').forEach(b => b.classList.remove('active'));
-  const needsMode = state.design === 'buendel' && n > 1;
-  document.getElementById('mode-section').style.display = needsMode ? 'block' : 'none';
-  document.getElementById('color-section').style.display = 'none';
-  if (!needsMode) {
-    // Stab oder Einfarbig: keine Anordnungs-Wahl nötig
-    state.mode  = 'mix';
-    state.slots = Array(n).fill(null);
-    renderSlots();
-    document.getElementById('color-section').style.display = 'block';
-  }
+  zeigeFarben();
   drawEarrings();
 }
 
 function setMode(mode, btn) {
   state.mode  = mode;
-  state.slots = Array(state.count).fill(null);
+  state.slots = Array.from({ length: state.count }, (_, i) => state.slots[i] || null);
   document.querySelectorAll('#mode-row .option-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderSlots();
@@ -708,17 +706,12 @@ function renderSlots() {
   if (state.count === 1) {
     labels = ['Kristallfarbe'];
   } else if (state.count === 2) {
-    labels = isBuendel
-      ? (v
-          ? ['Farbe 1 · Kristall 1–4', 'Farbe 2 · Kristall 5–8']
-          : ['Farbe A · Kristalle 1, 3, 5, 7', 'Farbe B · Kristalle 2, 4, 6, 8'])
-      : ['Farbe A · Kristall 1 & 3', 'Farbe B · Kristall 2 & 4'];
+    // Beschriftung nur "Farbe 1/2" (seit 14.10.2026): wo die Farbe sitzt, zeigt die Zeichnung
+    labels = ['Farbe 1', 'Farbe 2'];
   } else {
     labels = isBuendel
-      ? (v
-          ? ['Farbe 1 · Kristall 1 & 2', 'Farbe 2 · Kristall 3 & 4', 'Farbe 3 · Kristall 5 & 6', 'Farbe 4 · Kristall 7 & 8']
-          : ['Farbe 1 · Kristall 1 & 5', 'Farbe 2 · Kristall 2 & 6', 'Farbe 3 · Kristall 3 & 7', 'Farbe 4 · Kristall 4 & 8'])
-      : ['Kristall 1', 'Kristall 2', 'Kristall 3', 'Kristall 4'];
+      ? ['Farbe 1', 'Farbe 2', 'Farbe 3', 'Farbe 4']
+      : ['Kristall 1 · oben', 'Kristall 2', 'Kristall 3', 'Kristall 4 · unten'];
   }
   for (let i = 0; i < state.count; i++) {
     const div = document.createElement('div');
@@ -728,7 +721,7 @@ function renderSlots() {
     const container = document.getElementById(`slot-${i}`);
     COLORS.forEach(c => {
       const chip = document.createElement('button');
-      chip.className = 'color-chip';
+      chip.className = 'color-chip' + (state.slots[i] === c.name ? ' active' : '');
       chip.appendChild(colorDot(c));
       chip.appendChild(document.createTextNode(c.name));
       chip.onclick = () => {
@@ -786,9 +779,7 @@ function buildSummary() {
   if (state.count === 1) {
     colorLines = `Kristallfarbe: ${state.slots[0]}`;
   } else if (state.count === 2) {
-    colorLines = v
-      ? `Farbe 1 (Kristall 1–4): ${state.slots[0]}\nFarbe 2 (Kristall 5–8): ${state.slots[1]}`
-      : `Farbe A: ${state.slots[0]}\nFarbe B: ${state.slots[1]}`;
+    colorLines = `Farbe 1: ${state.slots[0]}\nFarbe 2: ${state.slots[1]}`;
   } else {
     colorLines = state.slots.map((s, i) => `Farbe ${i+1}: ${s}`).join('\n');
   }
@@ -897,12 +888,6 @@ function copyText() {
 }
 
 
-const STEP_LABELS = LAVA_KUPFER_VERFUEGBAR
-  ? ['Design', 'Lava', 'Edelstahl', 'Verschluss', 'Farb-Anzahl', 'Anordnung', 'Farben']
-  : ['Design', 'Edelstahl', 'Verschluss', 'Farb-Anzahl', 'Anordnung', 'Farben'];
-
-// Ist die Kupfer-Lava ausverkauft (Schalter oben auf false), verschwindet der
-// Schritt und die Nummern rücken nach (Edelstahl = 2 … Farben = 6).
 function applyLavaSwitch() {
   if (LAVA_KUPFER_VERFUEGBAR) return;
   document.getElementById('lava-section').remove();
@@ -912,25 +897,24 @@ function applyLavaSwitch() {
 }
 applyLavaSwitch();
 
-function stepDone() {
-  return [
-    !!state.design,
-    ...(LAVA_KUPFER_VERFUEGBAR ? [!!state.design && lavaComplete()] : []),
-    !!state.metal,
-    !!state.clasp,
-    !!state.count,
-    !!state.mode,
-    !!state.count && state.slots.filter(Boolean).length === state.count,
-  ];
+// Fortschrittsbalken (seit 14.10.2026): nur die Schritte, die es im gewählten Design gibt.
+// Lava nur bei Stab Ohrringen, Anordnung nur bei Bündel Ohrringen mit mehr als einer Farbe.
+function schritte() {
+  const s = [['Design', !!state.design]];
+  if (LAVA_KUPFER_VERFUEGBAR && state.design === 'kristall') s.push(['Lava', !!state.lava]);
+  s.push(['Edelstahl', !!state.metal], ['Verschluss', !!state.clasp], ['Farb-Anzahl', !!state.count]);
+  if (state.design === 'buendel' && state.count !== 1) s.push(['Anordnung', !!state.mode]);
+  s.push(['Farben', !!state.count && state.slots.filter(Boolean).length === state.count]);
+  return s;
 }
 
 function updateProgress() {
   const el = document.getElementById('progress');
-  const done = stepDone();
-  const current = done.indexOf(false);   // erster offener Schritt, -1 = alles fertig
-  el.innerHTML = STEP_LABELS.map((label, i) => {
-    const cls = done[i] ? 'p-step done' : (i === current ? 'p-step current' : 'p-step');
-    const dot = done[i] ? '\u2713' : (i + 1);
+  const S = schritte();
+  const current = S.findIndex(x => !x[1]);   // erster offener Schritt, -1 = alles fertig
+  el.innerHTML = S.map(([label, done], i) => {
+    const cls = done ? 'p-step done' : (i === current ? 'p-step current' : 'p-step');
+    const dot = done ? '\u2713' : (i + 1);
     return `<div class="${cls}"><div class="p-dot">${dot}</div><div class="p-label">${label}</div></div>`;
   }).join('');
 }
@@ -963,7 +947,20 @@ function farbenWert() {
   if (!state.count || state.slots.length === 0 || !state.slots.every(Boolean)) return null;
   return [...new Set(state.slots)].join(', ');
 }
+// Sichtbare Schritte werden fortlaufend nummeriert (seit 14.10.2026): fällt ein Schritt weg
+// (Lava bei Bündel, Anordnung bei Einfarbig), rücken die Nummern nach – keine Lücke wie "1, 2, 4".
+function nummerieren() {
+  let n = 0;
+  document.querySelectorAll('.section-label').forEach((el, i) => {
+    if (!el.id) el.id = 'section-label-' + i;
+    if (el.offsetParent === null) return;
+    n++;
+    const alt = HEAD_ORIG[el.id] !== undefined ? HEAD_ORIG[el.id] : el.textContent;
+    HEAD_ORIG[el.id] = n + ' · ' + alt.replace(/^\d+ · /, '');
+  });
+}
 function updateHeadings() {
+  nummerieren();
   HEADING_WERTE().forEach(([id, wert]) => setHeading(id, wert));
   document.querySelectorAll('.color-slot').forEach((div, i) => {
     const lab = div.querySelector('.slot-label');

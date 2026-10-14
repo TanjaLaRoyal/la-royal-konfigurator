@@ -84,8 +84,11 @@ header { text-align: center; margin-bottom: 36px; }
 .section-label .haken, .slot-label .haken { color: #a8843f; }
 .section-label .wahl, .slot-label .wahl { font-weight: 400; letter-spacing: 0.04em; text-transform: none; }
 /* Gewählte Knöpfe: dunkler Goldrand (#a8843f, Kontrast 3,4:1) statt nur dunklem Rand */
-.design-btn.active, .metal-btn.active, .option-btn.active, .color-chip.active, .pos-btn.active { border-color: #a8843f; box-shadow: inset 0 0 0 1px #a8843f; background: #faf6ee; }
+.design-btn.active, .metal-btn.active, .option-btn.active, .color-chip.active, .pos-btn.active { border-color: #a8843f; box-shadow: inset 0 0 0 1px #a8843f; background: #faf6ee; color: #111; }
 .count-btn.active { background: #faf6ee; border-color: #a8843f; box-shadow: inset 0 0 0 1px #a8843f; color: #111; }
+.metal-swatch { display: inline-block; width: 13px; height: 13px; border-radius: 50%; margin-right: 8px; vertical-align: -1px; }
+.metal-swatch.silber { background: linear-gradient(135deg, #d4d8dc, #8a9299); }
+.metal-swatch.gold   { background: linear-gradient(135deg, #e8c97e, #b8863a); }
 </style>
 </head>
 <body>
@@ -112,8 +115,8 @@ header { text-align: center; margin-bottom: 36px; }
   <div class="section">
     <div class="section-label" id="metal-section-label">1 · Edelstahl</div>
     <div class="option-row" id="metal-row">
-      <button class="option-btn" onclick="setMetal('Silber', this)">Silber</button>
-      <button class="option-btn" onclick="setMetal('Gold', this)">Gold</button>
+      <button class="option-btn" onclick="setMetal('Silber', this)"><span class="metal-swatch silber"></span>Silber</button>
+      <button class="option-btn" onclick="setMetal('Gold', this)"><span class="metal-swatch gold"></span>Gold</button>
     </div>
   </div>
 
@@ -539,26 +542,21 @@ function setMetal(metal, btn) {
 }
 
 function setCount(n, btn) {
+  // Bisher gewählte Farben, Anordnung und Lava bleiben, soweit sie passen (seit 14.10.2026)
   state.count = n;
-  state.mode  = null;
-  state.slots = [];
+  const numSlots = n === 3 ? 3 : n;
+  state.slots = Array.from({ length: numSlots }, (_, i) => state.slots[i] || null);
   document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  document.querySelectorAll('#mode-row .option-btn').forEach(b => b.classList.remove('active'));
   // Lava-Wahl nur bei "3 Farben + Lava"
-  state.lava = null;
-  document.querySelectorAll('#lava-row .option-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('lava-block').style.display = (LAVA_KUPFER_VERFUEGBAR && n === 3) ? 'block' : 'none';
-  // Mode-Schritt nur bei count > 1 zeigen
+  // Anordnung nur bei mehr als einer Farbe
+  if (n === 1) state.mode = 'mix';
+  else if (state.mode === 'mix' && !document.querySelector('#mode-row .option-btn.active')) state.mode = null;
   document.getElementById('mode-section').style.display = n === 1 ? 'none' : 'block';
-  document.getElementById('color-section').style.display = 'none';
-  if (n === 1) {
-    // Einfarbig braucht kein Mode
-    state.mode  = 'mix';
-    state.slots = [null];
-    renderSlots();
-    document.getElementById('color-section').style.display = 'block';
-  }
+  const fertig = n === 1 || !!state.mode;
+  document.getElementById('color-section').style.display = fertig ? 'block' : 'none';
+  if (fertig) renderSlots();
   drawCanvas();
 }
 
@@ -572,7 +570,7 @@ function setLava(lava, btn) {
 function setMode(mode, btn) {
   state.mode  = mode;
   const numSlots = state.count === 3 ? 3 : state.count;
-  state.slots = Array(numSlots).fill(null);
+  state.slots = Array.from({ length: numSlots }, (_, i) => state.slots[i] || null);
   document.querySelectorAll('#mode-row .option-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderSlots();
@@ -605,22 +603,16 @@ function renderSlots() {
   if (state.count === 1) {
     labels = ['Kristallfarbe'];
   } else if (state.count === 2) {
-    labels = v
-      ? ['Farbe 1 · Kristall 1–4', 'Farbe 2 · Kristall 5–8']
-      : ['Farbe A · Kristalle 1, 3, 5, 7', 'Farbe B · Kristalle 2, 4, 6, 8'];
+    // Beschriftung nur "Farbe 1/2" (seit 14.10.2026): wo die Farbe sitzt, zeigt die Zeichnung
+    labels = ['Farbe 1', 'Farbe 2'];
   } else if (state.count === 3) {
     const hint = document.createElement('div');
-    hint.style.cssText = 'font-size:13px;color:#888;margin-bottom:14px;letter-spacing:0.05em;';
-    const lavaWort = LAVA_KUPFER_VERFUEGBAR ? 'Lavaperlen (fix)' : 'Schwarze Lavaperlen (fix)';
-    hint.textContent = (v ? 'Kristall 1 & 2 · ' : 'Kristall 1 & 5 · ') + lavaWort;
+    hint.style.cssText = 'font-size:14px;color:#111;margin-bottom:14px;';
+    hint.textContent = 'Zwei Lavaperlen sitzen fest im Bündel, dazu kommen deine drei Farben.';
     wrapper.appendChild(hint);
-    labels = v
-      ? ['Farbe 1 · Kristall 3 & 4', 'Farbe 2 · Kristall 5 & 6', 'Farbe 3 · Kristall 7 & 8']
-      : ['Farbe 1 · Kristall 2 & 6', 'Farbe 2 · Kristall 3 & 7', 'Farbe 3 · Kristall 4 & 8'];
+    labels = ['Farbe 1', 'Farbe 2', 'Farbe 3'];
   } else {
-    labels = v
-      ? ['Farbe 1 · Kristall 1 & 2', 'Farbe 2 · Kristall 3 & 4', 'Farbe 3 · Kristall 5 & 6', 'Farbe 4 · Kristall 7 & 8']
-      : ['Farbe 1 · Kristall 1 & 5', 'Farbe 2 · Kristall 2 & 6', 'Farbe 3 · Kristall 3 & 7', 'Farbe 4 · Kristall 4 & 8'];
+    labels = ['Farbe 1', 'Farbe 2', 'Farbe 3', 'Farbe 4'];
   }
   for (let i = 0; i < state.count; i++) {
     const div = document.createElement('div');
@@ -630,7 +622,7 @@ function renderSlots() {
     const container = document.getElementById(`slot-${i}`);
     COLORS.forEach(c => {
       const chip = document.createElement('button');
-      chip.className = 'color-chip';
+      chip.className = 'color-chip' + (state.slots[i] === c.name ? ' active' : '');
       chip.appendChild(colorDot(c));
       chip.appendChild(document.createTextNode(c.name));
       chip.onclick = () => {
@@ -686,9 +678,7 @@ function buildSummary() {
   if (state.count === 1) {
     colorLines = `Kristallfarbe: ${state.slots[0]}`;
   } else if (state.count === 2) {
-    colorLines = v
-      ? `Farbe 1 (Kristall 1–4): ${state.slots[0]}\nFarbe 2 (Kristall 5–8): ${state.slots[1]}`
-      : `Farbe A: ${state.slots[0]}\nFarbe B: ${state.slots[1]}`;
+    colorLines = `Farbe 1: ${state.slots[0]}\nFarbe 2: ${state.slots[1]}`;
   } else if (state.count === 3) {
     colorLines = v
       ? `Lava\nFarbe 1: ${state.slots[0]}\nFarbe 2: ${state.slots[1]}\nFarbe 3: ${state.slots[2]}`
@@ -794,24 +784,21 @@ function copyText() {
 }
 
 
-const STEP_LABELS = ['Edelstahl', 'Farb-Anzahl', 'Anordnung', 'Farben'];
-
-function stepDone() {
-  return [
-    !!state.metal,
-    !!state.count && lavaComplete(),
-    !!state.mode,
-    state.slots.length > 0 && state.slots.every(Boolean),
-  ];
+// Fortschrittsbalken (seit 14.10.2026): Anordnung nur, wenn mehr als eine Farbe gewählt ist.
+function schritte() {
+  const s = [['Edelstahl', !!state.metal], ['Farb-Anzahl', !!state.count && lavaComplete()]];
+  if (state.count !== 1) s.push(['Anordnung', !!state.mode]);
+  s.push(['Farben', state.slots.length > 0 && state.slots.every(Boolean)]);
+  return s;
 }
 
 function updateProgress() {
   const el = document.getElementById('progress');
-  const done = stepDone();
-  const current = done.indexOf(false);   // erster offener Schritt, -1 = alles fertig
-  el.innerHTML = STEP_LABELS.map((label, i) => {
-    const cls = done[i] ? 'p-step done' : (i === current ? 'p-step current' : 'p-step');
-    const dot = done[i] ? '\u2713' : (i + 1);
+  const S = schritte();
+  const current = S.findIndex(x => !x[1]);   // erster offener Schritt, -1 = alles fertig
+  el.innerHTML = S.map(([label, done], i) => {
+    const cls = done ? 'p-step done' : (i === current ? 'p-step current' : 'p-step');
+    const dot = done ? '\u2713' : (i + 1);
     return `<div class="${cls}"><div class="p-dot">${dot}</div><div class="p-label">${label}</div></div>`;
   }).join('');
 }
@@ -845,7 +832,20 @@ function farbenWert() {
   if (!state.count || state.slots.length === 0 || !state.slots.every(Boolean)) return null;
   return [...new Set(state.slots)].join(', ');
 }
+// Sichtbare Schritte werden fortlaufend nummeriert (seit 14.10.2026): fällt ein Schritt weg
+// (Lava bei Bündel, Anordnung bei Einfarbig), rücken die Nummern nach – keine Lücke wie "1, 2, 4".
+function nummerieren() {
+  let n = 0;
+  document.querySelectorAll('.section-label').forEach((el, i) => {
+    if (!el.id) el.id = 'section-label-' + i;
+    if (el.offsetParent === null) return;
+    n++;
+    const alt = HEAD_ORIG[el.id] !== undefined ? HEAD_ORIG[el.id] : el.textContent;
+    HEAD_ORIG[el.id] = n + ' · ' + alt.replace(/^\d+ · /, '');
+  });
+}
 function updateHeadings() {
+  nummerieren();
   HEADING_WERTE().forEach(([id, wert]) => setHeading(id, wert));
   document.querySelectorAll('.color-slot').forEach((div, i) => {
     const lab = div.querySelector('.slot-label');
