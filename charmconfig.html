@@ -89,6 +89,13 @@ header { text-align: center; margin-bottom: 36px; }
 .metal-swatch { display: inline-block; width: 13px; height: 13px; border-radius: 50%; margin-right: 8px; vertical-align: -1px; }
 .metal-swatch.silber { background: linear-gradient(135deg, #d4d8dc, #8a9299); }
 .metal-swatch.gold   { background: linear-gradient(135deg, #e8c97e, #b8863a); }
+
+/* Kasten "Deine Auswahl" als Zielpunkt (seit 14.10.2026): erscheint nach dem ersten Schritt, zeigt
+   erledigte Schritte mit Haken und offene als "noch wählen"; "Jetzt bestellen" ist grau, bis alles gewählt ist */
+.summary-text .offen::before { content: '\25CB  '; color: #999; }
+.summary-text .fertig::before { content: '\2713  '; color: #a8843f; }
+.order-btn.gesperrt { background: #ddd; color: #111; pointer-events: none; }
+.copy-btn.versteckt { display: none; }
 </style>
 </head>
 <body>
@@ -666,6 +673,32 @@ function updateSummary() {
     document.getElementById('summary-text').textContent = s;
     document.getElementById('order-btn').href = bestellLink();
     document.getElementById('mini-vorschau').src = document.getElementById('charm-canvas').toDataURL('image/png');
+    document.getElementById('order-btn').classList.remove('gesperrt');
+    document.getElementById('copy-btn').classList.remove('versteckt');
+    const h = document.querySelector('.order-hint');
+    if (h.dataset.orig === undefined) h.dataset.orig = h.textContent;
+    h.textContent = h.dataset.orig;
+  } else if (STAND_ZEILEN().some(z => z[1])) {
+    // Noch nicht fertig: Kasten zeigt den Stand. Der Bestelltext (buildSummary) entsteht erst,
+    // wenn alles gewählt ist – bis dahin kein Kopieren und kein Bestell-Link.
+    document.getElementById('summary-box').classList.add('visible');
+    const st = document.getElementById('summary-text');
+    st.innerHTML = '';
+    const offen = [];
+    STAND_ZEILEN().forEach(([name, wert]) => {
+      const z = document.createElement('div');
+      z.className = wert ? 'fertig' : 'offen';
+      z.textContent = wert ? name + ': ' + wert : name + ': noch wählen';
+      st.appendChild(z);
+      if (!wert) offen.push(name);
+    });
+    const ob = document.getElementById('order-btn');
+    ob.classList.add('gesperrt'); ob.removeAttribute('href');
+    document.getElementById('copy-btn').classList.add('versteckt');
+    const h = document.querySelector('.order-hint');
+    if (h.dataset.orig === undefined) h.dataset.orig = h.textContent;
+    h.textContent = 'Noch offen: ' + offen.join(', ');
+    document.getElementById('mini-vorschau').src = document.querySelector('#bracelet-canvas, #earring-canvas, #charm-canvas').toDataURL('image/png');
   } else {
     document.getElementById('summary-box').classList.remove('visible');
   }
@@ -870,6 +903,18 @@ function HEADING_WERTE() {
     ['count-section-label', count],
     ['mode-section-label', (state.mode && state.count > 1) ? (state.mode === 'verlauf' ? 'Farbverlauf' : 'Mix') : null],
     ['color-section-label', farbenWert()],
+  ];
+}
+
+
+function STAND_ZEILEN() {
+  const W = Object.fromEntries(HEADING_WERTE());
+  return [
+    ['Edelstahl', W['metal-section-label']],
+    ['Farb-Anzahl', state.count === 3 ? countWert() : W['count-section-label']],   // Lava steht bei 3 Farben in einer eigenen Zeile
+    ...(LAVA_KUPFER_VERFUEGBAR && state.count === 3 ? [['Lava', state.lava]] : []),
+    ...(state.count !== 1 ? [['Anordnung', W['mode-section-label']]] : []),
+    ['Farben', W['color-section-label']],
   ];
 }
 
