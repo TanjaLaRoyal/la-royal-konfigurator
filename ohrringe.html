@@ -39,7 +39,7 @@ header { text-align: center; margin-bottom: 36px; }
 .design-btn.active { border-color: #111; background: #f4f3ef; }
 .design-btn:hover:not(.active) { border-color: #111; }
 .design-btn-name { font-size: 17px; font-weight: 400; }
-.design-btn-desc { font-size: 13px; color: #555; }
+.design-btn-desc { font-size: 13px; color: #111; letter-spacing: 0.04em; }
 .option-row { display: flex; gap: 10px; }
 .option-btn { flex: 1; border: 1px solid #ddd; background: transparent; padding: 13px 8px; cursor: pointer; border-radius: 1px; font-family: 'Jost', sans-serif; font-weight: 300; font-size: 15px; letter-spacing: 0.04em; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text); }
 .option-btn.active { border-color: #111; background: #f4f3ef; }
@@ -147,8 +147,8 @@ header { text-align: center; margin-bottom: 36px; }
     </div>
   </div>
 
-  <!-- 3: Edelstahl -->
-  <div class="section">
+  <!-- 3: Edelstahl (erscheint mit dem Design, wie im Wunscharmband) -->
+  <div class="section" id="metal-section" style="display:none">
     <div class="section-label" id="metal-section-label" data-nr="Edelstahl">3 · Edelstahl</div>
     <div class="option-row" id="metal-row">
       <button class="option-btn" onclick="setMetal('Silber', this)">
@@ -163,8 +163,8 @@ header { text-align: center; margin-bottom: 36px; }
     </div>
   </div>
 
-  <!-- 3: Verschluss -->
-  <div class="section">
+  <!-- 4: Verschluss -->
+  <div class="section" id="clasp-section" style="display:none">
     <div class="section-label" id="clasp-section-label" data-nr="Verschluss">4 · Verschluss</div>
     <div class="option-row" id="clasp-row">
       <button class="option-btn" onclick="setClasp('klapp', this)">Klapp-Verschluss</button>
@@ -172,8 +172,8 @@ header { text-align: center; margin-bottom: 36px; }
     </div>
   </div>
 
-  <!-- 4: Anzahl Farben -->
-  <div class="section">
+  <!-- 5: Anzahl Farben -->
+  <div class="section" id="count-section" style="display:none">
     <div class="section-label" id="count-section-label" data-nr="Farb-Anzahl">5 · Wie viele Kristallfarben?</div>
     <div class="count-options">
       <button class="count-btn" onclick="setCount(1, this)">Einfarbig</button>
@@ -470,7 +470,11 @@ function drawKristallEarring(ctx, cx, startY) {
     ? drawOhrhaken(ctx, cx, startY, mc)
     : drawKlappVerschluss(ctx, cx, startY, mc);
   y += R_SPACER; drawSphere(ctx, cx, y, R_SPACER, mc.hex, mc.shimmer, 0.55); y += R_SPACER;
-  y += R_LAVA;   (state.lava === 'Helles Kupfer' ? drawLavaKupfer : drawLava)(ctx, cx, y, R_LAVA); y += R_LAVA;
+  // Vor der Design-Wahl ist die Vorschau neutral grau (auch die Lavaperle), wie das leere Armband im Wunscharmband
+  y += R_LAVA;
+  if (!state.design) drawSphere(ctx, cx, y, R_LAVA, EMPTY.hex, EMPTY.shimmer, 0.5);
+  else (state.lava === 'Helles Kupfer' ? drawLavaKupfer : drawLava)(ctx, cx, y, R_LAVA);
+  y += R_LAVA;
   y += R_SPACER; drawSphere(ctx, cx, y, R_SPACER, mc.hex, mc.shimmer, 0.55); y += R_SPACER;
   for (let i = 0; i < 4; i++) {
     const c = getCrystalAt(i, 4);
@@ -574,18 +578,28 @@ function drawEarrings() {
   ctx.setTransform(Q, 0, 0, Q, 0, 0);
   ctx.clearRect(0, 0, canvas.width / Q, canvas.height / Q);
 
-  const SCALE        = state.design === 'buendel' ? 1.45 : 1.15;   // das Bündel ist kürzer als der Stab und wird grösser gezeigt
   const FIXED_BOTTOM = canvas.height / Q - 30;
-  const startY       = FIXED_BOTTOM / SCALE - getEarringHeight();
-  const drawFn       = state.design === 'buendel' ? drawBuendelEarring : drawKristallEarring;
 
-  ctx.save();
-  ctx.translate(150, 0);
-  ctx.scale(SCALE, SCALE);
-  ctx.translate(-150, 0);
-  drawFn(ctx, 105, startY);
-  drawFn(ctx, 195, startY);
-  ctx.restore();
+  if (!state.design) {
+    // Vor der Design-Wahl (seit 14.10.2026): links ein grauer Stab-Ohrring, rechts ein grauer
+    // Bündel-Ohrring, beide ohne Farben – damit nicht ein Design schon gewählt aussieht.
+    const SCALE = 1.15;
+    const hStab = 49 + 124, hBuendel = 2 * KLAPP_R_BUENDEL + 11 - 4.1 + BUENDEL_HOEHE;
+    ctx.save();
+    ctx.translate(150, 0); ctx.scale(SCALE, SCALE); ctx.translate(-150, 0);
+    drawKristallEarring(ctx, 105, FIXED_BOTTOM / SCALE - hStab);
+    drawBuendelEarring(ctx, 195, FIXED_BOTTOM / SCALE - hBuendel);
+    ctx.restore();
+  } else {
+    const SCALE  = state.design === 'buendel' ? 1.45 : 1.15;   // das Bündel ist kürzer als der Stab und wird grösser gezeigt
+    const startY = FIXED_BOTTOM / SCALE - getEarringHeight();
+    const drawFn = state.design === 'buendel' ? drawBuendelEarring : drawKristallEarring;
+    ctx.save();
+    ctx.translate(150, 0); ctx.scale(SCALE, SCALE); ctx.translate(-150, 0);
+    drawFn(ctx, 105, startY);
+    drawFn(ctx, 195, startY);
+    ctx.restore();
+  }
 
   updateLabel();
   updateSummary();
@@ -603,6 +617,8 @@ function setDesign(design, btn) {
   state.design = design;
   document.querySelectorAll('.design-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  // Edelstahl, Verschluss und Farb-Anzahl erscheinen erst mit dem Design (seit 14.10.2026, wie im Wunscharmband)
+  ['metal-section', 'clasp-section', 'count-section'].forEach(id => document.getElementById(id).style.display = 'block');
   // Lava-Wahl nur bei Stab Ohrringe (Bündel hat keine Lavaperle)
   if (LAVA_KUPFER_VERFUEGBAR) {
     document.getElementById('lava-section').style.display = design === 'kristall' ? 'block' : 'none';
