@@ -70,7 +70,6 @@ header { text-align: center; margin-bottom: 36px; }
 .metal-swatch { width: 13px; height: 13px; border-radius: 50%; }
 .metal-swatch.silber    { background: linear-gradient(135deg, #d4d8dc, #8a9299); }
 .metal-swatch.gold      { background: linear-gradient(135deg, #e8c97e, #b8863a); }
-.metal-swatch.rosegold  { background: linear-gradient(135deg, #f0c0a8, #c8785a); }
 .metal-swatch.schwarz   { background: radial-gradient(circle at 35% 35%, #585858, #1a1a1a 60%, #0a0a0a); }
 .metal-swatch.kupfer  { background: radial-gradient(circle at 35% 35%, #fff5ea, #efcfaa 40%, #cf9a6c 80%, #8f6040); }
 .design-btn.locked { opacity: 0.3; pointer-events: none; }
@@ -173,9 +172,6 @@ header { text-align: center; margin-bottom: 36px; }
         </button>
         <button class="metal-btn" onclick="setMetal('Gold',this)">
           <span class="metal-swatch gold"></span> Gold
-        </button>
-        <button class="metal-btn" id="rosegold-btn" onclick="setMetal('Roségold',this)">
-          <span class="metal-swatch rosegold"></span> Roségold
         </button>
       </div>
     </div>
@@ -322,18 +318,15 @@ const state = {
   noExtras:     false,
 };
 
-// Metallfarben (seit 12.10.2026 satter: Gold wärmer, Silber heller und kühler, Roségold kräftiger – Tanjas Wahl "M2")
+// Metallfarben (seit 12.10.2026 satter: Gold wärmer und Silber heller und kühler – Tanjas Wahl "M2")
 function metalColor() {
   if (state.metal === 'Gold')     return { hex: '#d2a038', shimmer: '#f7e2a0' };
-  if (state.metal === 'Roségold') return { hex: '#d88c74', shimmer: '#f8d2c2' };
   return { hex: '#aab3bd', shimmer: '#f1f4f7' };
 }
 
 function barrelColor() {
-  // Die Grosslochperle (längliche Edelstahlperle) gibt es nur in Silber und Gold –
-  // bei Roségold wird sie schwarz dargestellt.
+  // Die Grosslochperle (längliche Edelstahlperle) gibt es in Silber und Gold.
   if (state.metal === 'Gold')     return { hex: '#d2a038', shimmer: '#f7e2a0' };
-  if (state.metal === 'Roségold') return { hex: '#2a2a2a', shimmer: '#8a8a8a' };
   return { hex: '#aab3bd', shimmer: '#f1f4f7' };
 }
 
@@ -534,7 +527,6 @@ function nachDemZeichnen() {
 // ---- Kristall Pur (seit 14.10.2026 im Wunscharmband, vorher eigene Datei Kristallpur.html) ----
 // Gezeichnet wie in Kristallpur.html: 31 gleich grosse Perlen, oben die Grosslochperle, dann 30 Kristalle
 // (normale Armbandgrösse). Die Farben wiederholen sich in ihrer Reihenfolge rund ums Armband.
-// Roségold gibt es bei Kristall Pur nicht, deshalb immer die Grosslochperle in Silber oder Gold.
 const PUR_PERLEN = 31;
 const PUR_R      = 12;
 const PUR_LEER   = { ...GREY, shape: 'bicone' };   // dasselbe Grau wie im Wunscharmband (keine neuen Farbwerte)
@@ -1042,10 +1034,8 @@ function drawBiconeBand(ctx, x, y, r, c, ang) {
 
 // Grosslochperle in Gold und Silber (seit 12.10.2026): leicht bauchiger Körper mit einem Rand
 // an beiden Enden und einem hellen Glanzstreifen längs – so sieht die echte Edelstahlperle aus.
-// Die schwarze Perle (bei Roségold) hat keine Ränder und bleibt glatt: drawBarrelGlatt.
 const BARREL_RAND = .3;   // Länge eines Randes als Anteil der halben Perlenlänge (Tanjas Wahl "G2")
 function drawBarrel(ctx, x, y, r, base, shimmer, gloss, angle) {
-  if (state.metal === 'Roségold') return drawBarrelGlatt(ctx, x, y, r, base, shimmer, gloss, angle);
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle || 0);
@@ -1095,28 +1085,6 @@ function drawMetallKugel(ctx, x, y, r, base, shimmer) {
   const s = ctx.createRadialGradient(x - r * .32, y - r * .4, 0, x - r * .32, y - r * .4, r * .34);
   s.addColorStop(0, 'rgba(255,255,255,1)'); s.addColorStop(.45, 'rgba(255,255,255,.75)'); s.addColorStop(1, 'rgba(255,255,255,0)');
   ctx.fillStyle = s; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
-  ctx.restore();
-}
-
-function drawBarrelGlatt(ctx, x, y, r, base, shimmer, gloss, angle) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(angle || 0);
-  const w = r * 0.92, h = r * 1.25;
-  const we = r * 0.62;
-  ctx.beginPath();
-  ctx.moveTo(0, -h);
-  ctx.bezierCurveTo( we*1.3, -h*.88,  w, -h*.32,  w, 0);
-  ctx.bezierCurveTo( w,  h*.32,  we*1.3,  h*.88,  0,  h);
-  ctx.bezierCurveTo(-we*1.3,  h*.88, -w,  h*.32, -w, 0);
-  ctx.bezierCurveTo(-w, -h*.32, -we*1.3, -h*.88,  0, -h);
-  ctx.closePath();
-  const g = ctx.createRadialGradient(-w*.3,-h*.3,h*.04, w*.1, h*.1, h);
-  g.addColorStop(0,shimmer); g.addColorStop(.42,base); g.addColorStop(1,darken(base,.48));
-  ctx.fillStyle=g; ctx.fill();
-  const sh = ctx.createRadialGradient(-w*.28,-h*.28,0,-w*.28,-h*.28,h*.4);
-  sh.addColorStop(0,`rgba(255,255,255,${gloss})`); sh.addColorStop(1,'rgba(255,255,255,0)');
-  ctx.fillStyle=sh; ctx.fill();
   ctx.restore();
 }
 
@@ -1231,17 +1199,11 @@ function resetExtras() {
 // Lava, Edelstahl und Extra Funkel-Wünsche bleiben immer. Einfarbig und Zweifarbig gibt es
 // in beiden Designs, sie bleiben mit ihren Farben. Dreifarbig (nur Energie) und Vierfarbig
 // (nur Doppel Kristall) muss die Kundin neu anklicken – die Farben sind dann vorausgefüllt.
-// Kristall Pur (seit 14.10.2026): eigene Farb-Anzahl (1 bis 5), kein Lava-Schritt, keine Funkel-Wünsche,
-// kein Roségold. Ist Roségold gewählt und die Kundin wechselt zu Kristall Pur, wird Edelstahl wieder offen.
+// Kristall Pur (seit 14.10.2026): eigene Farb-Anzahl (1 bis 5), kein Lava-Schritt, keine Funkel-Wünsche.
 function setDesign(design, btn) {
   if (state.design === design) return;
   const behalten = !!state.count && PUR_COUNTS[design].includes(state.count);
   const pur = design === 'pur';
-  if (pur && state.metal === 'Roségold') {
-    state.metal = null;
-    document.querySelectorAll('.metal-btn:not(.lava-btn)').forEach(b => b.classList.remove('active'));
-  }
-  document.getElementById('rosegold-btn').style.display = pur ? 'none' : '';
   state.design = design;
   state.ePos   = [0, 1, 0];
   if (!behalten) {

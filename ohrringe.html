@@ -49,7 +49,6 @@ header { text-align: center; margin-bottom: 36px; }
 .metal-swatch { width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0; }
 .metal-swatch.silber   { background: linear-gradient(135deg, #d4d8dc, #8a9299); }
 .metal-swatch.gold     { background: linear-gradient(135deg, #e8c97e, #b8863a); }
-.metal-swatch.rosegold { background: linear-gradient(135deg, #e8b09a, #c9816e); }
 .count-options { display: flex; gap: 10px; }
 .count-btn { flex: 1; border: 1px solid #ddd; background: transparent; padding: 12px 6px; font-family: 'Jost', sans-serif; font-size: 15px; font-weight: 300; letter-spacing: 0.04em; color: var(--text); cursor: pointer; border-radius: 1px; transition: all 0.2s; text-align: center; }
 .count-btn.active { border-color: #111; background: var(--gold); color: #fff; }
@@ -134,7 +133,7 @@ header { text-align: center; margin-bottom: 36px; }
     <div class="design-options">
       <button class="design-btn" onclick="setDesign('kristall', this)">
         <span class="design-btn-name">Stab Ohrringe</span>
-        <span class="design-btn-desc">Lavaperle · 4 Kristalle – erhältlich in Silber, Gold & Roségold</span>
+        <span class="design-btn-desc">Lavaperle · 4 Kristalle – erhältlich in Silber & Gold</span>
       </button>
       <button class="design-btn" onclick="setDesign('buendel', this)">
         <span class="design-btn-name">Bündel Ohrringe</span>
@@ -165,9 +164,6 @@ header { text-align: center; margin-bottom: 36px; }
       </button>
       <button class="option-btn" onclick="setMetal('Gold', this)">
         <span class="metal-swatch gold"></span> Gold
-      </button>
-      <button class="option-btn" id="rosegold-btn" onclick="setMetal('Roségold', this)">
-        <span class="metal-swatch rosegold"></span> Roségold
       </button>
     </div>
   </div>
@@ -268,7 +264,6 @@ const state = {
 
 function getMetalColor() {
   if (state.metal === 'Gold')     return { hex: '#c9a96e', shimmer: '#e8d49a' };
-  if (state.metal === 'Roségold') return { hex: '#c9816e', shimmer: '#e8b09a' };
   return { hex: '#a8b0b8', shimmer: '#d0d6da' };
 }
 
@@ -632,14 +627,6 @@ function setDesign(design, btn) {
   // Lava-Wahl nur bei Stab Ohrringe (Bündel hat keine Lavaperle)
   if (LAVA_KUPFER_VERFUEGBAR) {
     document.getElementById('lava-section').style.display = design === 'kristall' ? 'block' : 'none';
-  }
-  // Roségold nur bei Stab Ohrringe verfügbar
-  const rg = document.getElementById('rosegold-btn');
-  if (design === 'buendel') {
-    rg.style.display = 'none';
-    if (state.metal === 'Roségold') { state.metal = null; updateMetalButtons(); }
-  } else {
-    rg.style.display = '';
   }
   if (state.count) zeigeFarben();
   drawEarrings();
