@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Royal – Wunschkette</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --gold: #a8843f; --soft: #f4f3ef; --text: #111; }
+body { background: transparent; color: var(--text); font-family: 'Jost', sans-serif; font-weight: 300; display: flex; flex-direction: column; align-items: center; padding: 0; }
+.card { background: transparent; padding: 20px 28px 60px; width: 100%; max-width: 720px; }
+
+/* Zeichnung immer oben, einspaltig. Feld 340 x 480 (Tanjas Wahl 24.10.2026) */
+.bracelet-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; background: var(--soft); padding: 24px 20px 18px; border-radius: 1px; max-width: 400px; margin: 0 auto 28px; }
+
+.progress { display: flex; align-items: flex-start; max-width: 520px; margin: 0 auto 32px; }
+.p-step { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 7px; position: relative; }
+.p-step::before { content: ''; position: absolute; top: 13px; left: calc(-50% + 17px); width: calc(100% - 34px); height: 1px; background: #ddd; }
+.p-step:first-child::before { display: none; }
+.p-step.done::before { background: var(--gold); }
+.p-dot { width: 27px; height: 27px; border-radius: 50%; border: 1px solid #ddd; background: transparent; color: #999; display: flex; align-items: center; justify-content: center; font-size: 13px; font-family: 'Jost', sans-serif; transition: all 0.3s; }
+.p-step.done .p-dot { background: var(--gold); border-color: var(--gold); color: #fff; }
+.p-step.current .p-dot { border-color: #111; color: #111; font-weight: 500; }
+.p-label { font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase; text-align: center; color: #999; line-height: 1.3; transition: color 0.3s; }
+.p-step.done .p-label, .p-step.current .p-label { color: #111; }
+.preview-label { font-family: 'Cormorant Garamond', serif; font-size: 15px; color: #111; font-style: italic; text-align: center; min-height: 1.4em; }
+.preview-label.filled { color: #111; font-style: normal; font-size: 16px; }
+.preis-zeile { font-family: 'Jost', sans-serif; font-size: 16px; font-weight: 400; color: #000; text-align: center; letter-spacing: 0.04em; }
+.preis-zeile:empty { display: none; }
+.section-label { font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; margin-bottom: 12px; font-weight: 500; }
+.section { margin-bottom: 28px; }
+.design-options { display: flex; flex-direction: column; gap: 10px; }
+.design-btn { border: 1px solid #ddd; background: transparent; padding: 16px 20px; cursor: pointer; border-radius: 1px; font-family: 'Jost', sans-serif; font-weight: 300; letter-spacing: 0.04em; transition: all 0.2s; text-align: left; color: var(--text); display: flex; flex-direction: column; gap: 5px; width: 100%; }
+.design-btn:hover:not(.active) { border-color: #111; }
+.design-btn-name { font-size: 17px; font-weight: 400; }
+.design-btn.dimmed { opacity: 0.3; }
+.design-btn-desc { font-size: 13px; color: #111; letter-spacing: 0.04em; }
+/* Längen-Knöpfe: Länge links, Preis rechts – der Preis ist von Anfang an zu sehen (Tanjas Wunsch 24.10.2026) */
+.laenge-btn { flex-direction: row; justify-content: space-between; align-items: center; padding: 13px 20px; }
+.laenge-text { display: flex; flex-direction: column; gap: 3px; }
+.laenge-preis { font-size: 17px; font-weight: 400; white-space: nowrap; }
+.count-options { display: flex; gap: 10px; flex-wrap: wrap; }
+.count-btn { flex: 1; min-width: 74px; border: 1px solid #ddd; background: transparent; padding: 12px 6px; font-family: 'Jost', sans-serif; font-size: 15px; font-weight: 300; letter-spacing: 0.04em; color: var(--text); cursor: pointer; border-radius: 1px; transition: all 0.2s; text-align: center; }
+.count-btn:hover:not(.active) { border-color: #111; color: #111; }
+.color-slot { margin-bottom: 16px; }
+.slot-label { font-size: 14px; letter-spacing: 0.15em; text-transform: uppercase; color: #111; margin-bottom: 8px; font-weight: 500; }
+.color-options { display: flex; flex-wrap: wrap; gap: 7px; }
+.color-chip { display: flex; align-items: center; gap: 7px; border: 1px solid #ddd; padding: 6px 10px; border-radius: 1px; cursor: pointer; font-size: 15px; transition: all 0.2s; background: transparent; font-family: 'Jost', sans-serif; font-weight: 300; color: var(--text); }
+.color-chip:hover:not(.active) { border-color: #111; }
+.color-dot { width: 18px; height: 18px; flex-shrink: 0; }
+.position-section-label { font-size: 14px; letter-spacing: 0.15em; text-transform: uppercase; color: #111; margin-bottom: 10px; font-weight: 500; margin-top: 20px; }
+.position-table { border: 1px solid #ddd; border-radius: 1px; overflow: hidden; }
+.position-row { display: flex; align-items: center; padding: 10px 14px; border-bottom: 1px solid #ddd; gap: 12px; }
+.position-row:last-child { border-bottom: none; }
+.position-name { font-size: 15px; color: #111; font-weight: 400; width: 64px; flex-shrink: 0; letter-spacing: 0.05em; }
+.position-toggle { display: flex; flex: 1; gap: 8px; }
+.pos-btn { flex: 1; border: 1px solid #ddd; background: transparent; padding: 8px 4px; cursor: pointer; border-radius: 1px; font-size: 13px; font-family: 'Jost', sans-serif; font-weight: 300; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px; color: #111; }
+.pos-btn:hover:not(.active) { border-color: #111; }
+.pos-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.1); }
+.metal-options { display: flex; gap: 12px; }
+.metal-btn { flex: 1; border: 1px solid #ddd; background: transparent; padding: 13px; cursor: pointer; border-radius: 1px; font-family: 'Jost', sans-serif; font-weight: 300; font-size: 16px; letter-spacing: 0.06em; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text); }
+.metal-btn:hover:not(.active) { border-color: #111; }
+.metal-swatch { width: 13px; height: 13px; border-radius: 50%; }
+.metal-swatch.silber    { background: linear-gradient(135deg, #d4d8dc, #8a9299); }
+.metal-swatch.gold      { background: linear-gradient(135deg, #e8c97e, #b8863a); }
+.seiten-titel { font-family: 'Jost', sans-serif; font-weight: 300; font-size: clamp(1.4rem, 3.5vw, 2rem); letter-spacing: 0.18em; line-height: 1.35; text-transform: uppercase; text-align: center; color: #111; margin-bottom: 52px; }
+@media (max-width: 420px) { .seiten-titel { font-size: 1.25rem; letter-spacing: 0.1em; } }
+.summary-box { display: none; position: relative; background: #fdfcfa; border: 1px solid #ddd; border-radius: 1px; padding: 18px 20px; margin-bottom: 20px; }
+.summary-box.visible { display: block; }
+.summary-title { font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; color: #111; font-weight: 500; margin-bottom: 10px; }
+.summary-text { font-size: 16px; color: #000; font-weight: 400; line-height: 1.7; white-space: pre-line; font-family: 'Jost', sans-serif; }
+.copy-btn { position: absolute; top: 14px; right: 14px; margin: 0; padding: 6px; border: none; background: transparent; color: #111; cursor: pointer; line-height: 0; }
+.copy-btn svg { width: 18px; height: 18px; }
+.order-hint { font-family: 'Jost', sans-serif; font-size: 15px; color: #000; font-weight: 400; text-align: center; margin: 10px 0 0; }
+.auswahl-zeile { display: flex; flex-direction: column; gap: 14px; }
+.auswahl-zeile .summary-text { order: 1; }
+.mini-vorschau { order: 2; align-self: center; width: 190px; height: auto; display: block; background: #f4f3ef; border: 1px solid #ddd; }
+@media (min-width: 560px) {
+  .auswahl-zeile { flex-direction: row; align-items: flex-start; justify-content: center; gap: 32px; }
+  .auswahl-zeile .summary-text { flex: 0 0 340px; }
+  .mini-vorschau { order: 0; width: 210px; align-self: flex-start; }
+  .summary-title { text-align: center; }
+}
+.order-btn { display: block; width: fit-content; margin: 0 auto; padding: 10px 22px; background: #a8843f; color: #fff; border: none; border-radius: 20px; font-family: 'Jost', sans-serif; font-weight: 500; font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; text-align: center; text-decoration: none; transition: background 0.2s; }
+.order-btn:hover { filter: brightness(0.92); }
+.save-row { display: none; flex-direction: column; align-items: center; margin-top: 6px; }
+.save-row.visible { display: flex; }
+.save-btn { display: inline-flex; align-items: center; gap: 9px; padding: 7px 18px; background: transparent; color: #a8843f; border: 1px solid #a8843f; border-radius: 24px; font-family: 'Jost', sans-serif; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; }
+.save-btn:hover { background: #f4f3ef; }
+.save-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+.save-hint { font-family: 'Jost', sans-serif; font-size: 13px; color: #111; margin: 6px 0 0; text-align: center; min-height: 1em; }
+
+/* Erledigte Schritte: Überschrift schwarz mit goldenem Haken, goldener Balken links, zarter Goldschimmer dahinter */
+.section-label.done, .slot-label.done { color: #111; border-left: 3px solid #a8843f; background: linear-gradient(90deg, #f4f3ef, rgba(244,243,239,0)); padding: 6px 10px; margin-left: -10px; }
+.section-label .haken, .slot-label .haken { color: #a8843f; }
+.section-label .wahl, .slot-label .wahl { font-weight: 400; letter-spacing: 0.04em; text-transform: none; }
+/* Farben: ein Gold #a8843f, eine Fläche #f4f3ef, Kasten "Deine Auswahl" #fdfcfa, Text #111, Rahmen #ddd, inaktiv #999 – sonst nichts */
+.design-btn.active, .metal-btn.active, .color-chip.active, .pos-btn.active { border-color: #a8843f; box-shadow: inset 0 0 0 1px #a8843f; background: #f4f3ef; color: #111; }
+.count-btn.active { background: #f4f3ef; border-color: #a8843f; box-shadow: inset 0 0 0 1px #a8843f; color: #111; }
+
+.summary-text .offen::before { content: '\25CB  '; color: #999; }
+.summary-text .fertig::before { content: '\2713  '; color: #a8843f; }
+.order-btn.gesperrt { background: #ddd; color: #111; pointer-events: none; }
+.copy-btn.versteckt { display: none; }
+</style>
+</head>
+<body>
+
+<!-- Nur die goldene Linie, keine Überschrift (Tanjas Entscheidung 24.10.2026) -->
+<div style="width:48px; height:1px; background:#a8843f; margin:60px auto 52px;"></div>
+
+<div class="card">
+
+  <div class="bracelet-wrap">
+    <canvas id="kette-canvas" width="1020" height="1440" style="width:340px;height:480px;"></canvas>
+    <div class="preview-label" id="preview-label">Wähle dein Design + Wunschkristalle – die Kette füllt sich mit deinen Farben.</div>
+    <div class="preis-zeile" id="preis-zeile"></div>
+    <div class="save-row" id="save-row">
+      <button type="button" class="save-btn" id="btn-speichern" onclick="bildSpeichern()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/></svg>
+        <span id="btn-speichern-text">Bild speichern</span>
+      </button>
+      <p class="save-hint" id="save-hint"></p>
+    </div>
+  </div>
+
+  <div class="progress" id="progress"></div>
+
+  <div class="options-col">
+
+    <div class="section">
+      <div class="section-label" id="design-section-label">1 · Design wählen</div>
+      <div class="design-options">
+        <button class="design-btn" onclick="setDesign('dk', this)">
+          <span class="design-btn-name">Doppelkristall Kette</span>
+          <span class="design-btn-desc">Lavaperle · Kristall · Platzhalter Perle · Kristall – 1, 2 oder 4 Farben</span>
+        </button>
+        <button class="design-btn" onclick="setDesign('energie', this)">
+          <span class="design-btn-name">Energie Kette</span>
+          <span class="design-btn-desc">Lavaperle · Platzhalter Perle · 3 Kristalle · Platzhalter Perle – 1, 2 oder 3 Farben</span>
+        </button>
+        <button class="design-btn" onclick="setDesign('abwechselnd', this)">
+          <span class="design-btn-name">Abwechselnd Kette</span>
+          <span class="design-btn-desc">Lavaperle und Kristall im Wechsel – 1 bis 5 Farben</span>
+        </button>
+        <button class="design-btn" onclick="setDesign('pur', this)">
+          <span class="design-btn-name">Pur Kette</span>
+          <span class="design-btn-desc">Nur Kristalle – 1 bis 5 Farben</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="section" id="metal-section" style="display:none">
+      <div class="section-label" id="metal-section-label">2 · Edelstahl</div>
+      <div class="metal-options">
+        <button class="metal-btn" onclick="setMetal('Silber',this)">
+          <span class="metal-swatch silber"></span> Silber
+        </button>
+        <button class="metal-btn" onclick="setMetal('Gold',this)">
+          <span class="metal-swatch gold"></span> Gold
+        </button>
+      </div>
+    </div>
+
+    <div class="section" id="oese-section" style="display:none">
+      <div class="section-label" id="oese-section-label">3 · Charmhalteröse</div>
+      <div class="design-options">
+        <button class="design-btn oese-btn" data-oese="mit" onclick="setOese('mit')">
+          <span class="design-btn-name">Mit Charmhalteröse</span>
+          <span class="design-btn-desc">In der Mitte sitzt eine Öse mit Ring, daran hängst du deine Charms</span>
+        </button>
+        <button class="design-btn oese-btn" data-oese="ohne" onclick="setOese('ohne')">
+          <span class="design-btn-name">Ohne Charmhalteröse</span>
+          <span class="design-btn-desc">Die Perlen laufen rundherum durch</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="section" id="laenge-section" style="display:none">
+      <div class="section-label" id="laenge-section-label">4 · Länge wählen</div>
+      <div class="design-options" id="laenge-options"></div>
+    </div>
+
+    <div class="section" id="count-section" style="display:none">
+      <div class="section-label" id="count-section-label">5 · Wie viele Kristallfarben?</div>
+      <div class="count-options" id="count-options"></div>
+    </div>
+
+    <div class="section" id="color-section" style="display:none">
+      <div class="section-label" id="color-section-label">6 · Kristallfarben wählen</div>
+      <div id="slots-wrapper"></div>
+      <div id="position-section" style="display:none">
+        <div class="position-section-label">Position wählen</div>
+        <div class="position-table" id="position-table"></div>
+      </div>
+    </div>
+
+    <div class="section" id="extras-section" style="display:none">
+      <div class="section-label" id="extras-section-label">7 · Extra Funkel-Wünsche</div>
+      <div class="design-options">
+        <button class="design-btn" id="extra-none-btn" onclick="setNoExtras()">
+          <span class="design-btn-name">Keine extra Funkel-Wünsche</span>
+          <span class="design-btn-desc">Deine Kette wird klassisch gefädelt, so wie abgebildet</span>
+        </button>
+        <button class="design-btn" id="extra-lava-btn" onclick="toggleLavaReplace()">
+          <span class="design-btn-name">Lava durch Kristalle ersetzen &nbsp;+ 20 €</span>
+          <span class="design-btn-desc">Alle Lavaperlen werden durch Kristalle in deiner Wunschfarbe ersetzt</span>
+        </button>
+        <button class="design-btn" id="extra-keine-btn" onclick="togglePlatzhalter()">
+          <span class="design-btn-name">Keine Platzhalter Perlen</span>
+          <span class="design-btn-desc">Deine Kette wird ohne die kleinen Edelstahlperlen gefädelt</span>
+        </button>
+      </div>
+      <div id="lava-color-block" style="display:none; margin-top:18px;">
+        <div class="slot-label">Kristallfarbe statt Lava</div>
+        <div class="color-options" id="lava-color-options"></div>
+      </div>
+    </div>
+
+    <div class="summary-box" id="summary-box">
+      <div class="summary-title">Deine Auswahl</div>
+      <div class="auswahl-zeile">
+        <img class="mini-vorschau" id="mini-vorschau" alt="Deine Kette">
+        <div class="summary-text" id="summary-text"></div>
+      </div>
+      <button class="copy-btn" id="copy-btn" onclick="copyText()" title="Auswahl kopieren" aria-label="Auswahl kopieren"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg></button>
+      <a class="order-btn" id="order-btn" target="_top" style="margin-top:18px">Jetzt bestellen</a>
+      <p class="order-hint">Im nächsten Schritt legst du deine Kette in den Warenkorb.</p>
+    </div>
+
+  </div><!-- /options-col -->
+
+</div>
+
+<script>
+// ===================== Zeichnung (aus kette-zeichnung.html, festgelegt am 24.10.2026) =====================
+const COLORS = [
+  { name: 'Schimmer Perle',                hex: '#FEFEFC', shimmer: '#FEFEFD', shape: 'round', stop: 'klar' },
+  { name: 'Silbermine AB',                    hex: '#67655F', shimmer: '#D4D4D2', shape: 'bicone', stop: 0.75 },
+  { name: 'Himmelblau AB',                 hex: '#99D6F8', shimmer: '#C2E6FB', shape: 'bicone' },
+  { name: 'Capri Blau AB',                 hex: '#013CAC', shimmer: '#678ACD', shape: 'round'  },
+  { name: 'Meeresblau',                    hex: '#3547A6', shimmer: '#8691CA', shape: 'bicone' },
+  { name: 'Nachtblau',                    hex: '#36537D', shimmer: '#8698B1', shape: 'round'  },
+  { name: 'Türkise Lagune AB',             hex: '#04AD99', shimmer: '#68CEC2', shape: 'bicone' },
+  { name: 'Atlantik Türkis dunkel matt',   hex: '#3CA6B2', shimmer: '#8ACAD1', shape: 'bicone' },
+  { name: 'Zitrus Grün',                   hex: '#D0EC40', shimmer: '#E3F48C', shape: 'bicone' },
+  { name: 'Olivin Grün',                   hex: '#85A752', shimmer: '#91B063', shape: 'bicone' },
+  { name: 'El Golfo Grün',                 hex: '#0B6F0D', shimmer: '#6DA96E', shape: 'bicone' },
+  { name: 'Smaragd AB',                    hex: '#20725A', shimmer: '#E8C87A', shape: 'round'  },
+  { name: 'Citrin Gelb AB',               hex: '#FDF158', shimmer: '#FEFCAA', shape: 'round'  },
+  { name: 'Sonnenschein Matt',             hex: '#FEF6C0', shimmer: '#FEFAD9', shape: 'round'  },
+  { name: 'Abendsonne',                    hex: '#FACB35', shimmer: '#FCE086', shape: 'bicone' },
+  { name: 'Manrique Orange',               hex: '#FF8C00', shimmer: '#FFBA66', shape: 'bicone' },
+  { name: 'Glühende Lava',                 hex: '#FE5302', shimmer: '#FE9867', shape: 'bicone' },
+  { name: 'Hibiskus Rot AB',               hex: '#D00F10', shimmer: '#E36F70', shape: 'bicone' },
+  { name: 'Rotes Magma',                   hex: '#A32A0A', shimmer: '#FF7A00', shape: 'bicone' },
+  { name: 'Venus',                         hex: '#7B4A26', shimmer: '#EED4A8', shape: 'round', stop: 0.75 },
+  { name: 'Rosaline',                      hex: '#FDDAEA', shimmer: '#FEE9F2', shape: 'bicone' },
+  { name: 'Pink Safir Matt',               hex: '#FCCEE0', shimmer: '#FDE2EC', shape: 'bicone' },
+  { name: 'Rose AB',                       hex: '#EE8FB8', shimmer: '#F3B1CD', shape: 'round'  },
+  { name: 'Pinke Buganvilla AB',           hex: '#DF1683', shimmer: '#EC73B5', shape: 'bicone' },
+  { name: 'Pinke Buganvilla Matt',         hex: '#C53773', shimmer: '#DC87AB', shape: 'bicone' },
+  { name: 'Heller Amethyst',               hex: '#D6BCD7', shimmer: '#DAC3DB', shape: 'bicone' },
+];
+
+const LICHT = [-0.6, -0.8];      // Licht kommt von oben links
+
+const SCHLIFF_RUND   = 0.7;      // Stärke der Waben am runden Kristall ("weich")
+
+const SCHLIFF_BICONE = 0.65;     // Stärke der Flächen am Doppelkegel ("zart")
+
+function darken(hex, f) {
+  return `rgb(${[1, 3, 5].map(i => Math.round(parseInt(hex.slice(i, i + 2), 16) * f)).join(',')})`;
+}
+
+function drawKlar(ctx, x, y, r) {
+  ctx.save();
+  ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = '#000';
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  drawKlarGlas(ctx, x, y, r);
+  drawKlarFacetten(ctx, x, y, r);
+}
+
+function drawKlarFacetten(ctx, x, y, r) {
+  ctx.save();
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.clip();
+  // vier Reihen Schliffflächen, abwechselnd hell und leicht grau
+  const B = [-1, -.52, 0, .52, 1];
+  for (let b = 0; b < 4; b++) {
+    const y0 = B[b], y1 = B[b + 1], ym = (y0 + y1) / 2;
+    const w = Math.sqrt(Math.max(0, 1 - ym * ym)), n = (b === 0 || b === 3) ? 3 : 5;
+    const sw = 2 * w / n, off = (b % 2) * sw * .5 - w;
+    for (let i = -1; i <= n; i++) {
+      const xa = off + i * sw, xb = xa + sw;
+      ctx.beginPath();
+      ctx.moveTo(x + xa * r, y + y0 * r); ctx.lineTo(x + xb * r, y + y0 * r);
+      ctx.lineTo(x + (xb + sw * .25) * r, y + y1 * r); ctx.lineTo(x + (xa + sw * .25) * r, y + y1 * r);
+      ctx.closePath();
+      ctx.fillStyle = ((i + b) % 2 === 0) ? 'rgba(255,255,255,.34)' : 'rgba(120,135,160,.10)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.45)'; ctx.lineWidth = Math.max(.4, r * .035); ctx.stroke();
+    }
+  }
+  // kleine AB-Lichter wie am echten Kristall
+  [[-.35, .3, 'rgba(70,130,255,.45)'], [.42, -.28, 'rgba(255,205,90,.5)'], [.1, .55, 'rgba(255,140,200,.35)']].forEach(([dx, dy, c]) => {
+    const g = ctx.createRadialGradient(x + dx * r, y + dy * r, 0, x + dx * r, y + dy * r, r * .3);
+    g.addColorStop(0, c); g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  });
+  ctx.restore();
+}
+
+function drawKlarGlas(ctx, x, y, r) {
+  ctx.save();
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.clip();
+  // Glaskörper: fast durchsichtig
+  ctx.fillStyle = 'rgba(255,255,255,0.22)'; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  // Regenbogenschleier, ganz zart
+  const s = ctx.createLinearGradient(x - r, y - r, x + r, y + r);
+  s.addColorStop(0,   'rgba(120,220,255,.14)');
+  s.addColorStop(.32, 'rgba(200,160,255,.119)');
+  s.addColorStop(.58, 'rgba(255,225,150,.126)');
+  s.addColorStop(.82, 'rgba(150,255,210,.105)');
+  s.addColorStop(1,   'rgba(255,170,220,.126)');
+  ctx.fillStyle = s; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  // Rand: nur aussen etwas dunkler, damit die Kugel Form hat
+  const e = ctx.createRadialGradient(x, y, r * .62, x, y, r);
+  e.addColorStop(0, 'rgba(120,130,150,0)'); e.addColorStop(.8, 'rgba(120,130,150,.14)'); e.addColorStop(1, 'rgba(95,105,125,.42)');
+  ctx.fillStyle = e; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  // Glanzpunkt oben links, kleiner Lichtreflex unten rechts (Glas)
+  const h = ctx.createRadialGradient(x - r * .3, y - r * .34, 0, x - r * .3, y - r * .34, r * .42);
+  h.addColorStop(0, 'rgba(255,255,255,.95)'); h.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = h; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  const l = ctx.createRadialGradient(x + r * .38, y + r * .42, 0, x + r * .38, y + r * .42, r * .34);
+  l.addColorStop(0, 'rgba(255,255,255,.55)'); l.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = l; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  ctx.restore();
+}
+
+function drawSphere(ctx, x, y, r, base, shimmer, gloss, stop = 0.42) {
+  if (stop === 'klar') return drawKlar(ctx, x, y, r);
+  const g = ctx.createRadialGradient(x - r * .35, y - r * .38, r * .04, x + r * .1, y + r * .1, r * 1.05);
+  g.addColorStop(0, shimmer); g.addColorStop(stop, base); g.addColorStop(1, darken(base, .48));
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+  const sh = ctx.createRadialGradient(x - r * .28, y - r * .32, 0, x - r * .28, y - r * .32, r * .4);
+  sh.addColorStop(0, `rgba(255,255,255,${gloss})`); sh.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = sh; ctx.fill();
+}
+
+function drawLava(ctx, x, y, r) {
+  const g = ctx.createRadialGradient(x - r * .3, y - r * .3, r * .05, x, y, r);
+  g.addColorStop(0, '#585858'); g.addColorStop(.45, '#252525'); g.addColorStop(1, '#0a0a0a');
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  [[-.28, -.18], [.22, .28], [-.1, .35], [.34, -.12], [.1, -.34], [-.34, .12]].forEach(([dx, dy]) => {
+    ctx.beginPath(); ctx.arc(x + dx * r, y + dy * r, r * .11, 0, Math.PI * 2); ctx.fill();
+  });
+}
+
+function drawRund(ctx, x, y, r, c, ang) {
+  if (c.stop === 'klar') return drawKlar(ctx, x, y, r);
+  const K = SCHLIFF_RUND;
+  const umriss = () => { ctx.beginPath(); ctx.arc(x, y, r * 1.02, 0, Math.PI * 2); ctx.closePath(); };   // runder Umriss (13.10.2026), die Waben liegen innen
+  umriss();
+  const g = ctx.createRadialGradient(x - r * .35, y - r * .38, r * .04, x + r * .1, y + r * .1, r * 1.05);
+  g.addColorStop(0, c.shimmer); g.addColorStop(typeof c.stop === 'number' ? c.stop : .42, c.hex); g.addColorStop(1, darken(c.hex, .48));
+  ctx.fillStyle = g; ctx.fill();
+  ctx.save(); umriss(); ctx.clip();
+  ctx.translate(x, y); ctx.rotate(ang);
+  const s = r * .46, dx = Math.sqrt(3) * s, dy = 1.5 * s, ox = dx * .25, oy = -s * .38;
+  for (let j = -3; j <= 3; j++) for (let i = -3; i <= 3; i++) {
+    const hx = ox + dx * (i + (((j % 2) + 2) % 2) * .5), hy = oy + dy * j;
+    if (Math.hypot(hx, hy) > r + s) continue;
+    ctx.beginPath();
+    for (let k = 0; k < 6; k++) { const a = Math.PI / 6 + k * Math.PI / 3; ctx[k ? 'lineTo' : 'moveTo'](hx + Math.cos(a) * s * 1.01, hy + Math.sin(a) * s * 1.01); }
+    ctx.closePath();
+    // Helligkeit je Fläche: Lage zum Licht plus ein fester Zufallswert je Wabe
+    const gx = (hx * Math.cos(ang) - hy * Math.sin(ang)) / r, gy = (hx * Math.sin(ang) + hy * Math.cos(ang)) / r;
+    const z = Math.sin(i * 12.9898 + j * 78.233) * 43758.5453, zf = (z - Math.floor(z)) * 2 - 1;
+    const d = (gx * LICHT[0] + gy * LICHT[1]) * .55 + zf * .5;
+    ctx.fillStyle = d > 0 ? `rgba(255,255,255,${Math.min(1, d * .34 * K)})` : `rgba(0,0,0,${Math.min(1, -d * .26 * K)})`;
+    ctx.fill();
+  }
+  // Fadenkanal: zarter heller Streifen längs durch die Mitte
+  const k = ctx.createLinearGradient(-r * .2, 0, r * .2, 0);
+  k.addColorStop(0, 'rgba(255,255,255,0)'); k.addColorStop(.5, `rgba(255,255,255,${.10 * K})`); k.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = k; ctx.fillRect(-r * .2, -r * 1.1, r * .4, r * 2.2);
+  ctx.restore();
+  ctx.save(); umriss(); ctx.clip();
+  const sh = ctx.createRadialGradient(x - r * .3, y - r * .34, 0, x - r * .3, y - r * .34, r * .34);
+  sh.addColorStop(0, 'rgba(255,255,255,.7)'); sh.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = sh; ctx.fillRect(x - r * 1.1, y - r * 1.1, 2.2 * r, 2.2 * r);
+  ctx.restore();
+}
+
+function drawBiconeBand(ctx, x, y, r, c, ang) {
+  const S = SCHLIFF_BICONE;
+  const w = r * 1.12, h = r * .98, k = .30 * w, m = w * .36;
+  const P = (px, py) => [x + px * Math.cos(ang) - py * Math.sin(ang), y + px * Math.sin(ang) + py * Math.cos(ang)];
+  const poly = pts => { ctx.beginPath(); pts.forEach(([px, py], i) => { const q = P(px, py); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }); ctx.closePath(); };
+  const aussen = [[-k, -h], [k, -h], [w, 0], [k, h], [-k, h], [-w, 0]];
+  poly(aussen);
+  const g = ctx.createRadialGradient(x - r * .4, y - r * .42, r * .05, x + r * .1, y + r * .1, r * 1.3);
+  g.addColorStop(0, c.shimmer); g.addColorStop(.42, c.hex); g.addColorStop(1, darken(c.hex, .48));
+  ctx.fillStyle = g; ctx.fill();
+  ctx.save(); poly(aussen); ctx.clip();
+  [-1, 1].forEach(s => {
+    [[[-w, 0], [-k, s * h], [-m, 0]], [[-m, 0], [-k, s * h], [k, s * h], [m, 0]], [[m, 0], [k, s * h], [w, 0]]].forEach((f, i) => {
+      const n = [[-1, s * .55], [0, s * 1], [1, s * .55]][i], l = Math.hypot(n[0], n[1]);
+      const gx = (n[0] * Math.cos(ang) - n[1] * Math.sin(ang)) / l, gy = (n[0] * Math.sin(ang) + n[1] * Math.cos(ang)) / l;
+      const d = gx * LICHT[0] + gy * LICHT[1];
+      poly(f);
+      ctx.fillStyle = d > 0 ? `rgba(255,255,255,${Math.min(1, d * .42 * S)})` : `rgba(0,0,0,${Math.min(1, -d * .30 * S)})`;
+      ctx.fill();
+      ctx.strokeStyle = `rgba(255,255,255,${Math.min(1, .28 * S)})`; ctx.lineWidth = Math.max(.35, r * .03); ctx.stroke();
+    });
+  });
+  const sh = ctx.createRadialGradient(x - r * .3, y - r * .34, 0, x - r * .3, y - r * .34, r * .4);
+  sh.addColorStop(0, 'rgba(255,255,255,.6)'); sh.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = sh; ctx.fillRect(x - 1.3 * r, y - 1.3 * r, 2.6 * r, 2.6 * r);
+  ctx.restore();
+}
+
+function drawMetallKugel(ctx, x, y, r, base, shimmer) {
+  ctx.save();
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.clip();
+  const g = ctx.createLinearGradient(0, y - r, 0, y + r);
+  g.addColorStop(0, '#ffffff'); g.addColorStop(.18, shimmer); g.addColorStop(.42, base);
+  g.addColorStop(.55, darken(base, .42)); g.addColorStop(.68, base); g.addColorStop(.88, shimmer); g.addColorStop(1, darken(base, .7));
+  ctx.fillStyle = g; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  // Rand rundum dunkler, damit die Kugel Form hat
+  const e = ctx.createRadialGradient(x, y, r * .55, x, y, r);
+  e.addColorStop(0, 'rgba(0,0,0,0)'); e.addColorStop(1, 'rgba(0,0,0,.38)');
+  ctx.fillStyle = e; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  // scharfer Spiegelpunkt
+  const s = ctx.createRadialGradient(x - r * .32, y - r * .4, 0, x - r * .32, y - r * .4, r * .34);
+  s.addColorStop(0, 'rgba(255,255,255,1)'); s.addColorStop(.45, 'rgba(255,255,255,.75)'); s.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = s; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  ctx.restore();
+}
+
+function metall(ctx, mc, x0, x1) {
+  const g = ctx.createLinearGradient(x0, 0, x1, 0);
+  g.addColorStop(0, mc.shimmer); g.addColorStop(.45, mc.hex); g.addColorStop(1, darken(mc.hex, .62));
+  return g;
+}
+
+function drawKarabiner(ctx, cx, startY, mc) {
+  ctx.save();
+  const glanz = metall(ctx, mc, cx - 14, cx + 16);
+  ctx.strokeStyle = glanz;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // Form: Halbkreis oben + Dreieck unten + Ösenring ganz unten
+  // Links: Halbkreis & Dreieck berühren sich fast | Rechts: Federhebel
+
+  const scR  = 12;            // Kreis-Radius
+  const scCY = startY + scR;  // Halbkreis-Mittelpunkt Y
+  const triH = 26;            // Dreieck-Höhe
+  const tipY = scCY + triH;   // Dreieckspitze (unten)
+
+  // Kreis 60% geschlossen / 40% offen (144° Lücke unten)
+  const gapAngle  = 0.28 * Math.PI;              // ~50° je Seite
+  const arcStart  = Math.PI / 2 + gapAngle;      // 0.9π – untere-links Lücke
+  const arcEnd    = Math.PI / 2 - gapAngle;      // 0.1π – untere-rechts Lücke
+  const gapLX = cx + scR * Math.cos(arcStart);   // x links Lücke
+  const gapLY = scCY + scR * Math.sin(arcStart); // y links Lücke
+  const gapRX = cx + scR * Math.cos(arcEnd);     // x rechts Lücke
+  const gapRY = scCY + scR * Math.sin(arcEnd);   // y rechts Lücke
+
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.arc(cx, scCY, scR, arcStart, arcEnd, false); // Bogen durch oben
+  ctx.stroke();
+
+  // Dreieck – Metallfarbe, geschlossen
+  // Ecken passen zu den Lückenrändern des Kreises
+  ctx.beginPath();
+  ctx.moveTo(gapLX + 1, gapLY - 1);   // oben links (1px Spalt = fast-Berührung)
+  ctx.lineTo(cx, tipY);                 // Spitze unten
+  ctx.lineTo(gapRX - 1, gapRY - 1);   // oben rechts
+  ctx.closePath();
+  ctx.fillStyle = glanz;
+  ctx.fill();
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Federschnapper – diagonal von Bogen-Rechts nach unten-außen
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(gapRX, gapRY);
+  ctx.lineTo(gapRX + 5, gapRY - 9);
+  ctx.stroke();
+
+  // Ösenring unten
+  const ringR = 3.3;   // kleine Öse, in der der erste Ring des Bündels hängt
+  const ringY = tipY + ringR;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, ringY, ringR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.restore();
+  return ringY + ringR + 2;
+}
+
+// Vorschlag Kettenzeichnung (24.10.2026). Masse: 6-mm-Perle = Radius 3 mm, alles in mm * u.
+// Metallfarben wie im Wunscharmband (metalColor in index.html)
+const METALL = { Silber: { hex: '#aab3bd', shimmer: '#f1f4f7' }, Gold: { hex: '#d2a038', shimmer: '#f7e2a0' } };
+let SILBER = METALL.Silber;
+const MM = { lava: 6, crystal: 6, metal: 3 };
+const farbe = n => COLORS.find(c => c.name === n) || { name: n, hex: '#c8c8c8', shimmer: '#e4e4e4', shape: 'round' };   // kette.html: noch nicht gewählt = grau (wie GREY im Wunscharmband)
+
+function teardrop(cx, top, rx, ry, th) {           // rechte Seite, th 0 = oben, PI = unten
+  const g = 0.30 + 0.70 * Math.pow((1 - Math.cos(th)) / 2, 0.9);
+  return [cx + rx * Math.sin(th) * g, top + ry * (1 - Math.cos(th))];
+}
+
+function kettenMuster(opt, HALB) {
+  // Muster je Design, gelesen von der Öse (bzw. vom Anfang) aus
+  const F = opt.farben.map(farbe), KR = i => ({ t: 'crystal', c: F[i % F.length] });
+  const LV = { t: 'lava' }, ED = { t: 'metal' };
+  let U;
+  if (opt.design === 'dk')        U = [LV, KR(0), ED, KR(1), LV, KR(2), ED, KR(3)];
+  else if (opt.design === 'energie') U = [LV, ED, KR(0), KR(1), KR(2), ED];
+  else if (opt.design === 'abwechselnd') U = F.flatMap((_, i) => [LV, KR(i)]);
+  else U = F.map((_, i) => KR(i));   // pur
+  // kette.html: Extra Funkel-Wünsche. Ohne Platzhalter Perlen gleiche Länge, es rücken Lava und Kristalle nach;
+  // Lava ersetzt: eine Ersatzfarbe für alle Lavapositionen (auch die beiden neben der Öse).
+  if (opt.ohnePlatzhalter) U = U.filter(b => b.t !== 'metal');
+  if (opt.ersatz !== undefined && opt.ersatz !== null) U = U.map(b => b.t === 'lava' ? { t: 'crystal', c: farbe(opt.ersatz) } : b);
+  const perlen = []; let ENDE;
+  if (opt.oese) {
+    // Öse in der Mitte, auf beiden Seiten gleich: von der Öse nach oben, Rest bleibt am Verschluss
+    let pos = 3, i = 0;
+    while (pos + MM[U[i % U.length].t] <= HALB) { const b = U[i % U.length]; perlen.push({ ...b, mm: pos + MM[b.t] / 2 }); perlen.push({ ...b, mm: -(pos + MM[b.t] / 2) }); pos += MM[b.t]; i++; }
+    ENDE = pos;
+  } else {
+    // Ohne Öse (Tanjas Regel 24.10.2026): Muster und Farben laufen durch, aber die Kette ist symmetrisch:
+    // an beiden Enden sitzt dieselbe Musterstelle (Perlenart) wie bei der Kette mit Öse.
+    // Dafür eine Mitte im Muster suchen, um die herum die Perlenarten gespiegelt sind, und nach aussen wachsen.
+    const n = U.length, art = j => U[((j % n) + n) % n].t;
+    let best = null;
+    for (let c = 0; c < n; c++) {
+      let ok = true; for (let k = 1; k < n; k++) if (art(c - k) !== art(c + k)) { ok = false; break; }
+      if (!ok) continue;
+      let len = MM[art(c)], k = 0;
+      while (len + 2 * MM[art(c + k + 1)] <= 2 * HALB) { k++; len += 2 * MM[art(c + k)]; }
+      if (!best || len > best.len) best = { c, k, len };   // Länge geht vor, Ende ergibt sich (Tanja 24.10.2026)
+    }
+    let p = -best.len / 2;
+    for (let j = best.c - best.k; j <= best.c + best.k; j++) {
+      const bb = U[((j % n) + n) % n]; perlen.push({ ...bb, mm: p + MM[bb.t] / 2 }); p += MM[bb.t];
+    }
+    ENDE = best.len / 2;
+  }
+  return { perlen, ENDE };
+}
+
+function drawKette(canvas, opt) {
+  SILBER = METALL[opt.metall || 'Silber'];
+  const Q = 3, ctx = canvas.getContext('2d');
+  ctx.setTransform(Q, 0, 0, Q, 0, 0);
+  const W = canvas.width / Q, H = canvas.height / Q;
+  ctx.clearRect(0, 0, W, H);
+  const cx = W / 2, top = 22, rx = W * 0.44; let ry = 160;
+  const K = opt.gross || 1;
+  let HALB = 210 / K;                                   // 45 cm minus 3 cm Verschlussbereich, halbiert
+  // Kurve abtasten, oberes Ende so wählen, dass zwischen den Enden der Karabiner (11 mm) plus Ringe Platz hat
+  let th0 = 0.1 * Math.PI, tab, u = 1.85 * K;
+  for (let it = 0; it < 10; it++) {
+    ry = (H - top - 16 * u - 6) / 2;   // unten Platz für Öse und Bindering (auch ohne Öse gleich gross gezeichnet)
+    tab = []; let s = 0, prev = teardrop(cx, top, rx, ry, Math.PI);
+    for (let i = 1; i <= 2000; i++) {
+      const th = Math.PI - (Math.PI - th0) * i / 2000, p = teardrop(cx, top, rx, ry, th);
+      s += Math.hypot(p[0] - prev[0], p[1] - prev[1]); tab.push([s, p[0], p[1]]); prev = p;
+    }
+    if (opt.perlePx) { u = opt.perlePx; HALB = Math.min(210, s / u); } else { u = s / HALB; HALB = 210 / K; }
+    const ende = teardrop(cx, top, rx, ry, th0), gap = 2 * (ende[0] - cx);
+    const soll = 19.5 * u;   // Kappen mit Öse, Ringe, Karabiner 11 mm   // Karabiner 11 mm, Kappen und Ringe
+    th0 *= Math.pow(soll / gap, 0.8);
+  }
+  const { perlen, ENDE } = kettenMuster(opt, HALB);
+  HALB = ENDE; u = tab[tab.length - 1][0] / HALB;   // Kurve endet genau an der letzten Perle
+  const L = tab[tab.length - 1][0];
+  function punkt(mm) {                                // mm < 0 = linke Seite
+    const s = Math.min(Math.abs(mm) * u, L);
+    let i = tab.findIndex(t => t[0] >= s); if (i < 1) i = 1;
+    const [x, y] = [tab[i][1], tab[i][2]], [x0, y0] = [tab[i - 1][1], tab[i - 1][2]];
+    let ang = Math.atan2(y - y0, x - x0);
+    if (mm < 0) return [2 * cx - x, y, Math.PI - ang];
+    return [x, y, ang];
+  }
+  // Faden
+  ctx.beginPath(); tab.forEach(([, x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+  ctx.moveTo(tab[0][1], tab[0][2]); tab.forEach(([, x, y]) => ctx.lineTo(2 * cx - x, y));
+  ctx.strokeStyle = 'rgba(120,110,100,0.35)'; ctx.lineWidth = 0.6; ctx.stroke();
+
+  const R = 3 * u;
+  perlen.sort((a, b) => punkt(a.mm)[1] - punkt(b.mm)[1]).forEach(b => {
+    const [x, y, ang] = punkt(b.mm), n = ang + Math.PI / 2;
+    if (b.t === 'lava') drawLava(ctx, x, y, R);
+    else if (b.t === 'metal') drawMetallKugel(ctx, x, y, 1.5 * u, SILBER.hex, SILBER.shimmer);
+    else if (b.c.shape === 'bicone') drawBiconeBand(ctx, x, y, R, b.c, n);
+    else drawRund(ctx, x, y, R, b.c, n);
+  });
+
+  // Charmhalteröse: 6-mm-Edelstahlkugel, kurze Öse, Bindering 9 mm
+  if (opt.oese) {
+    const [x, y] = punkt(0.0001);
+    const ky = y;
+    // Öse unter der Kugel; die Ringe gehen durch die Öse (nicht darunter hängend, Tanja 24.10.2026)
+    const by = ky + R + 1.1 * u;
+    const oese = (von, bis) => { ctx.lineWidth = 0.55 * u; ctx.strokeStyle = metall(ctx, SILBER, x - u, x + u); ctx.beginPath(); ctx.ellipse(x, by, 0.9 * u, 1.5 * u, 0, von, bis); ctx.stroke(); };
+    oese(0, Math.PI * 2);
+    // Bindering, 9 mm. Oberkante liegt in der Öse. In Gold zwei dünne Ringe auf gleicher Höhe, einmal ineinander
+    // verschlungen (Tanja hat nur dünne goldene Ringe, zwei zusammen sind stabiler). In Silber ein Ring.
+    const rr = 4.5 * u, ry2 = by + 0.5 * u + rr;
+    const einRing = (mx, my, dicke, von, bis) => {
+      ctx.lineWidth = dicke; ctx.strokeStyle = metall(ctx, SILBER, mx - rr, mx + rr);
+      ctx.beginPath(); ctx.arc(mx, my, rr, von, bis); ctx.stroke();
+    };
+    if (opt.metall === 'Gold') {
+      const sv = 0.4 * u, d = 0.42 * u;
+      const c1 = [x - sv, ry2], c2 = [x + sv, ry2];
+      einRing(c2[0], c2[1], d, 0, Math.PI * 2);
+      einRing(c1[0], c1[1], d, 0, Math.PI * 2);
+      // untere Kreuzung: hier liegt Ring 2 über Ring 1 (oben liegt Ring 1 über Ring 2)
+      const hh = Math.sqrt(rr * rr - sv * sv), w2 = Math.atan2(hh, x - c2[0]);
+      einRing(c2[0], c2[1], d, w2 - 0.25, w2 + 0.25);
+    } else {
+      einRing(x, ry2, 0.75 * u, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(60,66,74,.55)'; ctx.lineWidth = 0.18 * u;
+      ctx.beginPath(); ctx.arc(x, ry2, rr + 0.38 * u, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, ry2, rr - 0.38 * u, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 0.25 * u;
+      ctx.beginPath(); ctx.arc(x, ry2, rr + 0.15 * u, 1.1 * Math.PI, 1.45 * Math.PI); ctx.stroke();
+    }
+    // vordere Hälfte der Öse über die Ringe: so sieht man, dass sie durch die Öse gehen
+    oese(-Math.PI / 2, Math.PI / 2);
+    // Ösenperle: Kugel mit leicht abgeflachten Seiten (Gold wie Silber, Tanja 24.10.2026)
+    ctx.save(); ctx.translate(x, ky); ctx.scale(0.9, 1); drawMetallKugel(ctx, 0, 0, R, SILBER.hex, SILBER.shimmer); ctx.restore();
+  }
+
+  // Verschluss wie auf Tanjas Foto (24.10.2026): an jedem Ende eine kleine Kappe, dann ein Ring.
+  // Rechts der Karabiner (11 mm, Form wie im Bündel Charm), links das Verlängerungskettchen mit Perle am Stift.
+  const ring = (x, y, r) => { ctx.lineWidth = 0.45 * u; ctx.strokeStyle = metall(ctx, SILBER, x - r, x + r); ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke(); };
+  function kappe(x, y, a) {      // kleine Kappe über dem Fadenende, ca. 4 mm lang
+    ctx.save(); ctx.translate(x, y); ctx.rotate(a);
+    const l = 2 * u, w = 1.35 * u;
+    ctx.beginPath(); ctx.moveTo(-l, -w); ctx.quadraticCurveTo(l * 0.9, -w * 0.9, l, 0); ctx.quadraticCurveTo(l * 0.9, w * 0.9, -l, w); ctx.closePath();
+    const g = ctx.createLinearGradient(0, -w, 0, w);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(.3, SILBER.shimmer); g.addColorStop(.55, SILBER.hex); g.addColorStop(1, darken(SILBER.hex, .6));
+    ctx.fillStyle = g; ctx.fill(); ctx.restore();
+  }
+  function ende(mm) {
+    // Kappe über dem Fadenende, vorne eine kleine Öse, durch die Öse ein Ring
+    const [x, y, a] = punkt(mm), dx = Math.cos(a), dy = Math.sin(a);
+    kappe(x + dx * 1.9 * u, y + dy * 1.9 * u, a);
+    const ox = x + dx * 4.3 * u, oy = y + dy * 4.3 * u;
+    const kOese = (von, bis) => { ctx.lineWidth = 0.35 * u; ctx.strokeStyle = metall(ctx, SILBER, ox - u, ox + u); ctx.beginPath(); ctx.arc(ox, oy, 0.6 * u, von, bis); ctx.stroke(); };
+    kOese(0, Math.PI * 2);
+    // Ring geht durch die Öse der Kappe (hängt nicht darunter, Tanja 24.10.2026)
+    const rgx = x + dx * 5.3 * u, rgy = y + dy * 5.3 * u;
+    ring(rgx, rgy, 1.3 * u);
+    kOese(a - Math.PI / 2, a + Math.PI / 2 - Math.PI);   // eine Seite der Öse über dem Ring
+    return [rgx, rgy];
+  }
+  const [lx, ly] = ende(-HALB), [rxe, rye] = ende(HALB);
+  // Verlängerungskettchen links: hängt am Ring der linken Kappe, Glieder fast rund (zum Einhaken)
+  let gx = lx, gy = ly + 1.3 * u;
+  const glied = 3.2 * u;
+  for (let i = 0; i < 9; i++) {
+    ctx.lineWidth = 0.4 * u; ctx.strokeStyle = metall(ctx, SILBER, gx - u, gx + u);
+    ctx.beginPath();
+    if (i % 2) ctx.ellipse(gx, gy + glied / 2, 0.45 * u, glied / 2, 0, 0, Math.PI * 2);
+    else ctx.ellipse(gx, gy + glied / 2, 1.35 * u, glied / 2, 0, 0, Math.PI * 2);
+    ctx.stroke(); gy += glied * 0.8;
+  }
+  // Karabiner: Öse im Ring der rechten Kappe, Haken eingehakt im Ring der linken Kappe (geschlossen getragen)
+  {
+    const D = Math.hypot(lx - rxe, ly - rye), dxk = (lx - rxe) / D, dyk = (ly - rye) / D;
+    const k = (D - 1.3 * u) / 41.3;
+    ctx.save(); ctx.translate(rxe + dxk * 0.6 * u, rye + dyk * 0.6 * u); ctx.rotate(Math.atan2(dxk, -dyk));
+    ctx.scale(k, k); drawKarabiner(ctx, 0, -41.3, SILBER); ctx.restore();
+  }
+  // Ring am Ende des Kettchens, darin die Öse des Stifts, dann die Perle, unten die kleine Kugel
+  ring(gx, gy + 1.2 * u, 1.3 * u);
+  ctx.lineWidth = 0.35 * u; ctx.strokeStyle = metall(ctx, SILBER, gx - u, gx + u);
+  ctx.beginPath(); ctx.ellipse(gx, gy + 2.6 * u, 0.55 * u, 0.9 * u, 0, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(gx, gy + 3.5 * u); ctx.lineTo(gx, gy + 4.1 * u); ctx.stroke();
+  const by = gy + 4.1 * u + R;
+  if (opt.kettchen === 'lava') drawLava(ctx, gx, by, R);
+  else { const c = farbe(opt.kettchen); c.shape === 'bicone' ? drawBiconeBand(ctx, gx, by, R, c, 0) : drawRund(ctx, gx, by, R, c, 0); }
+  drawSphere(ctx, gx, by + R + 0.8 * u, 0.8 * u, SILBER.hex, SILBER.shimmer, 0.75);
+  return { u, anzahl: perlen.length };
+}
+
+// Goldene Ösenperle als kurze Walze: breiter als hoch, flache Seiten, polierter Glanz (Foto 24.10.2026)
+function oesenWalze(ctx, x, y, R) {
+  const w = R * 0.9, h = R * 0.95, rr = R * 0.62;   // bauchig gerundet wie auf dem Foto
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(x - w + rr, y - h); ctx.lineTo(x + w - rr, y - h); ctx.quadraticCurveTo(x + w, y - h, x + w, y - h + rr);
+  ctx.lineTo(x + w, y + h - rr); ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+  ctx.lineTo(x - w + rr, y + h); ctx.quadraticCurveTo(x - w, y + h, x - w, y + h - rr);
+  ctx.lineTo(x - w, y - h + rr); ctx.quadraticCurveTo(x - w, y - h, x - w + rr, y - h); ctx.closePath();
+  const g = ctx.createLinearGradient(x - w, 0, x + w, 0);
+  g.addColorStop(0, darken(SILBER.hex, .6)); g.addColorStop(.18, SILBER.hex); g.addColorStop(.32, '#ffffff'); g.addColorStop(.42, SILBER.shimmer);
+  g.addColorStop(.55, darken(SILBER.hex, .45)); g.addColorStop(.7, SILBER.hex); g.addColorStop(.88, SILBER.shimmer); g.addColorStop(1, darken(SILBER.hex, .6));
+  ctx.fillStyle = g; ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,.18)'; ctx.lineWidth = Math.max(.3, R * .05); ctx.stroke();
+  ctx.restore();
+}
+// ===================== Ende Zeichnung =====================
+
+// Farbknöpfe: kleiner Kristall wie im Wunscharmband (colorDot nutzt drawBicone und drawSphere)
+function drawBicone(ctx, x, y, r, base, shimmer, gloss, angle) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  const w = r;
+  const h = r * 0.96;
+  ctx.beginPath();
+  ctx.moveTo(0, -h);
+  ctx.bezierCurveTo( w * 0.45, -h * 0.70,  w, -h * 0.12,  w,  0);
+  ctx.bezierCurveTo( w,         h * 0.12,   w * 0.45,  h * 0.70, 0,  h);
+  ctx.bezierCurveTo(-w * 0.45,  h * 0.70,  -w,  h * 0.12, -w,  0);
+  ctx.bezierCurveTo(-w,        -h * 0.12,  -w * 0.45, -h * 0.70, 0, -h);
+  ctx.closePath();
+  const g = ctx.createRadialGradient(-w * .38, -h * .36, h * .04, w * .1, h * .1, h);
+  g.addColorStop(0, shimmer); g.addColorStop(.42, base); g.addColorStop(1, darken(base, .48));
+  ctx.fillStyle = g; ctx.fill();
+  const sh = ctx.createRadialGradient(-w * .3, -h * .3, 0, -w * .3, -h * .3, h * .42);
+  sh.addColorStop(0, `rgba(255,255,255,${gloss})`); sh.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = sh; ctx.fill();
+  ctx.restore();
+}
+
+function colorDot(c, size = 18) {
+  const dpr = 2;
+  const cv  = document.createElement('canvas');
+  cv.width  = size * dpr;
+  cv.height = size * dpr;
+  cv.className = 'color-dot';
+  cv.style.width  = size + 'px';
+  cv.style.height = size + 'px';
+  const ctx = cv.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const r = size * 0.42;
+  if (c.shape === 'bicone') drawBicone(ctx, size / 2, size / 2, r, c.hex, c.shimmer, 0.72, 0);
+  else                      drawSphere(ctx, size / 2, size / 2, r, c.hex, c.shimmer, 0.65, c.stop);
+  return cv;
+}
+
+// ===================== Konfigurator =====================
+const LEER = '';   // noch keine Farbe gewählt: die Zeichnung zeigt grau
+// Noch kein Edelstahl gewählt: alle Metallteile grau, damit man sieht, dass man die Wahl hat (Tanjas Wunsch 24.10.2026).
+// Dasselbe Grau wie GREY im Wunscharmband, keine neue Farbe.
+METALL.Grau = { hex: '#c8c8c8', shimmer: '#e4e4e4' };
+
+// Preise nach dem Handbuch Kettenkalkulation (24.10.2026): Doppelkristall, Energie, Abwechselnd;
+// Pur je 20 € mehr; "Lava durch Kristalle ersetzen" + 20 €. Charmhalteröse und "Keine Platzhalter Perlen" kostenlos.
+const LAENGEN = [
+  { cm: 38, name: 'kurz' },
+  { cm: 45, name: 'klassisch' },
+  { cm: 52, name: 'locker getragen' },
+  { cm: 60, name: 'lang' },
+  { cm: 70, name: 'extra lang' },
+];
+const PREIS = { 38: 105, 45: 120, 52: 135, 60: 150, 70: 170 };
+const AUFPREIS_PUR = 20, AUFPREIS_LAVA = 20;
+
+const COUNTS = { dk: [1, 2, 4], energie: [1, 2, 3], abwechselnd: [1, 2, 3, 4, 5], pur: [1, 2, 3, 4, 5] };
+const COUNT_NAMEN = {
+  dk:          { 1: 'Einfarbig', 2: 'Zweifarbig', 4: 'Vierfarbig' },
+  energie:     { 1: 'Einfarbig', 2: 'Zweifarbig', 3: 'Dreifarbig' },
+  abwechselnd: { 1: 'Einfarbig', 2: '2 Farben', 3: '3 Farben', 4: '4 Farben', 5: '5 Farben' },
+  pur:         { 1: 'Einfarbig', 2: '2 Farben', 3: '3 Farben', 4: '4 Farben', 5: '5 Farben' },
+};
+const DESIGN_NAMEN = { dk: 'Doppelkristall', energie: 'Energie', abwechselnd: 'Abwechselnd', pur: 'Pur' };
+
+// Bestellseiten: 7 Produkte, noch nicht angelegt (Stand 24.10.2026). Sobald es sie gibt, hier die Adressen eintragen.
+// Schlüssel: Design, bei ersetzter Lava mit "-kristalle".
+const BESTELLSEITEN = {
+  'dk':                    'https://laroyallanzarote.com/products/doppelkristall-kette-wunschanfertigung',
+  'dk-kristalle':          'https://laroyallanzarote.com/products/doppelkristall-kette-kristalle-statt-lava-wunschanfertigung',
+  'energie':               'https://laroyallanzarote.com/products/energie-kette-wunschanfertigung',
+  'energie-kristalle':     'https://laroyallanzarote.com/products/energie-kette-kristalle-statt-lava-wunschanfertigung',
+  'abwechselnd':           'https://laroyallanzarote.com/products/abwechselnd-kette-wunschanfertigung',
+  'abwechselnd-kristalle': 'https://laroyallanzarote.com/products/abwechselnd-kette-kristalle-statt-lava-wunschanfertigung',
+  'pur':                   'https://laroyallanzarote.com/products/pur-kette-wunschanfertigung',
+};
+
+const state = {
+  design: null,
+  metal:  null,
+  oese:   null,          // 'mit' | 'ohne'
+  laenge: null,          // 38 | 45 | 52 | 60 | 70
+  count:  null,
+  slots:  [],
+  merk:   [],
+  ePos:   [0, 1, 0],
+  lavaReplace:     false,
+  lavaColor:       null,
+  ohnePlatzhalter: false,
+  noExtras:        false,
+};
+
+const hatExtras     = () => state.design && state.design !== 'pur';
+const hatPlatzhalter = () => state.design === 'dk' || state.design === 'energie';
+const lavaErsetzt   = () => hatExtras() && state.lavaReplace;
+const ohnePlatzhalterAktiv = () => hatPlatzhalter() && state.ohnePlatzhalter;
+
+function preis(cm) {
+  cm = cm || state.laenge;
+  if (!cm) return null;
+  return PREIS[cm] + (state.design === 'pur' ? AUFPREIS_PUR : 0) + (lavaErsetzt() ? AUFPREIS_LAVA : 0);
+}
+
+// Was die Zeichnung bekommt. Die Zeichnung zeigt immer eine 45-cm-Kette (Länge wird nicht gezeichnet).
+function kettenOpt() {
+  if (!state.design) return { design: 'pur', farben: [LEER], kettchen: LEER, oese: false, metall: 'Grau', perlePx: 2.65 };
+  const n = state.count, s = i => state.slots[i] || LEER;
+  let farben;
+  if (!n)                            farben = [LEER];
+  else if (state.design === 'energie') farben = n === 1 ? [s(0)] : n === 2 ? state.ePos.map(p => s(p)) : [s(0), s(1), s(2)];
+  else                               farben = Array.from({ length: n }, (_, i) => s(i));
+  const ersatz = lavaErsetzt() ? (state.lavaColor || LEER) : null;
+  // Perle am Verlängerungskettchen: Lava; bei ersetzter Lava die Ersatzfarbe; bei Pur Farbe 1
+  const kettchen = state.design === 'pur' ? farben[0] : (ersatz !== null ? ersatz : 'lava');
+  return { design: state.design, farben, kettchen, oese: state.oese === 'mit', metall: state.metal || 'Grau',
+           ersatz, ohnePlatzhalter: ohnePlatzhalterAktiv(), perlePx: 2.65 };
+}
+
+function zeichnen() {
+  drawKette(document.getElementById('kette-canvas'), kettenOpt());
+  updateLabel();
+  updateSummary();
+  updateProgress();
+  updateHeadings();
+}
+
+// ---- Auswahl ----
+// Schritt für Schritt (24.10.2026): jeder Schritt erscheint erst, wenn der vorige gewählt ist.
+// Einmal sichtbare Schritte bleiben stehen, damit man jederzeit zurückgehen kann.
+function aufdecken() {
+  const zeigen = (id, ja) => { if (ja) document.getElementById(id).style.display = 'block'; };
+  zeigen('metal-section',  !!state.design);
+  zeigen('oese-section',   !!state.metal);
+  zeigen('laenge-section', !!state.oese);
+  zeigen('count-section',  !!state.laenge);
+}
+
+function setDesign(design, btn) {
+  if (state.design === design) return;
+  const behalten = !!state.count && COUNTS[design].includes(state.count);
+  state.design = design;
+  state.ePos = [0, 1, 0];
+  if (!behalten) {
+    state.merk  = state.slots.filter(Boolean);
+    state.count = null;
+    state.slots = [];
+  }
+  document.querySelectorAll('button[onclick^="setDesign"]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  aufdecken();
+  renderLaengen();
+  renderCountButtons();
+  if (behalten) renderSlots();
+  document.getElementById('color-section').style.display  = behalten ? 'block' : 'none';
+  document.getElementById('extras-section').style.display = behalten && hatExtras() ? 'block' : 'none';
+  document.getElementById('extra-keine-btn').style.display = hatPlatzhalter() ? '' : 'none';
+  updateExtraDimming();
+  zeichnen();
+}
+
+function setMetal(metal, btn) {
+  state.metal = metal;
+  document.querySelectorAll('#metal-section .metal-btn').forEach(b => b.classList.toggle('active', b === btn));
+  aufdecken();
+  zeichnen();
+}
+
+function setOese(wert) {
+  state.oese = wert;
+  document.querySelectorAll('.oese-btn').forEach(b => b.classList.toggle('active', b.dataset.oese === wert));
+  aufdecken();
+  zeichnen();
+}
+
+function setLaenge(cm) {
+  state.laenge = cm;
+  renderLaengen();
+  aufdecken();
+  zeichnen();
+}
+
+// Längen-Knöpfe mit Preis; der Preis ändert sich mit dem Design (Pur) und mit "Lava durch Kristalle ersetzen"
+function renderLaengen() {
+  const box = document.getElementById('laenge-options');
+  box.innerHTML = '';
+  LAENGEN.forEach(l => {
+    const b = document.createElement('button');
+    b.className = 'design-btn laenge-btn' + (state.laenge === l.cm ? ' active' : '');
+    b.dataset.cm = l.cm;
+    b.innerHTML = `<span class="laenge-text"><span class="design-btn-name">${l.cm} cm</span><span class="design-btn-desc">${l.name}</span></span><span class="laenge-preis">${preis(l.cm)} €</span>`;
+    b.onclick = () => setLaenge(l.cm);
+    box.appendChild(b);
+  });
+}
+
+function renderCountButtons() {
+  const box = document.getElementById('count-options');
+  box.innerHTML = '';
+  COUNTS[state.design].forEach(n => {
+    const b = document.createElement('button');
+    b.className = 'count-btn' + (state.count === n ? ' active' : '');
+    b.textContent = COUNT_NAMEN[state.design][n];
+    b.onclick = () => setCount(n, b);
+    box.appendChild(b);
+  });
+}
+
+function setCount(n, btn) {
+  const bisher = state.slots.some(Boolean) ? state.slots : (state.merk || []);
+  state.count = n;
+  state.slots = Array.from({ length: n }, (_, i) => bisher[i] || null);
+  state.merk  = [];
+  if (state.design === 'energie') state.ePos = [0, 1, 0];
+  document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSlots();
+  document.getElementById('color-section').style.display  = 'block';
+  document.getElementById('extras-section').style.display = hatExtras() ? 'block' : 'none';
+  zeichnen();
+}
+
+function renderSlots() {
+  const wrapper = document.getElementById('slots-wrapper');
+  wrapper.innerHTML = '';
+  const isEnergie = state.design === 'energie';
+  const n = state.count;
+  let labels;
+  if (isEnergie && n === 3) labels = ['Links', 'Mitte', 'Rechts'];
+  else if (n === 1)         labels = ['Kristallfarbe'];
+  else                      labels = Array.from({ length: n }, (_, i) => `Farbe ${i + 1}`);
+  for (let i = 0; i < n; i++) {
+    const div = document.createElement('div');
+    div.className = 'color-slot';
+    div.innerHTML = `<div class="slot-label">${labels[i]}</div><div class="color-options" id="slot-${i}"></div>`;
+    wrapper.appendChild(div);
+    const container = document.getElementById(`slot-${i}`);
+    COLORS.forEach(c => {
+      const chip = document.createElement('button');
+      chip.className = 'color-chip' + (state.slots[i] === c.name ? ' active' : '');
+      chip.appendChild(colorDot(c));
+      chip.appendChild(document.createTextNode(c.name));
+      chip.onclick = () => {
+        state.slots[i] = c.name;
+        container.querySelectorAll('.color-chip').forEach(b => b.classList.remove('active'));
+        chip.classList.add('active');
+        if (isEnergie && n === 2) renderPositionTable();
+        zeichnen();
+      };
+      container.appendChild(chip);
+    });
+  }
+  const posSection = document.getElementById('position-section');
+  if (isEnergie && n === 2) { posSection.style.display = 'block'; renderPositionTable(); }
+  else posSection.style.display = 'none';
+}
+
+// Energie zweifarbig: welche Farbe links, in der Mitte und rechts in der Dreiergruppe sitzt (wie beim Armband)
+function renderPositionTable() {
+  const table = document.getElementById('position-table');
+  table.innerHTML = '';
+  ['Links', 'Mitte', 'Rechts'].forEach((posName, posIdx) => {
+    const row = document.createElement('div');
+    row.className = 'position-row';
+    const nameEl = document.createElement('div');
+    nameEl.className = 'position-name';
+    nameEl.textContent = posName;
+    row.appendChild(nameEl);
+    const toggleEl = document.createElement('div');
+    toggleEl.className = 'position-toggle';
+    [0, 1].forEach(slotIdx => {
+      const colorName = state.slots[slotIdx];
+      const colorObj  = colorName ? COLORS.find(c => c.name === colorName) : null;
+      const btn = document.createElement('button');
+      btn.className = 'pos-btn' + (state.ePos[posIdx] === slotIdx ? ' active' : '');
+      if (colorObj) btn.appendChild(colorDot(colorObj, 14));
+      else          btn.innerHTML = '<span class="pos-dot" style="background:#ddd"></span>';
+      btn.appendChild(document.createTextNode(colorName || `Farbe ${slotIdx + 1}`));
+      btn.onclick = () => { state.ePos[posIdx] = slotIdx; renderPositionTable(); zeichnen(); };
+      toggleEl.appendChild(btn);
+    });
+    row.appendChild(toggleEl);
+    table.appendChild(row);
+  });
+}
+
+// ---- Extra Funkel-Wünsche ----
+function updateExtraDimming() {
+  const anyExtra = state.lavaReplace || ohnePlatzhalterAktiv();
+  ['extra-lava-btn', 'extra-keine-btn'].forEach(id => document.getElementById(id).classList.toggle('dimmed', state.noExtras));
+  document.getElementById('extra-none-btn').classList.toggle('dimmed', anyExtra);
+  document.getElementById('extra-none-btn').classList.toggle('active', state.noExtras);
+  document.getElementById('extra-lava-btn').classList.toggle('active', state.lavaReplace);
+  document.getElementById('extra-keine-btn').classList.toggle('active', state.ohnePlatzhalter);
+  document.getElementById('lava-color-block').style.display = state.lavaReplace ? 'block' : 'none';
+}
+
+function setNoExtras() {
+  state.noExtras = !state.noExtras;
+  if (state.noExtras) { state.lavaReplace = false; state.lavaColor = null; state.ohnePlatzhalter = false; }
+  updateExtraDimming();
+  renderLaengen();
+  zeichnen();
+}
+
+function toggleLavaReplace() {
+  state.lavaReplace = !state.lavaReplace;
+  if (state.lavaReplace) { state.noExtras = false; renderLavaColorOptions(); }
+  else state.lavaColor = null;
+  updateExtraDimming();
+  renderLaengen();
+  zeichnen();
+}
+
+function togglePlatzhalter() {
+  state.ohnePlatzhalter = !state.ohnePlatzhalter;
+  if (state.ohnePlatzhalter) state.noExtras = false;
+  updateExtraDimming();
+  zeichnen();
+}
+
+function renderLavaColorOptions() {
+  const container = document.getElementById('lava-color-options');
+  container.innerHTML = '';
+  COLORS.forEach(c => {
+    const chip = document.createElement('button');
+    chip.className = 'color-chip' + (state.lavaColor === c.name ? ' active' : '');
+    chip.appendChild(colorDot(c));
+    chip.appendChild(document.createTextNode(c.name));
+    chip.onclick = () => {
+      state.lavaColor = c.name;
+      container.querySelectorAll('.color-chip').forEach(b => b.classList.remove('active'));
+      chip.classList.add('active');
+      zeichnen();
+    };
+    container.appendChild(chip);
+  });
+}
+
+function extrasComplete() {
+  if (!hatExtras()) return true;
+  const decided = state.noExtras || state.lavaReplace || ohnePlatzhalterAktiv();
+  return decided && (!state.lavaReplace || !!state.lavaColor);
+}
+
+function farbenKomplett() { return !!state.count && state.slots.length === state.count && state.slots.every(Boolean); }
+
+function isReady() {
+  return !!(state.design && state.metal && state.oese && state.laenge && farbenKomplett() && extrasComplete());
+}
+
+// ---- Texte ----
+function extraZeilen() {
+  if (!hatExtras()) return [];
+  const z = [];
+  if (state.noExtras)         z.push('Keine extra Funkel-Wünsche');
+  if (state.lavaReplace)      z.push(`Extra: Lava durch Kristalle ersetzen – ${state.lavaColor} (+${AUFPREIS_LAVA} €)`);
+  if (ohnePlatzhalterAktiv()) z.push('Extra: keine Platzhalter Perlen');
+  return z;
+}
+
+function energieFarbe(pos) {
+  const i = state.count === 1 ? 0 : state.count === 2 ? state.ePos[pos] : pos;
+  return state.slots[i] || '';
+}
+
+// Bestelltext (Konzept 24.10.2026): Design / Länge / Farben / Edelstahl / Charmhalteröse / Extra / Preis
+function buildSummary() {
+  const kopf = `${DESIGN_NAMEN[state.design]} Kette\nLänge: ${state.laenge} cm`;
+  let farben;
+  if (state.design === 'dk') farben = `Farben: ${state.slots.join(', ')}`;
+  else if (state.design === 'energie') farben = 'Kristallfarben:\n' + ['Links', 'Mitte', 'Rechts'].map((p, i) => `${p}: ${energieFarbe(i)}`).join('\n');
+  else if (state.count === 1) farben = `Kristallfarbe: ${state.slots[0]}`;
+  else farben = state.slots.map((s, i) => `Farbe ${i + 1}: ${s}`).join('\n');
+  const extras = extraZeilen();
+  return [kopf, farben, `Edelstahl: ${state.metal}`, `Charmhalteröse: ${state.oese}`, ...extras, `Preis: ${preis()} €`].join('\n');
+}
+
+// Zeile unter der Kette: die ganze Auswahl, so wie sie bestellt wird
+function updateLabel() {
+  const label = document.getElementById('preview-label');
+  document.getElementById('preis-zeile').textContent = state.laenge ? `Preis: ${preis()} €` : '';
+  if (!state.design) {
+    label.textContent = 'Wähle dein Design + Wunschkristalle – die Kette füllt sich mit deinen Farben.';
+    label.className = 'preview-label';
+  } else if (isReady()) {
+    const teile = [`${DESIGN_NAMEN[state.design]} Kette`, `${state.laenge} cm`];
+    if (state.design === 'energie' && state.count >= 2) ['Links', 'Mitte', 'Rechts'].forEach((p, i) => teile.push(`${p}: ${energieFarbe(i)}`));
+    else teile.push(...[...new Set(state.slots)]);
+    teile.push(state.metal, state.oese === 'mit' ? 'mit Charmhalteröse' : 'ohne Charmhalteröse');
+    if (state.lavaReplace && hatExtras()) teile.push(`Kristalle statt Lava: ${state.lavaColor}`);
+    if (ohnePlatzhalterAktiv()) teile.push('ohne Platzhalter Perlen');
+    label.textContent = teile.join(' · ');
+    label.className = 'preview-label filled';
+  } else if (farbenKomplett() && hatExtras() && !extrasComplete()) {
+    label.textContent = 'Fast fertig – wähle noch deine Extra Funkel-Wünsche.';
+    label.className = 'preview-label';
+  } else {
+    label.textContent = 'Wähle unten deine Optionen – die Kette füllt sich mit deinen Farben.';
+    label.className = 'preview-label';
+  }
+}
+
+function stepLabels() {
+  const s = ['Design', 'Edelstahl', 'Öse', 'Länge', 'Farb-Anzahl', 'Farben'];
+  if (state.design !== 'pur') s.push('Funkel-Wünsche');
+  return s;
+}
+function stepDone() {
+  const d = [!!state.design, !!state.metal, !!state.oese, !!state.laenge, !!state.count, farbenKomplett()];
+  if (state.design !== 'pur') d.push(!!state.design && extrasComplete());
+  return d;
+}
+function updateProgress() {
+  const el = document.getElementById('progress');
+  const done = stepDone();
+  const current = done.indexOf(false);
+  el.innerHTML = stepLabels().map((label, i) => {
+    const cls = done[i] ? 'p-step done' : (i === current ? 'p-step current' : 'p-step');
+    const dot = done[i] ? '✓' : (i + 1);
+    return `<div class="${cls}"><div class="p-dot">${dot}</div><div class="p-label">${label}</div></div>`;
+  }).join('');
+}
+
+function updateSummary() {
+  const box = document.getElementById('summary-box');
+  const ob = document.getElementById('order-btn');
+  const h = document.querySelector('.order-hint');
+  if (h.dataset.orig === undefined) h.dataset.orig = h.textContent;
+  if (isReady()) {
+    box.classList.add('visible');
+    document.getElementById('summary-text').textContent = buildSummary();
+    ob.href = bestellLink();
+    ob.classList.remove('gesperrt');
+    document.getElementById('copy-btn').classList.remove('versteckt');
+    h.textContent = h.dataset.orig;
+    document.getElementById('mini-vorschau').src = document.getElementById('kette-canvas').toDataURL('image/png');
+  } else if (STAND_ZEILEN().some(z => z[1])) {
+    box.classList.add('visible');
+    const st = document.getElementById('summary-text');
+    st.innerHTML = '';
+    const offen = [];
+    STAND_ZEILEN().forEach(([name, wert]) => {
+      const z = document.createElement('div');
+      z.className = wert ? 'fertig' : 'offen';
+      z.textContent = wert ? name + ': ' + wert : name + ': noch wählen';
+      st.appendChild(z);
+      if (!wert) offen.push(name);
+    });
+    ob.classList.add('gesperrt'); ob.removeAttribute('href');
+    document.getElementById('copy-btn').classList.add('versteckt');
+    h.textContent = 'Noch offen: ' + offen.join(', ');
+    document.getElementById('mini-vorschau').src = document.getElementById('kette-canvas').toDataURL('image/png');
+  } else {
+    box.classList.remove('visible');
+  }
+  updateBild();
+}
+
+// "Jetzt bestellen": Bestellseite des Designs (mit Lava oder mit Kristallen statt Lava), Auswahltext in t, Länge in l.
+// Das Shop-Skript in Ecwid muss die Länge (l) noch vorauswählen können (Stand 24.10.2026 nicht eingebaut).
+function bestellLink() {
+  const key = state.design + (lavaErsetzt() ? '-kristalle' : '');
+  const seite = BESTELLSEITEN[key];
+  if (!seite) return '#';
+  return seite + '?t=' + encodeURIComponent(buildSummary()) + '&l=' + state.laenge;
+}
+
+const KOPIER_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg>';
+const KOPIER_HAKEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+function copyText() {
+  const text = buildSummary();
+  const btn = document.getElementById('copy-btn');
+  function fertig() { btn.innerHTML = KOPIER_HAKEN; setTimeout(() => { btn.innerHTML = KOPIER_ICON; }, 2000); }
+  function fallback() {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.top = '-9999px'; ta.style.left = '-9999px'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    fertig();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(fertig).catch(() => fallback());
+  else fallback();
+}
+
+// ---- Bild speichern (wie im Wunscharmband): die Kette und die Auswahl-Zeile darunter, sonst nichts ----
+let auswahlBlob = null;
+function updateBild() {
+  const fertig = isReady();
+  document.getElementById('save-row').classList.toggle('visible', fertig);
+  auswahlBlob = null;
+  document.getElementById('save-hint').textContent = '';
+  if (fertig) auswahlBild().toBlob(b => { auswahlBlob = b; }, 'image/png');
+}
+
+function auswahlBild() {
+  const quelle = document.getElementById('kette-canvas');
+  const S = 1080, HB = 1350, c = document.createElement('canvas');
+  c.width = S; c.height = HB;
+  const g = c.getContext('2d');
+  g.fillStyle = '#f4f3ef'; g.fillRect(0, 0, S, HB);
+  g.font = "400 36px 'Cormorant Garamond', Georgia, serif";
+  const teile = document.getElementById('preview-label').textContent.split(' · ');
+  const zeilen = [];
+  let z = '';
+  teile.forEach(t => {
+    const probe = z ? z + ' · ' + t : t;
+    if (z && g.measureText(probe).width > S - 120) { zeilen.push(z + ' ·'); z = t; } else z = probe;
+  });
+  if (z) zeilen.push(z);
+  const zh = 48, textH = zeilen.length * zh;
+  // Kette im Seitenverhältnis der Zeichenfläche (340 x 480) einpassen
+  let bh = HB - textH - 90, bw = bh * quelle.width / quelle.height;
+  if (bw > S - 40) { bw = S - 40; bh = bw * quelle.height / quelle.width; }
+  g.drawImage(quelle, (S - bw) / 2, 10, bw, bh);
+  g.fillStyle = '#111'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  zeilen.forEach((t, i) => g.fillText(t, S / 2, HB - 40 - textH + zh / 2 + i * zh));
+  return c;
+}
+
+const istIPhone = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const BILDNAME = 'meine-wunschkette.png';
+
+function bildSpeichern() {
+  if (!auswahlBlob) return;
+  const hinweis = document.getElementById('save-hint');
+  if (istIPhone) {
+    let datei = null;
+    try { datei = new File([auswahlBlob], BILDNAME, { type: 'image/png' }); } catch (e) {}
+    if (datei && navigator.canShare && navigator.canShare({ files: [datei] })) {
+      navigator.share({ files: [datei] }).catch(() => {});
+      hinweis.innerHTML = 'Im Menü auf <strong>Bild sichern</strong> tippen, dann liegt deine Kette in deinen Fotos.';
+      return;
+    }
+  }
+  const url = URL.createObjectURL(auswahlBlob), a = document.createElement('a');
+  a.href = url; a.download = BILDNAME;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  const txt = document.getElementById('btn-speichern-text');
+  txt.textContent = 'Gespeichert';
+  setTimeout(() => { txt.textContent = 'Bild speichern'; }, 2000);
+}
+
+// ---- Überschriften zeigen die Auswahl (wie in allen Konfiguratoren) ----
+const HEAD_ORIG = {};
+function setHeading(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (HEAD_ORIG[id] === undefined) HEAD_ORIG[id] = el.textContent;
+  if (value) {
+    const name = HEAD_ORIG[id].replace(/^\d+ · /, '').replace(/ wählen$/, '').replace('Wie viele Kristallfarben?', 'Farb-Anzahl');
+    el.innerHTML = '<span class="haken">✓</span> ' + name + ' · <span class="wahl"></span>';
+    el.querySelector('.wahl').textContent = value;
+    el.classList.add('done');
+  } else {
+    el.textContent = HEAD_ORIG[id];
+    el.classList.remove('done');
+  }
+}
+function nummerieren() {
+  let n = 0;
+  document.querySelectorAll('.section-label').forEach((el, i) => {
+    if (!el.id) el.id = 'section-label-' + i;
+    if (el.offsetParent === null) return;
+    n++;
+    const alt = HEAD_ORIG[el.id] !== undefined ? HEAD_ORIG[el.id] : el.textContent;
+    HEAD_ORIG[el.id] = n + ' · ' + alt.replace(/^\d+ · /, '');
+  });
+}
+function farbenWert() { return farbenKomplett() ? [...new Set(state.slots)].join(', ') : null; }
+function extrasWert() {
+  if (!hatExtras() || !extrasComplete()) return null;
+  return state.noExtras ? 'Keine' : extraZeilen().map(t => t.replace(/^Extra: /, '')).join(', ');
+}
+function HEADING_WERTE() {
+  return [
+    ['design-section-label', state.design ? DESIGN_NAMEN[state.design] : null],
+    ['metal-section-label', state.metal],
+    ['oese-section-label', state.oese],
+    ['laenge-section-label', state.laenge ? `${state.laenge} cm · ${preis()} €` : null],
+    ['count-section-label', state.count ? COUNT_NAMEN[state.design][state.count] : null],
+    ['color-section-label', farbenWert()],
+    ['extras-section-label', extrasWert()],
+  ];
+}
+function updateHeadings() {
+  nummerieren();
+  HEADING_WERTE().forEach(([id, wert]) => setHeading(id, wert));
+  document.querySelectorAll('.color-slot').forEach((div, i) => {
+    const lab = div.querySelector('.slot-label');
+    if (!lab) return;
+    if (state.count === 1) { lab.style.display = 'none'; return; }
+    lab.style.display = '';
+    if (lab.dataset.orig === undefined) lab.dataset.orig = lab.textContent;
+    if (state.slots[i]) {
+      lab.innerHTML = '<span class="haken">✓</span> ' + lab.dataset.orig + ' · <span class="wahl"></span>';
+      lab.querySelector('.wahl').textContent = state.slots[i];
+      lab.classList.add('done');
+    } else { lab.textContent = lab.dataset.orig; lab.classList.remove('done'); }
+  });
+}
+function STAND_ZEILEN() {
+  const W = Object.fromEntries(HEADING_WERTE());
+  const z = [
+    ['Design', W['design-section-label']],
+    ['Edelstahl', W['metal-section-label']],
+    ['Charmhalteröse', W['oese-section-label']],
+    ['Länge', W['laenge-section-label']],
+    ['Farb-Anzahl', W['count-section-label']],
+    ['Farben', W['color-section-label']],
+  ];
+  if (state.design !== 'pur') z.push(['Funkel-Wünsche', W['extras-section-label']]);
+  return z;
+}
+
+zeichnen();
+</script>
+<script>
+function sendHeight() {
+  const card = document.querySelector('.card');
+  const h = card ? card.getBoundingClientRect().bottom : document.body.scrollHeight;
+  window.parent.postMessage({ iframeHeight: Math.ceil(h), iframeId: 'kette' }, '*');
+}
+const ro = new ResizeObserver(sendHeight);
+ro.observe(document.body);
+sendHeight();
+</script>
+</body>
+</html>
