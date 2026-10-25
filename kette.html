@@ -39,6 +39,7 @@ body { background: transparent; color: var(--text); font-family: 'Jost', sans-se
 /* Längen-Knöpfe: Länge links, Preis rechts – der Preis ist von Anfang an zu sehen (Tanjas Wunsch 24.10.2026) */
 .laenge-btn { flex-direction: row; justify-content: space-between; align-items: center; padding: 13px 20px; }
 .laenge-text { display: flex; flex-direction: column; gap: 3px; }
+.laenge-hinweis { font-family: 'Jost', sans-serif; font-size: 14px; font-weight: 400; color: #000; margin: -6px 0 12px; letter-spacing: 0.02em; }
 .laenge-preis { font-size: 17px; font-weight: 400; white-space: nowrap; }
 .count-options { display: flex; gap: 10px; flex-wrap: wrap; }
 .count-btn { flex: 1; min-width: 74px; border: 1px solid #ddd; background: transparent; padding: 12px 6px; font-family: 'Jost', sans-serif; font-size: 15px; font-weight: 300; letter-spacing: 0.04em; color: var(--text); cursor: pointer; border-radius: 1px; transition: all 0.2s; text-align: center; }
@@ -179,6 +180,8 @@ body { background: transparent; color: var(--text); font-family: 'Jost', sans-se
 
     <div class="section" id="laenge-section" style="display:none">
       <div class="section-label" id="laenge-section-label">4 · Länge wählen</div>
+      <!-- Hinweis Verlängerungskettchen, verschwindet nach der Wahl (Tanja 25.10.2026) -->
+      <p class="laenge-hinweis" id="laenge-hinweis">An jeder Kette ist zusätzlich ein Verlängerungskettchen von 4&nbsp;cm, so kannst du sie bis zu 4&nbsp;cm länger tragen.</p>
       <div class="design-options" id="laenge-options"></div>
     </div>
 
@@ -1305,7 +1308,11 @@ function HEADING_WERTE() {
 }
 function updateHeadings() {
   nummerieren();
-  HEADING_WERTE().forEach(([id, wert]) => setHeading(id, wert));
+  // Überschrift Länge mit "+ 4 cm Kettchen"; im Kasten "Deine Auswahl" bleibt es ohne (Tanja 25.10.2026)
+  HEADING_WERTE().forEach(([id, wert]) => setHeading(id,
+    id === 'laenge-section-label' && wert ? `${state.laenge} cm + 4\u00A0cm Kettchen · ${preis()} €` : wert));
+  const lh = document.getElementById('laenge-hinweis');
+  if (lh) lh.style.display = state.laenge ? 'none' : '';
   document.querySelectorAll('.color-slot').forEach((div, i) => {
     const lab = div.querySelector('.slot-label');
     if (!lab) return;
