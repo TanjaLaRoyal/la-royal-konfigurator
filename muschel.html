@@ -63,7 +63,7 @@ body { background: transparent; color: var(--text); font-family: 'Jost', sans-se
   .mini-vorschau { order: 0; width: 210px; align-self: flex-start; }
   .summary-title { text-align: center; }
 }
-.order-btn { display: block; width: fit-content; margin: 0 auto; padding: 10px 22px; background: #a8843f; color: #fff; border: none; border-radius: 20px; font-family: 'Jost', sans-serif; font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; text-align: center; text-decoration: none; transition: background 0.2s; }
+.order-btn { display: block; width: fit-content; margin: 0 auto; padding: 10px 22px; background: #a8843f; color: #fff; border: none; border-radius: 20px; font-family: 'Jost', sans-serif; font-weight: 500; font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; text-align: center; text-decoration: none; transition: background 0.2s; }
 .order-btn:hover { filter: brightness(0.92); }
 .save-row { display: none; flex-direction: column; align-items: center; margin-top: 6px; }
 .save-row.visible { display: flex; }
@@ -329,8 +329,8 @@ function metall(ctx, mc, x0, x1) {
 
 // Klappverschluss (12 mm bei 6-mm-Perlen): runder Bügel, unten links das Gehäuse
 // mit Niet am Scharnier, unten die Lasche mit Öse. Rückgabe: Unterkante der Öse.
-function drawKlappVerschluss(ctx, cx, startY, mc) {
-  const P = Math.PI, r = 19, cy = startY + 1 + r;
+function drawKlappVerschluss(ctx, cx, startY, mc, r = 19) {
+  const P = Math.PI, cy = startY + 1 + r;
   ctx.save(); ctx.lineCap = 'round';
   ctx.strokeStyle = metall(ctx, mc, cx - r, cx + r); ctx.lineWidth = 2.6;
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, P * 2); ctx.stroke();
@@ -675,8 +675,8 @@ function bildSpeichern() {
 // genau wie bei den Bestelllinks der Funkel-Galerie. Klappt im Shop nur ohne Abschottung (sandbox) des Rahmens.
 const BESTELLSEITE = 'https://laroyallanzarote.com/products/sternschnuppen-ohrringe-wunschanfertigung';
 function bestellLink() {
-  const v = state.clasp === 'haken' ? 'Ohrhaken' : 'Klapp-Verschluss';
-  return BESTELLSEITE + '?t=' + encodeURIComponent(buildSummary()) + '&v=' + encodeURIComponent(v);
+  // Verschluss steht nur im Auswahltext; die Bestellseite hat seit 28.10.2026 keine Verschluss-Auswahl mehr
+  return BESTELLSEITE + '?t=' + encodeURIComponent(buildSummary());
 }
 
 // Kopieren ist nur noch Reserve: kleines Symbol oben rechts im Kasten (seit 13.10.2026).
@@ -685,6 +685,10 @@ const KOPIER_HAKEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 function copyText() {
   const text = buildSummary();
   const btn = document.getElementById('copy-btn');
+  function fertig() {
+    btn.innerHTML = KOPIER_HAKEN;
+    setTimeout(() => { btn.innerHTML = KOPIER_ICON; }, 2000);
+  }
   function fallback() {
     const ta = document.createElement('textarea');
     ta.value = text; ta.style.position = 'fixed'; ta.style.top = '-9999px';
@@ -692,36 +696,31 @@ function copyText() {
     document.body.appendChild(ta); ta.select();
     try { document.execCommand('copy'); } catch(e) {}
     document.body.removeChild(ta);
-    btn.innerHTML = KOPIER_HAKEN;
-    setTimeout(() => { btn.innerHTML = KOPIER_ICON; }, 2000);
+    fertig();
   }
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => {
-      btn.innerHTML = KOPIER_HAKEN;
-      setTimeout(() => { btn.innerHTML = KOPIER_ICON; }, 2000);
-    }).catch(() => fallback());
-  } else { fallback(); }
+    navigator.clipboard.writeText(text).then(fertig).catch(() => fallback());
+  } else {
+    fallback();
+  }
 }
 
 
-const STEP_LABELS = ['Edelstahl', 'Verschluss', 'Farb-Anzahl', 'Farben'];
-
-function stepDone() {
+function schritte() {
   return [
-    !!state.metal,
-    !!state.clasp,
-    !!state.count,
-    !!state.count && state.slots.filter(Boolean).length === state.count,
+    ['Edelstahl', !!state.metal],
+    ['Verschluss', !!state.clasp],
+    ['Farb-Anzahl', !!state.count],
+    ['Farben', !!state.count && state.slots.filter(Boolean).length === state.count],
   ];
 }
-
 function updateProgress() {
   const el = document.getElementById('progress');
-  const done = stepDone();
-  const current = done.indexOf(false);   // erster offener Schritt, -1 = alles fertig
-  el.innerHTML = STEP_LABELS.map((label, i) => {
-    const cls = done[i] ? 'p-step done' : (i === current ? 'p-step current' : 'p-step');
-    const dot = done[i] ? '\u2713' : (i + 1);
+  const S = schritte();
+  const current = S.findIndex(x => !x[1]);   // erster offener Schritt, -1 = alles fertig
+  el.innerHTML = S.map(([label, done], i) => {
+    const cls = done ? 'p-step done' : (i === current ? 'p-step current' : 'p-step');
+    const dot = done ? '\u2713' : (i + 1);
     return `<div class="${cls}"><div class="p-dot">${dot}</div><div class="p-label">${label}</div></div>`;
   }).join('');
 }
