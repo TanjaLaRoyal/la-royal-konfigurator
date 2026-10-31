@@ -218,6 +218,7 @@ header { text-align: center; margin-bottom: 36px; }
 <script>
 const COLORS = [
   { name: 'Schimmer Perle',                hex: '#FEFEFC', shimmer: '#FEFEFD', shape: 'round', stop: 'klar' },
+  { name: 'Weisser Opal AB',               hex: '#EAF0F2', shimmer: '#FFFFFF', shape: 'round', stop: 0.75, rand: 0.86 },
   { name: 'Silbermine AB',                    hex: '#67655F', shimmer: '#D4D4D2', shape: 'bicone', stop: 0.75 },
   { name: 'Himmelblau AB',                 hex: '#99D6F8', shimmer: '#C2E6FB', shape: 'bicone' },
   { name: 'Capri Blau AB',                 hex: '#013CAC', shimmer: '#678ACD', shape: 'round'  },
@@ -292,6 +293,11 @@ function getCrystalAt(pos, total) {
 function darken(hex, f) {
   return `rgb(${[1,3,5].map(i => Math.round(parseInt(hex.slice(i,i+2),16)*f)).join(',')})`;
 }
+
+// Randabdunklung je Farbe (seit 31.10.2026): Steht in COLORS ein Feld rand, wird der Rand
+// des Kristalls nur so weit abgedunkelt (z. B. 0.86), sonst wie bisher. Für Weisser Opal AB,
+// damit Weiss milchig bleibt und nicht grau wird.
+function randFor(hex, std) { const c = COLORS.find(k => k.hex === hex); return c && c.rand ? c.rand : std; }
 
 function drawLavaKupfer(ctx, x, y, r) {
   // Helles Kupfer: Champagner-Basis mit Kupfer-Wärme, grobe Poren, Glanzpunkt
@@ -389,7 +395,7 @@ function drawKlarGlas(ctx, x, y, r) {
 function drawSphere(ctx, x, y, r, base, shimmer, gloss, stop = 0.42) {
   if (stop === 'klar') return drawKlar(ctx, x, y, r);
   const g = ctx.createRadialGradient(x-r*.35,y-r*.38,r*.04,x+r*.1,y+r*.1,r*1.05);
-  g.addColorStop(0,shimmer); g.addColorStop(stop,base); g.addColorStop(1,darken(base,.48));
+  g.addColorStop(0,shimmer); g.addColorStop(stop,base); g.addColorStop(1,darken(base, randFor(base, .48)));
   ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
   const sh = ctx.createRadialGradient(x-r*.28,y-r*.32,0,x-r*.28,y-r*.32,r*.4);
   sh.addColorStop(0,`rgba(255,255,255,${gloss})`); sh.addColorStop(1,'rgba(255,255,255,0)');
@@ -406,7 +412,7 @@ function drawBicone(ctx, x, y, r, base, shimmer, gloss) {
   ctx.bezierCurveTo(x-w,y-h*.12, x-w*.45,y-h*.70, x,y-h);
   ctx.closePath();
   const g = ctx.createRadialGradient(x-w*.38,y-h*.36,h*.04,x+w*.1,y+h*.1,h);
-  g.addColorStop(0,shimmer); g.addColorStop(.42,base); g.addColorStop(1,darken(base,.48));
+  g.addColorStop(0,shimmer); g.addColorStop(.42,base); g.addColorStop(1,darken(base, randFor(base, .48)));
   ctx.fillStyle=g; ctx.fill();
   const sh = ctx.createRadialGradient(x-w*.3,y-h*.3,0,x-w*.3,y-h*.3,h*.42);
   sh.addColorStop(0,`rgba(255,255,255,${gloss})`); sh.addColorStop(1,'rgba(255,255,255,0)');
@@ -513,7 +519,7 @@ function drawBiconeSeite(ctx, x, y, r, c, t) {
   const pfad = () => { ctx.beginPath(); ctx.moveTo(-k, -h); ctx.lineTo(k, -h); ctx.lineTo(w, 0); ctx.lineTo(k, h); ctx.lineTo(-k, h); ctx.lineTo(-w, 0); ctx.closePath(); };
   pfad();
   const g = ctx.createRadialGradient(-w * .38, -h * .4, h * .05, w * .1, h * .1, h * 1.25);
-  g.addColorStop(0, c.shimmer); g.addColorStop(.42, c.hex); g.addColorStop(1, darken(c.hex, .5));
+  g.addColorStop(0, c.shimmer); g.addColorStop(.42, c.hex); g.addColorStop(1, darken(c.hex, randFor(c.hex, .5)));
   ctx.fillStyle = g; ctx.fill();
   ctx.save(); pfad(); ctx.clip();
   ctx.fillStyle = 'rgba(255,255,255,.16)'; ctx.beginPath(); ctx.moveTo(-w, 0); ctx.lineTo(-k, -h); ctx.lineTo(0, -h); ctx.lineTo(-w * .25, 0); ctx.closePath(); ctx.fill();
