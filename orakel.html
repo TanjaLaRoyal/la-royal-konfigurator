@@ -927,8 +927,16 @@
   var istIPhone = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
+  // Browser in der Facebook- oder Instagram-App: Dort klappt das Speichern nicht
+  // (vor allem an Android-Handys), der Knopf meldete trotzdem "Gespeichert". Seit 01.11.2026.
+  var istAppBrowser = /FBAN|FBAV|FB_IAB|FBIOS|Instagram/i.test(navigator.userAgent);
+
   $("btnSpeichern").addEventListener("click", function () {
     if (!letzterBlob) return;
+    if (istAppBrowser) {
+      $("hinweis").innerHTML = "Bitte mach einen Screenshot, hier klappt das Speichern nicht.";
+      return;
+    }
     if (istIPhone) {
       var datei = null;
       try { datei = new File([letzterBlob], "funkel-orakel.png", { type: "image/png" }); } catch (e) {}
