@@ -130,14 +130,14 @@ header { text-align: center; margin-bottom: 36px; }
   <!-- 1: Design -->
   <div class="section">
     <div class="section-label" id="design-section-label">1 · Design wählen</div>
-    <div class="design-options">
+    <div class="design-options" id="design-row">
       <button class="design-btn" onclick="setDesign('kristall', this)">
         <span class="design-btn-name">Stab Ohrringe</span>
         <span class="design-btn-desc">Lavaperle · 4 Kristalle – erhältlich in Silber & Gold</span>
       </button>
       <button class="design-btn" onclick="setDesign('buendel', this)">
         <span class="design-btn-name">Bündel Ohrringe</span>
-        <span class="design-btn-desc">8 Kristalle als Bündel – erhältlich in Silber & Gold</span>
+        <span class="design-btn-desc">8 Perlen als Bündel – erhältlich in Silber & Gold</span>
       </button>
     </div>
   </div>
@@ -183,6 +183,7 @@ header { text-align: center; margin-bottom: 36px; }
     <div class="count-options">
       <button class="count-btn" onclick="setCount(1, this)">Einfarbig</button>
       <button class="count-btn" onclick="setCount(2, this)">Zweifarbig</button>
+      <button class="count-btn" id="count-btn-lava" onclick="setCount(3, this)" style="display:none">3 Farben + Lava</button>
       <button class="count-btn" onclick="setCount(4, this)">Vierfarbig</button>
     </div>
   </div>
@@ -200,6 +201,25 @@ header { text-align: center; margin-bottom: 36px; }
   <div class="section" id="color-section" style="display:none">
     <div class="section-label" id="color-section-label" data-nr="Farben">7 · Kristallfarben wählen</div>
     <div id="slots-wrapper"></div>
+  </div>
+
+  <!-- Extra Funkel-Wünsche (nur Stab Ohrringe, seit 04.11.2026) -->
+  <div class="section" id="extras-section" style="display:none">
+    <div class="section-label" id="extras-section-label" data-nr="Extras">8 · Extra Funkel-Wünsche</div>
+    <div class="design-options">
+      <button class="design-btn" id="extra-none-btn" onclick="setExtra(false)">
+        <span class="design-btn-name">Keine extra Funkel-Wünsche</span>
+        <span class="design-btn-desc">Deine Ohrringe werden mit Lavaperle angefertigt, so wie abgebildet</span>
+      </button>
+      <button class="design-btn" id="extra-lava-btn" onclick="setExtra(true)">
+        <span class="design-btn-name">Lava durch Kristalle ersetzen</span>
+        <span class="design-btn-desc">Die Lavaperlen werden durch Kristalle in deiner Wunschfarbe ersetzt</span>
+      </button>
+    </div>
+    <div id="lava-color-block" style="display:none; margin-top:18px;">
+      <div class="slot-label" id="lava-color-label">Kristallfarbe statt Lava</div>
+      <div class="color-options" id="lava-color-options"></div>
+    </div>
   </div>
 
   <div class="summary-box" id="summary-box">
@@ -261,7 +281,12 @@ const state = {
   count:  null,
   mode:   null,   // 'mix' | 'verlauf' (nur Bündel, mehrfarbig)
   slots:  [],
+  extra:  null,   // null = noch nicht gewählt | 'keine' | 'lava' (nur Stab Ohrringe)
+  lavaColor: null, // Kristall statt Lava (nur Stab Ohrringe)
 };
+
+// Feste Lavaperle im Bündel bei "3 Farben + Lava" (wie im Bündel Charm)
+const LAVA = { hex: '#1a1a1a', shimmer: '#585858', shape: 'lava' };
 
 function getMetalColor() {
   if (state.metal === 'Gold')     return { hex: '#c9a96e', shimmer: '#e8d49a' };
@@ -277,6 +302,17 @@ function getCrystalAt(pos, total) {
   } else if (total === 4) {
     // Stab: kein Anordnungs-Modus
     slotIdx = state.count === 2 ? pos % 2 : pos;
+  } else if (state.count === 3) {
+    // Bündel "3 Farben + Lava" (seit 04.11.2026, wie im Bündel Charm): zwei Lavaperlen fest,
+    // Mix: Lava auf Perle 1 und 5; Farbverlauf: Lava auf Perle 1 und 2, dann je zwei Perlen pro Farbe
+    if (!state.mode) return EMPTY;
+    if (state.mode === 'verlauf') {
+      if (pos === 0 || pos === 1) return LAVA;
+      slotIdx = Math.floor((pos - 2) / 2);
+    } else {
+      if (pos === 0 || pos === 4) return LAVA;
+      slotIdx = [1, 2, 3, 5, 6, 7].indexOf(pos) % 3;
+    }
   } else if (state.mode === 'verlauf') {
     // Bündel Farbverlauf
     slotIdx = state.count === 2
@@ -484,6 +520,13 @@ function drawKristallEarring(ctx, cx, startY) {
   // Vor der Design-Wahl ist die Vorschau neutral grau (auch die Lavaperle), wie das leere Armband im Wunscharmband
   y += R_LAVA;
   if (!state.design) drawSphere(ctx, cx, y, R_LAVA, EMPTY.hex, EMPTY.shimmer, 0.5);
+  else if (state.extra === 'lava') {
+    // Kristall statt Lava (seit 04.11.2026): gleiche Grösse, solange keine Farbe gewählt ist grau
+    const c = COLORS.find(k => k.name === state.lavaColor) || EMPTY;
+    c.shape === 'bicone'
+      ? drawBicone(ctx, cx, y, R_CRYSTAL, c.hex, c.shimmer, 0.72)
+      : drawSphere(ctx, cx, y, R_CRYSTAL, c.hex, c.shimmer, 0.65, c.stop);
+  }
   else (state.lava === 'Helles Kupfer' ? drawLavaKupfer : drawLava)(ctx, cx, y, R_LAVA);
   y += R_LAVA;
   y += R_SPACER; drawSphere(ctx, cx, y, R_SPACER, mc.hex, mc.shimmer, 0.55); y += R_SPACER;
@@ -612,6 +655,7 @@ function drawEarrings() {
     ctx.restore();
   }
 
+  zeigeExtras();
   updateLabel();
   updateSummary();
   updateProgress();
@@ -626,7 +670,7 @@ function drawEarrings() {
 function setDesign(design, btn) {
   if (state.design === design) return;
   state.design = design;
-  document.querySelectorAll('.design-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#design-row .design-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   // Edelstahl, Verschluss und Farb-Anzahl erscheinen erst mit dem Design (seit 14.10.2026, wie im Wunscharmband)
   ['metal-section', 'clasp-section', 'count-section'].forEach(id => document.getElementById(id).style.display = 'block');
@@ -634,8 +678,57 @@ function setDesign(design, btn) {
   if (LAVA_KUPFER_VERFUEGBAR) {
     document.getElementById('lava-section').style.display = design === 'kristall' ? 'block' : 'none';
   }
+  // "3 Farben + Lava" gibt es nur beim Bündel. Wer damit zu Stab wechselt, wählt die Farb-Anzahl neu.
+  const lavaBtn = document.getElementById('count-btn-lava');
+  lavaBtn.style.display = design === 'buendel' ? '' : 'none';
+  if (design !== 'buendel' && state.count === 3) {
+    state.count = null;
+    lavaBtn.classList.remove('active');
+    document.getElementById('mode-section').style.display = 'none';
+    document.getElementById('color-section').style.display = 'none';
+  }
   if (state.count) zeigeFarben();
+  zeigeExtras();
   drawEarrings();
+}
+
+// Extra Funkel-Wünsche nur bei Stab Ohrringen, erst wenn die Farben gewählt sind (wie im Wunscharmband)
+function farbenFertig() {
+  return !!state.count && state.slots.length === state.count && state.slots.every(Boolean);
+}
+function zeigeExtras() {
+  const zeigen = state.design === 'kristall' && farbenFertig();
+  document.getElementById('extras-section').style.display = zeigen ? 'block' : 'none';
+}
+function extrasComplete() {
+  if (state.design !== 'kristall') return true;
+  return state.extra === 'keine' || (state.extra === 'lava' && !!state.lavaColor);
+}
+function setExtra(lava) {
+  state.extra = lava ? 'lava' : 'keine';
+  if (!lava) state.lavaColor = null;
+  document.getElementById('extra-none-btn').classList.toggle('active', !lava);
+  document.getElementById('extra-lava-btn').classList.toggle('active', lava);
+  document.getElementById('lava-color-block').style.display = lava ? 'block' : 'none';
+  if (lava) renderLavaColorOptions();
+  drawEarrings();
+}
+function renderLavaColorOptions() {
+  const container = document.getElementById('lava-color-options');
+  container.innerHTML = '';
+  COLORS.forEach(c => {
+    const chip = document.createElement('button');
+    chip.className = 'color-chip' + (state.lavaColor === c.name ? ' active' : '');
+    chip.appendChild(colorDot(c));
+    chip.appendChild(document.createTextNode(c.name));
+    chip.onclick = () => {
+      state.lavaColor = c.name;
+      container.querySelectorAll('.color-chip').forEach(b => b.classList.remove('active'));
+      chip.classList.add('active');
+      drawEarrings();
+    };
+    container.appendChild(chip);
+  });
 }
 
 // Nach Design- oder Anzahl-Wechsel: Anordnung nur bei Bündel mit mehr als einer Farbe; Farbfelder
@@ -727,6 +820,12 @@ function renderSlots() {
   } else if (state.count === 2) {
     // Beschriftung nur "Farbe 1/2" (seit 14.10.2026): wo die Farbe sitzt, zeigt die Zeichnung
     labels = ['Farbe 1', 'Farbe 2'];
+  } else if (state.count === 3) {
+    const hint = document.createElement('div');
+    hint.style.cssText = 'font-size:14px;color:#000;margin-bottom:14px;';
+    hint.textContent = 'Zwei Lavaperlen sitzen fest im Bündel, dazu kommen deine drei Farben.';
+    wrapper.appendChild(hint);
+    labels = ['Farbe 1', 'Farbe 2', 'Farbe 3'];
   } else {
     labels = isBuendel
       ? ['Farbe 1', 'Farbe 2', 'Farbe 3', 'Farbe 4']
@@ -756,7 +855,7 @@ function renderSlots() {
 
 function isReady() {
   return state.design && lavaComplete() && state.metal && state.clasp && state.count && state.mode &&
-         state.slots.filter(Boolean).length === state.count;
+         state.slots.filter(Boolean).length === state.count && extrasComplete();
 }
 
 function updateLabel() {
@@ -768,7 +867,9 @@ function updateLabel() {
     const claspName = state.clasp === 'haken' ? 'Ohrhaken' : 'Klapp-Verschluss';
     const designName = state.design === 'buendel' ? 'Bündel Ohrringe' : 'Stab Ohrringe';
     const lavaStr = state.design === 'kristall' && state.lava === 'Helles Kupfer' ? ' · Lava Helles Kupfer' : '';
-    label.textContent = `${designName} · ${colorStr} · ${state.metal}${lavaStr} · ${claspName}`;
+    const lavaFix = state.design === 'buendel' && state.count === 3 ? ' · Lava' : '';
+    const ersatz  = state.design === 'kristall' && state.extra === 'lava' ? ` · Kristalle statt Lava: ${state.lavaColor}` : '';
+    label.textContent = `${designName} · ${colorStr}${lavaFix} · ${state.metal}${lavaStr}${ersatz} · ${claspName}`;
     label.className = 'preview-label filled';
   } else {
     label.textContent = 'Wähle dein Design – die Ohrringe füllen sich mit deinen Farben.';
@@ -825,15 +926,21 @@ function buildSummary() {
     colorLines = `Kristallfarbe: ${state.slots[0]}`;
   } else if (state.count === 2) {
     colorLines = `Farbe 1: ${state.slots[0]}\nFarbe 2: ${state.slots[1]}`;
+  } else if (state.count === 3) {
+    // wie im Bündel Charm: Zeile "Lava" vor den Farben, daran erkennt der Parser die Variante
+    colorLines = `Lava\nFarbe 1: ${state.slots[0]}\nFarbe 2: ${state.slots[1]}\nFarbe 3: ${state.slots[2]}`;
   } else {
     colorLines = state.slots.map((s, i) => `Farbe ${i+1}: ${s}`).join('\n');
   }
   const modeLine = state.design === 'buendel' && state.count > 1
     ? `\nAnordnung: ${v ? 'Farbverlauf' : 'Mix'}`
     : '';
-  const price = state.design === 'buendel' ? '50 €' : '40 €';
+  const price = state.design === 'buendel' ? '55 €' : '40 €';   // Bündel seit 04.11.2026 55 € (vorher 50 €)
   const lavaLine = LAVA_KUPFER_VERFUEGBAR && state.design === 'kristall' && state.lava ? `\nLava: ${state.lava}` : '';
-  return `${designName}\n${colorLines}${modeLine}\nEdelstahl: ${state.metal}${lavaLine}\nVerschluss: ${claspName}\nPreis: ${price}`;
+  // Stab: Extra Funkel-Wünsche wie im Wunscharmband, Kristall statt Lava ohne Aufpreis (seit 04.11.2026)
+  const extraLine = state.design !== 'kristall' ? ''
+    : state.extra === 'lava' ? `\nExtra: Lava durch Kristalle ersetzen – ${state.lavaColor}` : '\nKeine extra Funkel-Wünsche';
+  return `${designName}\n${colorLines}${modeLine}\nEdelstahl: ${state.metal}${lavaLine}\nVerschluss: ${claspName}${extraLine}\nPreis: ${price}`;
 }
 
 // Fertige Ohrringe als Bild speichern (wie im Wunscharmband). Im Shop nur mit dem Einbau-Code ohne Abschottung.
@@ -958,6 +1065,7 @@ function schritte() {
   s.push(['Edelstahl', !!state.metal], ['Verschluss', !!state.clasp], ['Farb-Anzahl', !!state.count]);
   if (state.design === 'buendel' && state.count !== 1) s.push(['Anordnung', !!state.mode]);
   s.push(['Farben', !!state.count && state.slots.filter(Boolean).length === state.count]);
+  if (state.design === 'kristall') s.push(['Extras', extrasComplete() && !!state.extra]);
   return s;
 }
 
@@ -1038,7 +1146,13 @@ function HEADING_WERTE() {
     ['count-section-label', countWert()],
     ['mode-section-label', (state.mode && state.count > 1 && state.design === 'buendel') ? (state.mode === 'verlauf' ? 'Farbverlauf' : 'Mix') : null],
     ['color-section-label', farbenWert()],
+    ['extras-section-label', extrasWert()],
   ];
+}
+function extrasWert() {
+  if (state.extra === 'keine') return 'Keine';
+  if (state.extra === 'lava' && state.lavaColor) return 'Kristalle statt Lava: ' + state.lavaColor;
+  return null;
 }
 
 
@@ -1052,6 +1166,7 @@ function STAND_ZEILEN() {
     ['Farb-Anzahl', countWert()],
     ...(state.design === 'buendel' && state.count !== 1 ? [['Anordnung', W['mode-section-label']]] : []),
     ['Farben', W['color-section-label']],
+    ...(state.design === 'kristall' ? [['Extras', W['extras-section-label']]] : []),
   ];
 }
 
