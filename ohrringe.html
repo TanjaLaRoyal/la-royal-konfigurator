@@ -1171,6 +1171,120 @@ function STAND_ZEILEN() {
 }
 
 drawEarrings();
+
+// ═══════════════════════════════════════════════════════════
+// ZEICHNEN AUF ANFRAGE (für die Making-Übersicht, seit 06.11.2026)
+// Die Making-Übersicht schickt einen Bestelltext (Auswahltext). Dieser Konfigurator
+// zeichnet ihn unsichtbar und schickt das Bild zurück. Kundinnen merken davon nichts:
+// Ohne Anfrage passiert nichts, und nach dem Zeichnen ist ihre Auswahl wieder da.
+// Dieser Block ist in allen fünf Konfiguratoren gleich, nur lrSetze, lrZeichne und
+// lrCanvas sind je Datei eigen. Regeln: Handbuch „Funkel-Konfiguratoren“, Abschnitt
+// „Zeichnen auf Anfrage“.
+// ═══════════════════════════════════════════════════════════
+const LR_START = JSON.parse(JSON.stringify(state));   // Auswahl beim Öffnen der Seite
+
+// Bestelltext in Zeilen zerlegen; Ecwid hängt Grösse, Preis und Mitteilung mit " · " an
+function lrZeilen(text) {
+  let z = String(text || '').replace(/\r/g, '').split('\n')
+    .flatMap(t => t.split(' · ')).map(t => t.trim()).filter(Boolean);
+  if (z.length && /^Auswahltext/i.test(z[0])) z[0] = z[0].replace(/^Auswahltext[^:]*:\s*/i, '');
+  return z;
+}
+
+function lrLeseText(text) {
+  const z = lrZeilen(text);
+  const f = { kopf: z.shift() || '', farben: {}, extras: [] };
+  z.forEach(t => {
+    const m = t.match(/^([^:]+):\s*(.*)$/);
+    if (!m) {
+      if (t === 'Lava') f.mitLava = true;
+      if (/^Keine extra/i.test(t)) f.keineExtras = true;
+      return;
+    }
+    const k = m[1].trim(), v = m[2].trim();
+    if (/^Farbe \d+$/.test(k))                               f.farben[Number(k.slice(6))] = v;
+    else if (k === 'Kristallfarbe')                          f.farben[1] = v;
+    else if (k === 'Farben')                                 f.liste = v.split(',').map(s => s.trim()).filter(Boolean);
+    else if (k === 'Links' || k === 'Mitte' || k === 'Rechts') (f.pos = f.pos || {})[k] = v;
+    else if (k === 'Extra')                                  f.extras.push(v);
+    else                                                     f[k] = v;
+  });
+  f.nummern = Object.keys(f.farben).map(Number).sort((a, b) => a - b).map(n => f.farben[n]);
+  return f;
+}
+
+// Energie: Links/Mitte/Rechts in Farb-Anzahl, Farben und Positionen übersetzen
+function lrEnergie(pos) {
+  const p = [pos.Links, pos.Mitte, pos.Rechts];
+  const slots = [...new Set(p)];
+  if (slots.length !== 2) return { count: slots.length, slots, ePos: [0, 1, 0] };
+  return { count: 2, slots, ePos: p.map(x => slots.indexOf(x)) };
+}
+
+// „Lava durch Kristalle ersetzen – Farbe (+5 €)“ → Farbe
+function lrLavaFarbe(extra) {
+  const m = extra.match(/^Lava durch Kristalle ersetzen\s*[–-]\s*(.+?)(\s*\(\+\d+ €\))?$/);
+  return m ? m[1] : null;
+}
+
+// Stimmt die Zeichnung mit dem Bestelltext überein? Verglichen wird der neu erzeugte
+// Bestelltext mit dem bestellten, ohne Preis, Grösse und Mitteilung. Zeilen, die Ecwid
+// doppelt anhängt (z. B. „Länge“ bei Ketten), zählen einmal.
+function lrGleich(bestellt, neu) {
+  const norm = t => [...new Set(lrZeilen(t)
+    .filter(z => !/^(Preis|Grösse|andere Grösse|Mitteilung):/.test(z) && z !== 'Lava: Schwarz')
+    .map(z => z.replace(/\s*\(\+\d+ €\)/, '')))]
+    .join('\n');
+  return norm(bestellt) === norm(neu);
+}
+
+function lrBild(quelle, breite) {
+  const s = Math.min(1, breite / quelle.width);
+  const c = document.createElement('canvas');
+  c.width = Math.round(quelle.width * s);
+  c.height = Math.round(quelle.height * s);
+  c.getContext('2d').drawImage(quelle, 0, 0, c.width, c.height);
+  return c.toDataURL('image/png');
+}
+
+window.addEventListener('message', e => {
+  const d = e.data;
+  if (!d || d.typ !== 'lr-zeichnen') return;
+  const antwort = { typ: 'lr-bild', id: d.id };
+  const vorher = JSON.parse(JSON.stringify(state));
+  try {
+    Object.assign(state, JSON.parse(JSON.stringify(LR_START)));
+    lrSetze(lrLeseText(d.text));
+    lrZeichne();
+    antwort.text   = buildSummary();
+    antwort.stimmt = lrGleich(d.text, antwort.text);
+    antwort.bild   = lrBild(lrCanvas(), d.breite || 480);
+  } catch (err) {
+    antwort.fehler = String((err && err.message) || err);
+  }
+  Object.keys(state).forEach(k => delete state[k]);
+  Object.assign(state, vorher);
+  try { lrZeichne(); } catch (_) {}
+  (e.source || window.parent).postMessage(antwort, '*');
+});
+
+// Wunschohrringe: Bestelltext → Auswahl
+function lrSetze(f) {
+  state.design = /^Bündel/.test(f.kopf) ? 'buendel' : /^Stab/.test(f.kopf) ? 'kristall' : null;
+  if (!state.design) throw new Error('Keine Wunschohrringe: ' + f.kopf);
+  state.metal = f.Edelstahl || null;
+  state.clasp = /haken/i.test(f.Verschluss || '') ? 'haken' : 'klapp';
+  state.slots = f.nummern;
+  state.count = state.slots.length;
+  state.mode  = /verlauf/i.test(f.Anordnung || '') ? 'verlauf' : 'mix';
+  state.lava  = f.Lava || 'Schwarz';
+  if (state.design === 'kristall') {
+    state.extra = 'keine';
+    f.extras.forEach(x => { const lava = lrLavaFarbe(x); if (lava) { state.extra = 'lava'; state.lavaColor = lava; } });
+  }
+}
+function lrZeichne() { drawEarrings(); }
+function lrCanvas()  { return document.getElementById('earring-canvas'); }
 </script>
 <script>
 function sendHeight() {
