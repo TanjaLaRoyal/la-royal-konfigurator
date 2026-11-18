@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Armband knoten</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Playfair+Display&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#000;--line:#e6e8ea;--navy:#1f2d5c;--mint:#7fd6d0}
+  *{box-sizing:border-box}
+  body{margin:0;background:#fff;color:var(--ink);font-family:Montserrat,"Helvetica Neue",Arial,sans-serif}
+  .wrap{max-width:min(720px,calc(100vh - 118px));min-width:260px;margin:0 auto;padding:8px}
+  canvas{width:100%;height:auto;display:block;border-radius:6px;border:1px solid var(--line);background:#fff}
+  input[type=range]{width:100%;margin:16px 0 8px;accent-color:var(--navy)}
+  .ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center}
+  button{font:inherit;font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;padding:13px 22px;border-radius:999px;border:1px solid var(--navy);background:var(--navy);color:#fff;cursor:pointer;min-width:120px}
+  button.sec{background:#fff;color:var(--navy);border-color:var(--line)}
+  @media(max-width:480px){button{padding:12px 13px;min-width:0;font-size:12px;letter-spacing:.07em}.ctl{gap:8px;flex-wrap:nowrap}}
+  label{font-size:14px;display:flex;gap:8px;align-items:center;width:100%;justify-content:center;margin-top:6px;color:#000}
+  label input{accent-color:var(--navy)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <canvas id="c" width="1000" height="1000" aria-label="Animation: Armband neu knoten"></canvas>
+  <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="Zeitleiste">
+  <div class="ctl">
+    <button class="sec" id="prev">◀ Zurück</button>
+    <button id="play">Abspielen</button>
+    <button class="sec" id="next">Weiter ▶</button>
+  </div>
+</div>
+<script>
+const C=document.getElementById('c');let g=C.getContext('2d');const MAINCTX=g,OFF=document.createElement('canvas'),OFFCTX=OFF.getContext('2d');
+const DPR=Math.min(2,window.devicePixelRatio||1);C.width=1000*DPR;C.height=1000*DPR;OFF.width=C.width;OFF.height=C.height;
+const COL={bg:'#ffffff',ink:'#000000',a:'#e0483a',b:'#1b9aa0',m:'#f1f4f5',out:'#1d1d1f',soft:'#000000',gold:'#1f2d5c',mint:'#fff9d6',navy:'#1f2d5c'};
+const mix=(h1,h2,t)=>{const f=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),a=f(h1),b=f(h2);return'#'+a.map((v,i)=>Math.round(v+(b[i]-v)*t).toString(16).padStart(2,'0')).join('');};
+const PI=Math.PI,cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),lerp=(a,b,t)=>a+(b-a)*t,
+      ez=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2,ph=(p,a,b)=>cl((p-a)/(b-a));
+const CX=500,YC=720,YB=668,BR=62,W=14,K=[1,2,1,2],HK=n=>n==1?16:26,SQ=.88;
+const cum=k=>K.slice(0,k).reduce((s,n)=>s+HK(n),0);
+const HS=cum(4)*SQ,TOPF=YB-HS,MID=YB-HS/2;
+
+/* ---------- Zeichenhilfen ---------- */
+function quad(p0,p1,p2,n){const r=[];for(let i=0;i<=n;i++){const t=i/n,u=1-t;r.push([u*u*p0[0]+2*u*t*p1[0]+t*t*p2[0],u*u*p0[1]+2*u*t*p1[1]+t*t*p2[1]]);}return r;}
+let PID=0;
+function addPoly(segs,pts,z,c,w=W){const id=++PID;for(let i=1;i<pts.length;i++){segs.push({id,x1:pts[i-1][0],y1:pts[i-1][1],x2:pts[i][0],y2:pts[i][1],z:typeof z=='function'?z(i):(Array.isArray(z)?z[i]:z),c,w});}}
+/* Linien als durchgehende Züge zeichnen (glatte Ränder); wer oben liegt, entscheidet die Höhe z */
+function drawSegs(segs){const runs=[];let cur=null;
+  for(const s of segs){const lv=Math.round(s.z*2)/2;if(!cur||cur.id!==s.id||cur.lv!==lv){cur={id:s.id,lv,c:s.c,w:s.w,pts:[[s.x1,s.y1]],o:runs.length};runs.push(cur);}cur.pts.push([s.x2,s.y2]);}
+  {const seen={};for(let i=runs.length-1;i>=0;i--){if(!seen[runs[i].id]){seen[runs[i].id]=1;runs[i].end=1;}}}
+  runs.sort((u,v)=>u.lv-v.lv||u.o-v.o);g.lineJoin='round';
+  for(const r of runs){if(r.end){const e=r.pts[r.pts.length-1];g.fillStyle=COL.out;g.beginPath();g.arc(e[0],e[1],(r.w+5)/2,0,2*PI);g.fill();}g.beginPath();g.moveTo(r.pts[0][0],r.pts[0][1]);for(let i=1;i<r.pts.length;i++)g.lineTo(r.pts[i][0],r.pts[i][1]);g.lineCap='butt';g.strokeStyle=COL.out;g.lineWidth=r.w+5;g.stroke();g.lineCap='round';g.strokeStyle=r.c;g.lineWidth=r.w;g.stroke();}}
+function resampleN(pts,n){let tot=0;for(let i=1;i<pts.length;i++)tot+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);const o=[pts[0].slice()],st=tot/(n-1);let acc=0;
+  for(let i=1;i<pts.length&&o.length<n-1;i++){const a=pts[i-1],b=pts[i],d=Math.hypot(b[0]-a[0],b[1]-a[1]);if(d<1e-6)continue;let t=0;while(acc+d*(1-t)>=st&&o.length<n-1){const f=t+(st-acc)/d;o.push([lerp(a[0],b[0],f),lerp(a[1],b[1],f)]);t=f;acc=0;}acc+=d*(1-t);}
+  while(o.length<n)o.push(pts[pts.length-1].slice());return o;}
+function soft(pts,zs,step=4,win=4,passes=2){{let tot=0;for(let i=1;i<pts.length;i++)tot+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);step=Math.max(.5,tot/150);}const P=[pts[0]],Z=[zs[0]];let acc=0;
+  for(let i=1;i<pts.length;i++){let ax=pts[i-1][0],ay=pts[i-1][1];const bx=pts[i][0],by=pts[i][1];let d=Math.hypot(bx-ax,by-ay);if(d<1e-6)continue;let t=0;
+    while(acc+d*(1-t)>=step){const need=step-acc,f=t+need/d;P.push([lerp(pts[i-1][0],bx,f),lerp(pts[i-1][1],by,f)]);Z.push(lerp(zs[i-1],zs[i],f));t=f;acc=0;}acc+=d*(1-t);}
+  P.push(pts[pts.length-1]);Z.push(zs[zs.length-1]);let Q=P;
+  for(let k=0;k<passes;k++){const N=Q.map(q=>q.slice());for(let i=1;i<Q.length-1;i++){const w=Math.min(win,i,Q.length-1-i);let sx=0,sy=0;for(let j=-w;j<=w;j++){sx+=Q[i+j][0];sy+=Q[i+j][1];}N[i]=[sx/(2*w+1),sy/(2*w+1)];}Q=N;}
+  return[Q,Z];}
+function strand(pts,c,w=W){const s=[];addPoly(s,pts,0,c,w);drawSegs(s);}
+function bead(x,y,r,col){const gr=g.createRadialGradient(x-r*.35,y-r*.4,r*.08,x,y,r);if(col){gr.addColorStop(0,'#eaf5ff');gr.addColorStop(.3,'#5fa9ec');gr.addColorStop(1,'#1d5fb0');}else{gr.addColorStop(0,'#c9c9cf');gr.addColorStop(.3,'#6c6c73');gr.addColorStop(1,'#2c2c31');}g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,2*PI);g.fill();g.strokeStyle=COL.out;g.lineWidth=3;g.stroke();}
+function rr(x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+function steel(x,y,w,h,alpha=1){g.save();g.globalAlpha=g.globalAlpha*alpha;g.translate(x,y);g.lineJoin='round';
+  const gr=g.createLinearGradient(0,-h/2,0,h/2);gr.addColorStop(0,'#ffffff');gr.addColorStop(.5,'#cdd1d5');gr.addColorStop(1,'#7d838a');
+  const rim=w*.1,bw=w/2-rim*.7,bh=h*.36,bu=h*.17;g.fillStyle=gr;g.strokeStyle=COL.out;g.lineWidth=3;
+  g.beginPath();g.moveTo(-bw,-bh);g.quadraticCurveTo(0,-bh-bu,bw,-bh);g.lineTo(bw,bh);g.quadraticCurveTo(0,bh+bu,-bw,bh);g.closePath();g.fill();g.stroke();
+  for(const sd of[-1,1]){rr(sd>0?w/2-rim*1.3:-w/2,-h*.4,rim*1.3,h*.8,rim*.55);g.fill();g.stroke();}
+  g.restore();}
+function arrow(x1,y1,x2,y2,c=COL.gold,w=7){const a=Math.atan2(y2-y1,x2-x1),h=20;g.strokeStyle=c;g.fillStyle=c;g.lineWidth=w;g.lineCap='round';g.beginPath();g.moveTo(x1,y1);g.lineTo(x2-Math.cos(a)*h*.7,y2-Math.sin(a)*h*.7);g.stroke();g.beginPath();g.moveTo(x2,y2);g.lineTo(x2-Math.cos(a-.5)*h,y2-Math.sin(a-.5)*h);g.lineTo(x2-Math.cos(a+.5)*h,y2-Math.sin(a+.5)*h);g.closePath();g.fill();}
+let CAPT=null;const cap=(...l)=>{CAPT=l;};
+const FF='Montserrat,"Helvetica Neue",Arial,sans-serif';
+function text(s,x,y,size,weight=400,c=COL.ink,al='center',maxW=780){const w=weight>=700?600:weight;g.font=`${w} ${size}px ${FF}`;const mw=g.measureText(s).width;if(mw>maxW)g.font=`${w} ${size*maxW/mw}px ${FF}`;g.textAlign=al;g.textBaseline='middle';g.fillStyle=c;g.fillText(s,x,y);}
+function lump(y,h,n,rx=17){g.save();g.beginPath();g.ellipse(CX0,y,rx,h/2+1,0,0,2*PI);g.clip();g.fillStyle=COL.a;g.fillRect(CX0-rx-2,y-h,2*rx+4,2*h);g.strokeStyle=COL.b;g.lineWidth=6;for(let i=0;i<n;i++){const yy=y+(i-(n-1)/2)*11;g.beginPath();g.moveTo(CX0-rx-4,yy+7);g.lineTo(CX0+rx+4,yy-7);g.stroke();}g.restore();g.beginPath();g.ellipse(CX0,y,rx,h/2+1,0,0,2*PI);g.strokeStyle=COL.out;g.lineWidth=2.5;g.stroke();}
+let CX0=CX;
+function stack(k,sq=1,base=YB){let c=0;for(let i=0;i<k;i++){const h=HK(K[i]);lump(base-(c+h/2)*sq,h*sq,K[i]);c+=h;}}
+
+/* ---------- Nahansicht: Armband hängt nach unten, Enden zeigen nach oben ---------- */
+const RB=300;
+function ringPos(d){const t=d/RB;return{x:CX+RB*Math.sin(t),y:YC+RB-RB*Math.cos(t),a:t};}
+function row(gap,opt={}){for(let i=3;i>=0;i--){const q=ringPos(-(gap/2+BR+i*(2*BR+2)));bead(q.x,q.y,BR,i==1);}for(let i=0;i<3;i++){const q=ringPos(gap/2+120+BR+i*(2*BR+2));bead(q.x,q.y,BR,i==0);}
+  if(opt.steel!==false){const q=ringPos(gap/2+59);g.save();g.translate(q.x,q.y);g.rotate(q.a);steel(0,0,118,128,opt.alpha??1,-1);g.restore();}}
+function connectors(gap,al=1){g.save();g.globalAlpha=al;strand(quad([CX-gap/2-2,YC],[CX-4,YC],[CX-4,YB],8),COL.a,12);strand(quad([CX+gap/2+2,YC],[CX+4,YC],[CX+4,YB],8),COL.b,12);g.restore();}
+function restPts(top,side,e=1,n=59){return quad([CX+side*3,top],[CX+side*lerp(120,20,e),top-lerp(0,120,e)],[CX+side*lerp(270,150,e),top-lerp(4,230,e)],n);}
+function restPose(top,par,e=1){strand(restPts(top,-1,e),par?COL.b:COL.a);strand(restPts(top,1,e),par?COL.a:COL.b);}
+
+/* ---------- Szenen ---------- */
+function scStretch(p){const pulse=Math.pow(Math.sin(PI*2*ph(p,.08,.92)),2),L=190+120*pulse,y=470,w=lerp(11,7,pulse);
+  strand([[CX-L,y],[CX+L,y]],COL.m,w);
+  for(const s of[-1,1]){g.fillStyle='#fff';g.strokeStyle=COL.out;g.lineWidth=3;g.beginPath();g.arc(CX+s*(L+4),y,20,0,2*PI);g.fill();g.stroke();arrow(CX+s*(L+40),y,CX+s*(L+40+50+30*pulse),y);}
+}
+function scThread(p){const y=470;strand([[90,y],[910,y]],COL.m);
+  for(let i=0;i<6;i++){const q=ez(ph(p,.04+i*.09,.22+i*.09));bead(lerp(1100,215+i*88,q),y,42,i==1||i==4);}
+  const q=ez(ph(p,.6,.8)),sx=lerp(1150,215+6*88+12,q);steel(sx,y,96,104,1,1);
+  const f=ph(p,.82,.9);if(f>0){g.save();g.globalAlpha=f;arrow(sx,y-140,sx,y-64);g.restore();}
+  cap(p<.6?'Fädle die Perlen auf. Lass die Enden dabei nie los.':'Die Edelstahlperle kommt zuletzt.');}
+/* Knoten: Enden über Kreuz, ein- oder zweimal umeinander, dann nach links und rechts festziehen */
+function scKnot(p,k){const sa=COL.a,sb=COL.b;if(k==0){const t=ez(ph(p,0,.1));COL.a=mix(COL.m,sa,t);COL.b=mix(COL.m,sb,t);}try{scKnotI(p,k);}finally{COL.a=sa;COL.b=sb;}}
+function scKnotI(p,k){const TZ=k==0?['Zieh den Knoten zu.','Er legt fest, wie eng das Armband wird.']:['Zieh den Knoten fest.'];const n=K[k],ys=YB-cum(k),cL=k%2?COL.b:COL.a,cR=k%2?COL.a:COL.b,G0=k==0?lerp(150,44,ez(ph(p,.69,.86))):44;row(G0);if(k>0||p>.88)connectors(G0);
+  if(p>.88){cap(...TZ);stack(k+1);restPose(YB-cum(k+1),(k+1)%2,ez(ph(p,.9,1)));return;}
+  stack(k);
+  const aL=ez(ph(p,.01,.09)),a=ez(ph(p,.1,.17)),b=ph(p,.21,.64),c=ez(ph(p,.69,.86));
+  const wt=n*b,wi=Math.min(n-1,Math.floor(wt)),w=b>=1?1:wt-wi,tw=b>=1?n:wi+ez(ph(w,.5,1));
+  const yk=ys-lerp(160,6,c),Lw=lerp(lerp(0,44+36*(n-1),tw/n),7,c),A=lerp(20,4,c),f1=2*PI*tw,bul=lerp(78,0,c);
+  const ER=[lerp(CX+215,CX+270,c),lerp(yk-50,ys-HK(n)-4,c)],EL=[2*CX-ER[0],ER[1]],M=40,zl=Math.cos(f1);
+  let L=[],R=[],zL=[],zR=[];
+  const hs=k==0?G0/2:4,by=k==0?YC:ys;
+  quad([CX-hs,by],[CX-Lw-bul-(k==0?hs*.35:0),(by+yk)/2],[CX-Lw,yk],9).forEach(q=>{L.push(q);zL.push(1);});
+  for(let i=1;i<=M;i++){const u=i/M,f=f1*u;L.push([CX-Lw+2*Lw*u,yk-A*Math.sin(f)]);zL.push(Math.cos(f));}
+  {const s0=[CX+Lw,yk-A*Math.sin(f1)];
+   if(b>0&&b<1){
+     /* Das Ende als EIN durchgehendes Band: Bogen außen herum, hinter dem anderen Band in die Schlaufe, vorne wieder heraus */
+     const Rq=t=>{const p0=[CX+hs,by],p1=[CX+Lw+bul+(k==0?hs*.35:0),(by+yk)/2],p2=[CX+Lw,yk+A*Math.sin(f1)],v=1-t;return[v*v*p0[0]+2*v*t*p1[0]+t*t*p2[0],v*v*p0[1]+2*v*t*p1[1]+t*t*p2[1]];};
+     const Xc=Rq(.5),In=[CX+6,lerp(yk,by,.56)],Up=[CX-6,lerp(yk,by,.24)],u=ph(w,.5,1),aa=1-ez(u),gg=ez(cl(u*4)),mv=q=>[lerp(s0[0],q[0],aa),lerp(s0[1],q[1],aa)];
+     const E0=[ER[0]-s0[0],ER[1]-s0[1]],EL0=Math.hypot(E0[0],E0[1]);
+     const P=[s0,mv([s0[0]+E0[0]*.8,s0[1]+E0[1]*.8]),mv([s0[0]+228,s0[1]+58]),mv(Xc),mv(In)],Zc=[zl,zl,0,-3,-3];
+     if(w>=.5){const e5=[lerp(Up[0],s0[0],u),lerp(Up[1],s0[1],u)],e6=[lerp(Up[0],ER[0],u),lerp(Up[1],ER[1],u)],i4=P[4];P.push([lerp(i4[0],e5[0],gg),lerp(i4[1],e5[1],gg)],[lerp(i4[0],e6[0],gg),lerp(i4[1],e6[1],gg)]);Zc.push(3,3);}
+     let C=crs(P,Zc,14);
+     if(w<.5){let tot=0;const cum=[0];for(let i=1;i<C.length;i++){tot+=Math.hypot(C[i][0]-C[i-1][0],C[i][1]-C[i-1][1]);cum.push(tot);}
+       const want=ez(w/.5)*tot;let m=1;while(m<C.length-1&&cum[m]<want)m++;const fr=cl((want-cum[m-1])/Math.max(1e-6,cum[m]-cum[m-1])),A0=C[m-1],A1=C[m],A2=C[Math.min(C.length-1,m+1)],Am=C[Math.max(0,m-2)];
+       const e=[lerp(A0[0],A1[0],fr),lerp(A0[1],A1[1],fr),lerp(A0[2],A1[2],fr)],d0=[A1[0]-Am[0],A1[1]-Am[1]],d1=[A2[0]-A0[0],A2[1]-A0[1]],n0=Math.hypot(d0[0],d0[1])||1,n1=Math.hypot(d1[0],d1[1])||1;
+       const dx=lerp(d0[0]/n0,d1[0]/n1,fr),dy=lerp(d0[1]/n0,d1[1]/n1,fr),dl=Math.hypot(dx,dy)||1,ext=EL0*Math.pow(Math.max(0,1-want/(EL0*1.5)),2);C=C.slice(0,m);C.push(e);
+       if(ext>2){C.push([e[0]+dx/dl*ext*.5,e[1]+dy/dl*ext*.5,e[2]],[e[0]+dx/dl*ext,e[1]+dy/dl*ext,e[2]]);}}
+     C.slice(1).forEach(q=>{L.push([q[0],q[1]]);zL.push(q[2]);});
+   }else{const ct=[(s0[0]+ER[0])/2,(s0[1]+ER[1])/2];quad(s0,ct,ER,10).slice(1).forEach(q=>{L.push(q);zL.push(zl);});}}
+  quad([CX+hs,by],[CX+Lw+bul+(k==0?hs*.35:0),(by+yk)/2],[CX+Lw,yk+A*Math.sin(f1)],9).forEach(q=>{R.push(q);zR.push(-zl);});
+  for(let i=1;i<=M;i++){const u=1-i/M,f=f1*u;R.push([CX-Lw+2*Lw*u,yk+A*Math.sin(f)]);zR.push(-Math.cos(f));}
+  for(let i=1;i<=10;i++){R.push([lerp(CX-Lw,EL[0],i/10),lerp(yk,EL[1],i/10)]);zR.push(-1);}
+  if(a<1){const r0=sd=>quad([CX+sd*hs,by],[CX+sd*(hs-8),by-140],[CX+sd*(hs+70),by-270],59),rl=k==0?r0(-1):restPts(ys,-1),rr_=k==0?r0(1):restPts(ys,1),NN=70,mx=(A_,B_,t)=>{const u=resampleN(A_,NN),v=resampleN(B_,NN);return u.map((q,i)=>[lerp(q[0],v[i][0],t),lerp(q[1],v[i][1],t)]);};
+    L=mx(rl,L,aL);R=mx(rr_,R,a);zL=L.map(()=>1);zR=R.map(()=>-1);}
+  const segs=[];{const a_=soft(R,zR),b_=soft(L,zL);addPoly(segs,a_[0],a_[1],cR);addPoly(segs,b_[0],b_[1],cL);}drawSegs(segs);
+  if(c>.55){g.save();g.globalAlpha=ph(c,.55,1);stack(k+1);g.restore();}
+  cap(...(c>0?TZ:b>0?[n==1?'Führ es von hinten durch die Schlaufe.':'Führ es zweimal von hinten durch die Schlaufe.']:['Leg ein Ende über das andere.']));
+  if(b>0&&c==0){text((wi+1)+'×',CX-250,yk+50,76,800,cL);}
+  if(c>0&&c<1){arrow(ER[0]-50,ER[1]-36,ER[0]+24,ER[1]-36);arrow(EL[0]+50,EL[1]-36,EL[0]-24,EL[1]-36);}}
+function crs(P,Z,n){const o=[],gp=i=>P[cl(i,0,P.length-1)];for(let i=0;i<P.length-1;i++)for(let j=0;j<n;j++){const t=j/n,t2=t*t,t3=t2*t,p0=gp(i-1),p1=gp(i),p2=gp(i+1),p3=gp(i+2),c=d=>.5*((2*p1[d])+(-p0[d]+p2[d])*t+(2*p0[d]-5*p1[d]+4*p2[d]-p3[d])*t2+(-p0[d]+3*p1[d]-3*p2[d]+p3[d])*t3);o.push([c(0),c(1),lerp(Z[i],Z[i+1],t)]);}const l=P[P.length-1];o.push([l[0],l[1],Z[Z.length-1]]);return o;}
+function scPull(p){const sq=lerp(1,SQ,ez(ph(p,.1,.5))),top=YB-cum(4)*sq,e=1-.92*Math.sin(PI*ph(p,.05,.95));row(44);connectors(44);stack(4,sq);restPose(top,0,e);
+  if(e<.5){arrow(CX-285,top-40,CX-355,top-40);arrow(CX+285,top-40,CX+355,top-40);}}
+function ends(u0,u1){const q0=[18,0],q1=[90,-30],q2=[200,-HS/2-150],f=u=>{const v=1-u;return[v*v*q0[0]+2*v*u*q1[0]+u*u*q2[0],v*v*q0[1]+2*v*u*q1[1]+u*u*q2[1]];};
+  const A=[],B=[];for(let i=0;i<=20;i++){const u=lerp(u0,u1,i/20),pt=f(u);A.push([pt[0]-4,pt[1]-5]);B.push([pt[0]+4,pt[1]+5]);}strand(A,COL.a,10);strand(B,COL.b,10);}
+function bundle(x,y,rot,sc,u1){g.save();g.translate(x,y);g.rotate(rot);g.scale(sc,sc);CX0=0;ends(0,u1);stack(4,SQ,HS/2);
+  g.save();g.beginPath();g.ellipse(0,0,25,19,0,0,2*PI);g.clip();g.fillStyle=COL.b;g.fillRect(-30,-25,60,50);g.strokeStyle=COL.a;g.lineWidth=7;for(const o of[-12,6]){g.beginPath();g.moveTo(-32,o+12);g.lineTo(32,o-6);g.stroke();}g.restore();
+  g.beginPath();g.ellipse(0,0,25,19,0,0,2*PI);g.strokeStyle=COL.out;g.lineWidth=2.5;g.stroke();CX0=CX;g.restore();}
+/* Schlupf: beide Enden zusammen, eine Schlaufe legen, Enden durchziehen, auf die Knoten schieben */
+const OH=(()=>{const P=[[0,0],[0,.95],[.75,2.3],[2.0,1.55],[1.25,.4],[-.05,.18],[-1.15,.6],[-1.0,1.6],[.05,1.38],[1.0,1.3],[2.05,1.5],[3.1,2.0]],Z=[0,0,0,0,.5,1,0,-.5,-1,0,1,.5],o=[];
+  const g4=i=>P[cl(i,0,P.length-1)];
+  for(let i=0;i<P.length-1;i++)for(let j=0;j<20;j++){const t=j/20,t2=t*t,t3=t2*t,p0=g4(i-1),p1=g4(i),p2=g4(i+1),p3=g4(i+2),
+    c=d=>.5*((2*p1[d])+(-p0[d]+p2[d])*t+(2*p0[d]-5*p1[d]+4*p2[d]-p3[d])*t2+(-p0[d]+3*p1[d]-3*p2[d]+p3[d])*t3);o.push([c(0),c(1),lerp(Z[i],Z[i+1],t)]);}
+  o.push([...P[P.length-1],Z[Z.length-1]]);return o;})();
+const OH_LOOP=Math.round(5.2*20);
+function scSlip(p){row(44);connectors(44);
+  if(p>.9){cap('Schieb den Schlupf auf die Knoten.','Mit dem Fingernagel halten und fest ziehen.');bundle(CX,MID,0,1,1);return;}
+  stack(4,SQ);
+  const top=TOPF,a=ez(ph(p,0,.1)),f=ez(ph(p,.17,.6)),c=ez(ph(p,.65,.85));
+  const u=lerp(58,9,c),stem=lerp(18,-HS/2,c),P0y=top-stem,E=[CX+200,top-150];
+  let pts=[],zs=[];for(let i=0;i<=7;i++){pts.push([CX,lerp(top,P0y,i/7)]);zs.push(0);}
+  const mf=f*(OH.length-1),m=Math.floor(mf),fr=mf-m;for(let i=1;i<=m;i++){pts.push([CX+OH[i][0]*u,P0y-OH[i][1]*u]);zs.push(OH[i][2]);}
+  if(m<OH.length-1&&fr>0){const a_=OH[m],b_=OH[m+1];pts.push([CX+lerp(a_[0],b_[0],fr)*u,P0y-lerp(a_[1],b_[1],fr)*u]);zs.push(lerp(a_[2],b_[2],fr));}
+  const od=i=>{const a_=OH[Math.max(0,i-1)],b_=OH[Math.min(OH.length-1,i+1)],x=b_[0]-a_[0],y=-(b_[1]-a_[1]),l_=Math.hypot(x,y)||1;return[x/l_,y/l_];},dA=od(m),dB=od(Math.min(OH.length-1,m+1));
+  const tip=pts[pts.length-1];let dx=lerp(dA[0],dB[0],fr),dy=lerp(dA[1],dB[1],fr);const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;
+  let used=0;for(let i=1;i<pts.length;i++)used+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);const tl=Math.max(45,430-used),T0=[tip[0]+dx*tl,tip[1]+dy*tl],TE=[lerp(T0[0],E[0],c),lerp(T0[1],E[1],c)],zt=zs[zs.length-1];
+  {const CT=[lerp((tip[0]+TE[0])/2,CX+90,c),lerp((tip[1]+TE[1])/2,MID-30,c)];quad(tip,CT,TE,10).slice(1).forEach(q=>{pts.push(q);zs.push(zt);});}
+  const A=[],B=[];for(let i=0;i<pts.length;i++){const p1=pts[Math.max(0,i-1)],p2=pts[Math.min(pts.length-1,i+1)];let nx=-(p2[1]-p1[1]),ny=p2[0]-p1[0];const nl=Math.hypot(nx,ny)||1;nx/=nl;ny/=nl;A.push([pts[i][0]+nx*5.5,pts[i][1]+ny*5.5]);B.push([pts[i][0]-nx*5.5,pts[i][1]-ny*5.5]);}
+  let PA=A,PB=B;if(m==0&&a<1){const rb=restPts(top,-1,1,17),ra=restPts(top,1,1,17);PA=A.map((q,i)=>[lerp(ra[i][0],q[0],a),lerp(ra[i][1],q[1],a)]);PB=B.map((q,i)=>[lerp(rb[i][0],q[0],a),lerp(rb[i][1],q[1],a)]);}
+  const segs=[];addPoly(segs,PB,zs,COL.a,9);addPoly(segs,PA,zs.map(v=>v+.001),COL.b,9);g.save();g.globalAlpha=1-ph(p,.85,.89);drawSegs(segs);g.restore();
+  const lx=CX-215;
+  if(p<.17){cap('Der Schlupf ist ein Knoten mit beiden Enden.','Nimm dafür beide Enden zusammen.');}
+  else if(c==0&&m<OH_LOOP){cap('Leg mit beiden Enden eine Schlaufe.');}
+  else if(c==0){cap('Zieh beide Enden durch die Schlaufe.');}
+  else if(c<1||p<=.9){g.save();g.globalAlpha=cl(c*3);g.fillStyle='#f3cdb0';g.strokeStyle=COL.out;g.lineWidth=2.5;rr(CX-96,MID-17,78,34,15);g.fill();g.stroke();g.fillStyle='#fbe9dc';rr(CX-52,MID-12,30,24,10);g.fill();g.restore();
+    cap('Schieb den Schlupf auf die Knoten.','Mit dem Fingernagel halten und fest ziehen.');arrow(CX-40,top-150,CX-40,top-70);arrow(TE[0]+14,TE[1]-18,TE[0]+70,TE[1]-52);}
+  if(p>.84){g.save();g.globalAlpha=ph(p,.84,.9);bundle(CX,MID,0,1,1);g.restore();}}
+/* Schere: jede Hälfte ist ein durchgehendes Stück, Klinge unten, Griff oben auf der Gegenseite; beide kreuzen sich im Gelenk */
+function scissors(x,y,open){g.save();g.translate(x,y);g.lineJoin='round';g.lineCap='round';
+  const half=(s,part)=>{g.save();g.rotate(s*open);
+    if(part==0){g.beginPath();g.moveTo(0,0);g.quadraticCurveTo(s*4,-34,s*20,-58);g.strokeStyle=COL.out;g.lineWidth=15;g.stroke();g.strokeStyle=COL.a;g.lineWidth=10;g.stroke();
+      g.beginPath();g.ellipse(s*30,-88,20,29,s*.25,0,2*PI);g.strokeStyle=COL.out;g.lineWidth=14;g.stroke();g.strokeStyle=COL.a;g.lineWidth=9;g.stroke();}
+    else{g.fillStyle='#cfd4d9';g.strokeStyle=COL.out;g.lineWidth=3;g.beginPath();g.moveTo(s*5,-12);g.lineTo(s*2,112);g.quadraticCurveTo(-s*16,50,-s*13,-12);g.closePath();g.fill();g.stroke();}
+    g.restore();};
+  half(-1,0);half(1,0);half(-1,1);half(1,1);
+  g.fillStyle='#fff';g.strokeStyle=COL.out;g.lineWidth=3;g.beginPath();g.arc(0,0,6,0,2*PI);g.fill();g.stroke();g.restore();}
+function scCut(p){cap(p<.36?'Dehn das Armband noch einmal.':'Schneide die Enden knapp ab.');const a=ph(p,0,.34),w=Math.sin(a*PI),gap=44+10*w;row(gap);connectors(gap);
+  if(a>0&&a<1){arrow(CX-300,YC-20,CX-370-12*w,YC-20);arrow(CX+300,YC-20,CX+370+12*w,YC-20);}
+  const b=ez(ph(p,.38,.66)),snip=ph(p,.66,.72),c=ph(p,.72,1),U=.2,cut=p>=.72;
+  bundle(CX,MID,0,1,cut?U:1);
+  if(cut&&c<1){g.save();g.globalAlpha=1-c;g.translate(CX+12*c,MID+260*c*c);CX0=0;ends(U+.03,1);CX0=CX;g.restore();}
+  if(p>.36&&c<.6){g.save();g.globalAlpha=1-ph(c,.3,.6);scissors(CX+52,MID-118-220*(1-b),.4*(1-snip)+.03);g.restore();}}
+function scHide(p){const cg=ez(ph(p,.66,.9)),gap=lerp(44,2,cg),a1=ez(ph(p,.08,.38)),a2=ez(ph(p,.42,.7)),al=p<.8?lerp(1,.4,ph(p,0,.1)):lerp(.4,1,ph(p,.84,.96));
+  row(gap,{steel:false});
+  const q=ringPos(gap/2+59),o=ringPos(gap/2-6),rot=a1*(PI/2+q.a),sc=lerp(1,.74,a1);
+  const bx=lerp(lerp(CX,o.x,a1),q.x+6,a2),by=lerp(lerp(MID,o.y,a1),q.y+1,a2),h=HS/2*sc,B=[bx-h*Math.sin(rot),by+h*Math.cos(rot)],k=Math.max(a1,a2);
+  strand(quad([CX-gap/2-2,YC],[lerp(CX-4,(CX-gap/2+B[0])/2,k),YC],[B[0]-4*(1-k),B[1]],8),COL.a,12);
+  {const r0=ringPos(gap/2+122),c0=[CX+gap/2+2,YC];strand(quad([r0.x,r0.y],[lerp(c0[0],(r0.x+B[0])/2,k),lerp(c0[1],(r0.y+B[1])/2,k)],[B[0]+4*(1-k),B[1]],14),COL.b,12);}
+  bundle(bx,by,rot,sc,.2);g.save();g.translate(q.x,q.y);g.rotate(q.a);steel(0,0,118,128,al);g.restore();
+  if(a1>0&&a1<1)arrow(CX-70,MID-10,CX-70,YC-30);
+  if(a2>0&&a2<1){arrow(o.x-10,YC-110,q.x-10,YC-104);}
+  cap(p<.9?'Schieb den Knoten durch die Öffnung in die Edelstahlperle.':'Der Knoten ist versteckt.');}
+function star(x,y,r,al){g.save();g.globalAlpha=al;g.fillStyle='#d9ae3c';r*=.7+.5*al;g.beginPath();for(let i=0;i<8;i++){const rr2=i%2?r*.3:r,an=i*PI/4;g.lineTo(x+Math.cos(an)*rr2,y+Math.sin(an)*rr2);}g.closePath();g.fill();g.restore();}
+function scDone(p){const R=215,N=20,q=ez(ph(p,0,.3)),cy=500;g.save();g.translate(CX,cy);g.scale(lerp(.85,1,q),lerp(.85,1,q));g.globalAlpha=q;g.translate(-CX,-cy);
+  for(let i=1;i<N;i++){const an=-PI/2+i*2*PI/N;bead(CX+R*Math.cos(an),cy+R*Math.sin(an),31,i%4==2);}
+  steel(CX,cy-R,66,68);g.restore();
+  for(const[sx,sy,r,o]of[[250,300,28,0],[760,330,22,.3],[720,720,26,.55],[270,690,20,.75],[500,215,16,.15],[820,520,15,.65],[180,500,15,.9]])star(sx,sy,r,.5+.5*Math.sin(p*PI*6+o*6));}
+
+function scGlue(p){const q=ez(ph(p,0,.25));g.save();g.globalAlpha=q;g.translate(CX,430);
+  g.save();g.rotate(-.5);g.fillStyle='#fff';g.strokeStyle=COL.out;g.lineWidth=4;rr(-50,-90,100,170,16);g.fill();g.stroke();g.fillStyle=COL.gold;rr(-50,-20,100,50,0);g.fill();g.stroke();g.fillStyle='#fff';g.beginPath();g.moveTo(-22,-90);g.lineTo(-8,-140);g.lineTo(8,-140);g.lineTo(22,-90);g.closePath();g.fill();g.stroke();g.restore();
+  g.strokeStyle=COL.a;g.lineWidth=16;g.lineCap='round';g.beginPath();g.arc(0,0,150,0,2*PI);g.stroke();g.beginPath();g.moveTo(-106,-106);g.lineTo(106,106);g.stroke();g.restore();
+  g.save();g.globalAlpha=ph(p,.2,.4);text('Kein Kleber nötig',CX,700,52,600);g.restore();}
+function coil(){const L=[[0,0,46,36,.2],[7,-5,37,43,-.5],[-6,5,50,32,.9],[2,2,30,26,.4]];
+  L.forEach(([ox,oy,rx,ry,ro])=>{const pts=[];for(let i=0;i<=44;i++){const t=i/44*2*PI,x=rx*Math.cos(t),y=ry*Math.sin(t);pts.push([ox+x*Math.cos(ro)-y*Math.sin(ro),oy+x*Math.sin(ro)+y*Math.cos(ro)]);}strand(pts,COL.m,6);});
+  strand(quad([-44,16],[-78,52],[-108,34],10),COL.m,6);strand(quad([40,-20],[74,-52],[104,-30],10),COL.m,6);}
+function bag(){g.save();g.translate(CX,362);g.save();g.translate(-90,0);g.scale(1.15,1.15);coil();g.restore();bead(120,6,36);bead(200,6,36,1);g.restore();}
+function scNeed(p){const it=[[300,650,'Schere'],[700,650,'Schale oder Unterlage']];
+  const hd=(t,y,q)=>{g.save();g.globalAlpha=q;text(t,CX,y,30,800,COL.ink);g.restore();};
+  hd('Im Reparaturset',226,ez(ph(p,.02,.12)));
+  let q=ez(ph(p,.08,.22));g.save();g.globalAlpha=q;g.translate(0,20*(1-q));bag();g.restore();
+  q=ez(ph(p,.22,.34));g.save();g.globalAlpha=q;text('Elastikband und Ersatzperlen',CX,480,26,700);g.restore();
+  hd('Das brauchst du noch',556,ez(ph(p,.42,.52)));
+  it.forEach(([x,y,l],i)=>{const t0=.5+i*.12,q=ez(ph(p,t0,t0+.14));g.save();g.globalAlpha=q;g.translate(x,y+20*(1-q));
+    if(i==0){g.save();g.translate(-8,-2);g.rotate(-PI*.5);g.scale(.7,.7);scissors(0,-12,.34);g.restore();}
+    if(i==1){g.fillStyle='#fff';g.strokeStyle=COL.out;g.lineWidth=4;g.beginPath();g.moveTo(-112,-6);g.quadraticCurveTo(-92,40,0,40);g.quadraticCurveTo(92,40,112,-6);g.closePath();g.fill();g.stroke();g.beginPath();g.ellipse(0,-6,112,15,0,0,2*PI);g.fillStyle='#f3f4f5';g.fill();g.stroke();}
+    text(l,0,86,26,700);g.restore();});}
+function ringPts(cx,cy,R,N,gs){const o=[];for(let i=0;i<N;i++){let an=-PI/2+i*2*PI/N;if(i>0){const d=i<=5?5-i:i-6;an+=(i<=5?-1:1)*gs*Math.max(0,1-d/5);}o.push([cx+R*Math.cos(an),cy+R*Math.sin(an),an]);}return o;}
+function ringBand(cx,cy,R,al=1,ga=0,gw=0){const pts=[];for(let i=0;i<=72;i++){const t=ga+gw+i/72*(2*PI-2*gw);pts.push([cx+R*Math.cos(t),cy+R*Math.sin(t)]);}g.save();g.globalAlpha=g.globalAlpha*al;strand(pts,COL.m,5);g.restore();}
+function bowl(x,y,k){g.save();g.translate(x,y);g.scale(k,k);g.fillStyle='#fff';g.strokeStyle=COL.out;g.lineWidth=4/k*1.4;g.beginPath();g.moveTo(-112,-6);g.quadraticCurveTo(-92,40,0,40);g.quadraticCurveTo(92,40,112,-6);g.closePath();g.fill();g.stroke();g.beginPath();g.ellipse(0,-6,112,15,0,0,2*PI);g.fillStyle='#f3f4f5';g.fill();g.stroke();g.restore();}
+function scIntro(p){const k=1+.07*Math.sin(PI*2*ph(p,.4,.97)),cy=500,R=205;g.save();g.translate(CX,cy);g.scale(k,k);g.translate(-CX,-cy);
+  ringBand(CX,cy,R);const P=ringPts(CX,cy,R,20,0);for(let i=1;i<20;i++)bead(P[i][0],P[i][1],30,i%4==2);steel(P[0][0],P[0][1],64,66);g.restore();
+  const w=Math.sin(PI*2*ph(p,.4,.97));if(p>.4){g.save();g.globalAlpha=Math.abs(w);text(w>0?'zu groß?':'zu klein?',CX,cy,40,600,COL.ink);g.restore();}
+  cap(p<.36?'So fädelst du dein Armband neu auf und verknotest es sicher.':'Zu groß, zu klein, oder soll ein neues Elastikband hinein?');}
+function scCutOld(p){const cx=CX,cy=400,R=170,P=ringPts(cx,cy,R,20,.07*ez(ph(p,.05,.25))),b=ez(ph(p,.2,.42)),snip=ph(p,.42,.48),cut=p>=.48;
+  const ca=PI/20,S0=.52,S1=.84,sl=PI*ph(p,S0,S1),ord=[];
+  bowl(CX,748,2.1);ringBand(cx,cy,R,1-ph(p,.88,.96),ca,cut?.1*ez(ph(p,.48,.56)):0);
+  /* Das Band hat nach dem Schnitt zwei offene Enden: Die Perlen rutschen von beiden herunter und fallen einzeln in die Schale */
+  for(let i=0;i<20;i++){const sideA=i>=6&&i<=15,own=(sideA?i:(i<=5?i:i-20))*2*PI/20,cown=ca+PI/2,d=sideA?own-cown:cown-own,pd=S0+(S1-S0)*d/PI,f=ph(p,pd,pd+.07);
+    const tx=CX+(((i*7)%11)-5)*38+((i*13)%5-2)*5,ty=738-((i*5)%3)*17,ea=ca+(sideA?.1:-.1),cxp=cx+R*Math.cos(ea),cyp=cy+R*Math.sin(ea);
+    let x,y,r=25;if(p<S0){x=P[i][0];y=P[i][1];}else if(f<=0){const an=-PI/2+own+(sideA?-sl:sl);x=cx+R*Math.cos(an);y=cy+R*Math.sin(an);}else{const e=f*f;x=lerp(cxp,tx,f);y=lerp(cyp,ty,e);r=lerp(25,20,f);}
+    ord.push([f,i,x,y,r]);}
+  ord.sort((u,v)=>(v[0]>=1?1:0)-(u[0]>=1?1:0)||u[3]-v[3]);
+  for(const[f,i,x,y,r]of ord){if(i==0)steel(x,y,r*2.15,r*2.2);else bead(x,y,r,i%4==2);}
+  if(p>.15&&p<.62){g.save();g.globalAlpha=1-ph(p,.52,.62);const an=PI/20,px=cx+R*Math.cos(an),py=cy+R*Math.sin(an);g.translate(px+92+230*(1-b),py);g.rotate(PI/2);g.scale(.85,.85);scissors(0,0,.4*(1-snip)+.03);g.restore();}
+  cap(p<.5?'Schneide das Band zwischen zwei Perlen durch.':'Sammle alle Perlen in einer Schale.');}
+function scFit(p){const top=YB-cum(1),e=1-.75*ez(ph(p,0,.15))+.75*ez(ph(p,.85,1));row(44);connectors(44);stack(1);restPose(top,1,e);
+  const f=ph(p,.15,.25)*(1-ph(p,.85,.95));g.save();g.globalAlpha=f;for(const sd of[-1,1]){const q=restPts(top,sd,e),en=q[q.length-1];g.fillStyle='#fff';g.strokeStyle=COL.out;g.lineWidth=3;g.beginPath();g.arc(en[0],en[1],20,0,2*PI);g.fill();g.stroke();}
+  g.restore();cap(...(p<.5?['Probier das Armband an, bevor du weiterknotest.','Am besten hält jemand die Enden fest.']:['Zu eng? Perlen hinzufügen.','Zu weit? Perlen herausnehmen.']));}
+const S=[
+ {k:'Anleitung',ns:1,d:9,t:'Armbänder sicher verknoten',c:['So fädelst du dein Armband neu auf und verknotest es sicher.'],f:scIntro},
+ {k:'Vorbereitung',d:8,t:'Das brauchst du',c:['Tipp: Mach vorher ein Foto von der Perlenreihenfolge.'],f:scNeed},
+ {k:1,d:11,t:'Armband aufschneiden',c:['Schneide das alte Band zwischen zwei Perlen durch','und sammle alle Perlen in einer Schale.'],f:scCutOld},
+ {k:2,d:5,t:'Band vordehnen',c:['Zieh das Elastikband einmal kräftig in die Länge.'],f:scStretch},
+ {k:3,d:7,t:'Perlen auffädeln',c:['Die Edelstahlperle kommt ganz zum Schluss.','In ihr verschwindet später der Knoten.'],f:scThread},
+ {k:4,z:1,d:10,t:'Der erste Knoten',c:['Enden über Kreuz, ein Ende durch die Schlaufe ziehen.','Dieser Knoten bestimmt, wie fest das Armband sitzt.'],f:p=>scKnot(p,0)},
+ {k:5,z:1,d:8,t:'Anprobieren',c:['Probier das Armband an, bevor du weiterknotest.','Am besten hält dabei jemand die Enden fest.'],f:scFit},
+ {k:6,z:1,d:11,t:'Doppelknoten',c:['Wieder über Kreuz, das Ende diesmal zweimal','durch die Schlaufe ziehen. Dann festziehen.'],f:p=>scKnot(p,1)},
+ {k:7,z:1,d:7.5,t:'Noch ein einfacher Knoten',c:['Über Kreuz, einmal durch die Schlaufe ziehen','und festziehen.'],f:p=>scKnot(p,2)},
+ {k:8,z:1,d:10,t:'Noch ein Doppelknoten',c:['Zweimal durch die Schlaufe ziehen, festziehen.','So entsteht eine kleine Knotenreihe.'],f:p=>scKnot(p,3)},
+ {k:9,z:1,d:4.5,t:'Alles festziehen',c:['Zieh an den Enden und am Armband, bis alle Knoten fest sitzen.'],f:scPull},
+ {k:10,z:1,d:11,t:'Schlupf zur Sicherung',c:['Mit dem Fingernagel auf den Knoten halten','und an beiden Enden kräftig ziehen.'],f:scSlip},
+ {k:11,z:1,d:6.5,t:'Dehnen und abschneiden',c:['Dehn das Armband noch einmal','und schneide die Enden knapp ab.'],f:scCut},
+ {k:12,z:1,d:8,t:'Knoten verstecken',c:['Schieb den Knoten durch die Öffnung','in die Edelstahlperle.'],f:scHide},
+ {k:'Gut zu wissen',d:6,t:'Und Kleber?',c:['Die Knoten und der Schlupf halten von allein.'],f:scGlue},
+ {k:'Geschafft',d:5,t:'Fertig!',c:['Noch Fragen? Schreib mir eine WhatsApp.'],f:scDone}];
+let acc=0;for(const s of S){s.s=acc;acc+=s.d;}const TOTAL=acc;
+function idxAt(T){for(let i=S.length-1;i>=0;i--)if(T>=S[i].s)return i;return 0;}
+function render(T){T=cl(T,0,TOTAL-.001);const i=idxAt(T),lt=T-S[i].s,FD=.5;
+  if(i>0&&lt<FD){g=MAINCTX;drawFrame(S[i].s-.002);g=OFFCTX;drawFrame(T);g=MAINCTX;g.setTransform(1,0,0,1,0,0);const al=ez(lt/FD),W_=C.width,HH=Math.round(182*DPR),Y2=Math.round(840*DPR),H2=C.height-Y2;g.globalAlpha=al;g.drawImage(OFF,0,HH,W_,Y2-HH,0,HH,W_,Y2-HH);g.fillStyle='#fff';for(const[y0,hh]of[[0,HH],[Y2,H2]]){if(al<.5){g.globalAlpha=al*2;g.fillRect(0,y0,W_,hh);}else{g.globalAlpha=1;g.fillRect(0,y0,W_,hh);g.globalAlpha=(al-.5)*2;g.drawImage(OFF,0,y0,W_,hh,0,y0,W_,hh);}}g.globalAlpha=1;}else{g=MAINCTX;drawFrame(T);}}
+function drawFrame(T){T=cl(T,0,TOTAL-.001);const i=idxAt(T),sc=S[i],p=(T-sc.s)/sc.d;
+  g.setTransform(DPR,0,0,DPR,0,0);g.globalAlpha=1;g.fillStyle=COL.bg;g.fillRect(0,0,1000,1000);
+  if(typeof sc.k=='number'){const n_=sc.k+' ·';g.font=`600 44px ${FF}`;const w_=g.measureText(n_+' ').width;text(n_,60,112,44,600,COL.b,'left');text(sc.t,60+w_,112,44,500,COL.ink,'left',880-w_);}
+  else text(sc.t,60,112,44,500,COL.ink,'left',880);
+  CAPT=null;const zo=!!sc.z;g.save();if(zo){g.beginPath();g.rect(0,180,1000,658);g.clip();g.translate(CX,700);g.scale(1.25,1.25);g.translate(-CX,-700);}sc.f(p);g.restore();
+  g.globalAlpha=1;let L_=CAPT||sc.c;g.font=`500 32px ${FF}`;
+  if(L_.length==1&&g.measureText(L_[0]).width>840){const t=L_[0],mid=t.length/2;let bi=-1;for(let i=0;i<t.length;i++)if(t[i]==' '&&(bi<0||Math.abs(i-mid)<Math.abs(bi-mid)))bi=i;if(bi>0)L_=[t.slice(0,bi),t.slice(bi+1)];}
+  g.fillStyle=COL.mint;g.fillRect(0,840,1000,160);
+  if(L_.length>1){text(L_[0],CX,897,32,500,COL.ink,'center',900);text(L_[1],CX,943,32,500,COL.ink,'center',900);}else text(L_[0],CX,920,32,500,COL.ink,'center',900);}
+
+/* ---------- Steuerung ---------- */
+let T=0,playing=false,last=0;const $=id=>document.getElementById(id),scrub=$('scrub'),playB=$('play'),stopC={checked:false};
+function setPlay(v){playing=v;const i=idxAt(T);playB.textContent=v?'Pause':(T>=TOTAL-.01?'Nochmal':(T>=S[i].s+S[i].d-.01?'Nächster Schritt':'Abspielen'));}
+function frame(now){const dt=Math.min(.1,(now-last)/1000)||0;last=now;
+  if(playing){const i0=idxAt(T);T+=dt;if(T>=TOTAL){T=TOTAL-.001;setPlay(false);}else if(stopC.checked&&idxAt(T)!=i0&&!S[i0].ns){T=S[i0].s+S[i0].d-.001;setPlay(false);}}
+  render(T);if(document.activeElement!==scrub)scrub.value=Math.round(T/TOTAL*1000);requestAnimationFrame(frame);}
+playB.onclick=()=>{if(!playing){if(T>=TOTAL-.01)T=0;else if(stopC.checked){const i=idxAt(T);if(T>=S[i].s+S[i].d-.01&&i<S.length-1)T=S[i+1].s;}}setPlay(!playing);};
+$('prev').onclick=()=>{const i=idxAt(T);T=(T-S[i].s<.7&&i>0)?S[i-1].s:S[i].s;};
+$('next').onclick=()=>{const i=idxAt(T);if(i<S.length-1)T=S[i+1].s;};
+scrub.oninput=()=>{T=scrub.value/1000*TOTAL;};
+document.addEventListener('keydown',e=>{if(e.code=='Space'){e.preventDefault();playB.click();}});
+window.seek=t=>{setPlay(false);T=t;render(T);};window.SCENES=S;
+if(document.fonts&&document.fonts.load){['400 20px Montserrat','500 20px Montserrat','600 20px Montserrat','400 30px "Playfair Display"'].forEach(f=>document.fonts.load(f));}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
