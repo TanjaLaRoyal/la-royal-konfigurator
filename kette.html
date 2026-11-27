@@ -65,6 +65,11 @@ body { background: transparent; color: var(--text); font-family: 'Jost', sans-se
 .metal-swatch { width: 13px; height: 13px; border-radius: 50%; }
 .metal-swatch.silber    { background: linear-gradient(135deg, #d4d8dc, #8a9299); }
 .metal-swatch.gold      { background: linear-gradient(135deg, #e8c97e, #b8863a); }
+.metal-swatch.schwarz   { background: radial-gradient(circle at 35% 35%, #585858, #1a1a1a 60%, #0a0a0a); }
+.metal-swatch.kupfer    { background: radial-gradient(circle at 35% 35%, #fff5ea, #efcfaa 40%, #cf9a6c 80%, #8f6040); }
+.metal-swatch.lava-gold   { background: radial-gradient(circle at 35% 35%, #fff7d0, #f2d36b 40%, #c99f33 80%, #7a5714); }
+.metal-swatch.lava-silber { background: radial-gradient(circle at 35% 35%, #ffffff, #e9e9e6 40%, #b7b7b2 80%, #6b6b66); }
+.design-btn.locked { opacity: 0.3; pointer-events: none; }
 .seiten-titel { font-family: 'Jost', sans-serif; font-weight: 400; font-size: clamp(1.4rem, 3.5vw, 2rem); letter-spacing: 0.18em; line-height: 1.35; text-transform: uppercase; text-align: center; color: #000; margin-bottom: 52px; }
 @media (max-width: 420px) { .seiten-titel { font-size: 1.25rem; letter-spacing: 0.1em; } }
 .summary-box { display: none; position: relative; background: #fdfcfa; border: 1px solid #ddd; border-radius: 1px; padding: 18px 20px; margin-bottom: 20px; }
@@ -185,8 +190,26 @@ body { background: transparent; color: var(--text); font-family: 'Jost', sans-se
       <div class="design-options" id="laenge-options"></div>
     </div>
 
+    <div class="section" id="lava-section" style="display:none">
+      <div class="section-label" id="lava-section-label">5 · Lava</div>
+      <div class="metal-options">
+        <button class="metal-btn lava-btn" data-wahl="Schwarz" onclick="setLava('Schwarz')">
+          <span class="metal-swatch schwarz"></span> Schwarz
+        </button>
+        <button class="metal-btn lava-btn" data-wahl="Gold" data-lava="Gold" onclick="setLava('Gold')">
+          <span class="metal-swatch lava-gold"></span> Gold
+        </button>
+        <button class="metal-btn lava-btn" data-wahl="Silber" data-lava="Silber" onclick="setLava('Silber')">
+          <span class="metal-swatch lava-silber"></span> Silber
+        </button>
+        <button class="metal-btn lava-btn" data-wahl="Helles Kupfer" data-lava="Helles Kupfer" onclick="setLava('Helles Kupfer')">
+          <span class="metal-swatch kupfer"></span> Helles Kupfer
+        </button>
+      </div>
+    </div>
+
     <div class="section" id="count-section" style="display:none">
-      <div class="section-label" id="count-section-label">5 · Wie viele Kristallfarben?</div>
+      <div class="section-label" id="count-section-label">6 · Wie viele Kristallfarben?</div>
       <div class="count-options" id="count-options"></div>
     </div>
 
@@ -241,6 +264,7 @@ body { background: transparent; color: var(--text); font-family: 'Jost', sans-se
 const COLORS = [
   { name: 'Schimmer Perle',                hex: '#FEFEFC', shimmer: '#FEFEFD', shape: 'round', stop: 'klar' },
   { name: 'Silbermine AB',                    hex: '#67655F', shimmer: '#D4D4D2', shape: 'bicone', stop: 0.75 },
+  { name: 'Vulkanglas',                    hex: '#1A1A1A', shimmer: '#313131', shape: 'round' },
   { name: 'Himmelblau AB',                 hex: '#99D6F8', shimmer: '#C2E6FB', shape: 'bicone' },
   { name: 'Capri Blau AB',                 hex: '#013CAC', shimmer: '#678ACD', shape: 'round'  },
   { name: 'Meeresblau',                    hex: '#3547A6', shimmer: '#8691CA', shape: 'bicone' },
@@ -353,6 +377,34 @@ function drawSphere(ctx, x, y, r, base, shimmer, gloss, stop = 0.42) {
   ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
   const sh = ctx.createRadialGradient(x - r * .28, y - r * .32, 0, x - r * .28, y - r * .32, r * .4);
   sh.addColorStop(0, `rgba(255,255,255,${gloss})`); sh.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = sh; ctx.fill();
+}
+
+// Metall-Lavas (galvanisiert), je Farbe ein Schalter. Steht keine auf true, verschwindet die
+// Lava-Wahl, und es gibt nur schwarze Lava. Farben gleich wie im Wunscharmband (index.html).
+const LAVA_METALL = {
+  'Gold':          { verfuegbar: true,  verlauf: ['#fff7d0', '#f2d36b', '#c99f33', '#7a5714'], poren: 'rgba(105,72,12,0.5)' },
+  'Silber':        { verfuegbar: true,  verlauf: ['#ffffff', '#e9e9e6', '#b7b7b2', '#6b6b66'], poren: 'rgba(70,70,66,0.5)' },
+  'Helles Kupfer': { verfuegbar: false, verlauf: ['#fff5ea', '#efcfaa', '#cf9a6c', '#8f6040'], poren: 'rgba(110,60,35,0.5)' },
+};
+const LAVA_KUPFER_VERFUEGBAR = Object.values(LAVA_METALL).some(l => l.verfuegbar);   // = "es gibt eine Metall-Lava zur Wahl"
+function istMetallLava(l) { return !!l && l !== 'Schwarz'; }
+
+function drawLavaKupfer(ctx, x, y, r) { drawLavaMetall(ctx, x, y, r, 'Helles Kupfer'); }
+
+// Galvanisierte Lava (Gold, Silber, Helles Kupfer): metallischer Verlauf, grobe Poren, Glanzpunkt.
+function drawLavaMetall(ctx, x, y, r, name) {
+  const m = LAVA_METALL[name] || LAVA_METALL['Helles Kupfer'];
+  const g = ctx.createRadialGradient(x - r * .3, y - r * .3, r * .05, x, y, r);
+  g.addColorStop(0, m.verlauf[0]); g.addColorStop(.4, m.verlauf[1]); g.addColorStop(.85, m.verlauf[2]); g.addColorStop(1, m.verlauf[3]);
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+  ctx.fillStyle = m.poren;
+  [[-.28, -.18], [.22, .28], [-.1, .35], [.34, -.12], [.1, -.34], [-.34, .12],
+   [.05, .05], [-.45, -.3], [.4, .35], [-.2, -.42]].forEach(([dx, dy], i) => {
+    ctx.beginPath(); ctx.arc(x + dx * r, y + dy * r, r * (i < 6 ? .11 : .07), 0, Math.PI * 2); ctx.fill();
+  });
+  const sh = ctx.createRadialGradient(x - r * .3, y - r * .32, 0, x - r * .3, y - r * .32, r * .45);
+  sh.addColorStop(0, 'rgba(255,255,255,0.65)'); sh.addColorStop(1, 'rgba(255,255,255,0)');
   ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = sh; ctx.fill();
 }
 
@@ -609,7 +661,7 @@ function drawKette(canvas, opt) {
   const R = 3 * u;
   perlen.sort((a, b) => punkt(a.mm)[1] - punkt(b.mm)[1]).forEach(b => {
     const [x, y, ang] = punkt(b.mm), n = ang + Math.PI / 2;
-    if (b.t === 'lava') drawLava(ctx, x, y, R);
+    if (b.t === 'lava') (istMetallLava(opt.lava) ? drawLavaMetall : drawLava)(ctx, x, y, R, opt.lava);
     else if (b.t === 'metal') drawMetallKugel(ctx, x, y, 1.5 * u, SILBER.hex, SILBER.shimmer);
     else if (b.c.shape === 'bicone') drawBiconeBand(ctx, x, y, R, b.c, n);
     else drawRund(ctx, x, y, R, b.c, n);
@@ -700,7 +752,7 @@ function drawKette(canvas, opt) {
   ctx.beginPath(); ctx.ellipse(gx, gy + 2.6 * u, 0.55 * u, 0.9 * u, 0, 0, Math.PI * 2); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(gx, gy + 3.5 * u); ctx.lineTo(gx, gy + 4.1 * u); ctx.stroke();
   const by = gy + 4.1 * u + R;
-  if (opt.kettchen === 'lava') drawLava(ctx, gx, by, R);
+  if (opt.kettchen === 'lava') (istMetallLava(opt.lava) ? drawLavaMetall : drawLava)(ctx, gx, by, R, opt.lava);
   else { const c = farbe(opt.kettchen); c.shape === 'bicone' ? drawBiconeBand(ctx, gx, by, R, c, 0) : drawRund(ctx, gx, by, R, c, 0); }
   drawSphere(ctx, gx, by + R + 0.8 * u, 0.8 * u, SILBER.hex, SILBER.shimmer, 0.75);
   return { u, anzahl: perlen.length };
@@ -811,6 +863,7 @@ const state = {
   slots:  [],
   merk:   [],
   ePos:   [0, 1, 0],
+  lava:            null,   // 'Schwarz' | 'Gold' | 'Silber' (nur mit Lava, also nicht bei Pur)
   lavaReplace:     false,
   lavaColor:       null,
   ohnePlatzhalter: false,
@@ -820,6 +873,8 @@ const state = {
 const hatExtras     = () => state.design && state.design !== 'pur';
 const hatPlatzhalter = () => state.design === 'dk' || state.design === 'energie';
 const lavaErsetzt   = () => hatExtras() && state.lavaReplace;
+const hatLava       = () => LAVA_KUPFER_VERFUEGBAR && hatExtras();    // Lava-Wahl bei allen Ketten mit Lava (nicht Pur)
+const lavaFertig    = () => !hatLava() || !!state.lava;
 const ohnePlatzhalterAktiv = () => hatPlatzhalter() && state.ohnePlatzhalter;
 
 function preis(cm) {
@@ -840,7 +895,7 @@ function kettenOpt() {
   // Perle am Verlängerungskettchen: Lava; bei ersetzter Lava die Ersatzfarbe; bei Pur Farbe 1
   const kettchen = state.design === 'pur' ? farben[0] : (ersatz !== null ? ersatz : 'lava');
   return { design: state.design, farben, kettchen, oese: state.oese === 'mit', metall: state.metal || 'Grau',
-           ersatz, ohnePlatzhalter: ohnePlatzhalterAktiv(), perlePx: 2.65 };
+           lava: state.lava, ersatz, ohnePlatzhalter: ohnePlatzhalterAktiv(), perlePx: 2.65 };
 }
 
 function zeichnen() {
@@ -859,8 +914,25 @@ function aufdecken() {
   zeigen('metal-section',  !!state.design);
   zeigen('oese-section',   !!state.metal);
   zeigen('laenge-section', !!state.oese);
-  zeigen('count-section',  !!state.laenge);
+  zeigen('lava-section',   !!state.laenge && hatLava());
+  zeigen('count-section',  !!state.laenge && lavaFertig());
+  if (!hatLava()) document.getElementById('lava-section').style.display = 'none';
 }
+
+function setLava(lava) {
+  state.lava = lava;
+  document.querySelectorAll('.lava-btn').forEach(b => b.classList.toggle('active', b.dataset.wahl === lava));
+  // Bei Metall-Lava gibt es nichts zu ersetzen (wie im Wunscharmband)
+  if (istMetallLava(lava) && state.lavaReplace) { state.lavaReplace = false; state.lavaColor = null; renderLaengen(); }
+  updateExtraDimming();
+  aufdecken();
+  zeichnen();
+}
+
+// Nicht verfügbare Lava-Knöpfe entfernen
+document.querySelectorAll('.lava-btn[data-lava]').forEach(b => {
+  if (!LAVA_METALL[b.dataset.lava] || !LAVA_METALL[b.dataset.lava].verfuegbar) b.remove();
+});
 
 function setDesign(design, btn) {
   if (state.design === design) return;
@@ -1019,6 +1091,7 @@ function updateExtraDimming() {
   document.getElementById('extra-lava-btn').classList.toggle('active', state.lavaReplace);
   document.getElementById('extra-keine-btn').classList.toggle('active', state.ohnePlatzhalter);
   document.getElementById('lava-color-block').style.display = state.lavaReplace ? 'block' : 'none';
+  document.getElementById('extra-lava-btn').classList.toggle('locked', istMetallLava(state.lava));
 }
 
 function setNoExtras() {
@@ -1072,7 +1145,7 @@ function extrasComplete() {
 function farbenKomplett() { return !!state.count && state.slots.length === state.count && state.slots.every(Boolean); }
 
 function isReady() {
-  return !!(state.design && state.metal && state.oese && state.laenge && farbenKomplett() && extrasComplete());
+  return !!(state.design && state.metal && state.oese && state.laenge && lavaFertig() && farbenKomplett() && extrasComplete());
 }
 
 // ---- Texte ----
@@ -1099,7 +1172,9 @@ function buildSummary() {
   else if (state.count === 1) farben = `Kristallfarbe: ${state.slots[0]}`;
   else farben = state.slots.map((s, i) => `Farbe ${i + 1}: ${s}`).join('\n');
   const extras = extraZeilen();
-  return [kopf, farben, `Edelstahl: ${state.metal}`, `Charmhalteröse: ${state.oese}`, ...extras, `Preis: ${preis()} €`].join('\n');
+  // Zeile "Lava:" nur bei Metall-Lava; ohne Zeile ist die Lava schwarz (so bleiben ältere Bestelltexte gleich)
+  const lava = hatLava() && istMetallLava(state.lava) ? [`Lava: ${state.lava}`] : [];
+  return [kopf, farben, `Edelstahl: ${state.metal}`, ...lava, `Charmhalteröse: ${state.oese}`, ...extras, `Preis: ${preis()} €`].join('\n');
 }
 
 // Zeile unter der Kette: die ganze Auswahl, so wie sie bestellt wird
@@ -1113,7 +1188,9 @@ function updateLabel() {
     const teile = [`${DESIGN_NAMEN[state.design]} Kette`, `${state.laenge} cm`];
     if (state.design === 'energie' && state.count >= 2) ['Links', 'Mitte', 'Rechts'].forEach((p, i) => teile.push(`${p}: ${energieFarbe(i)}`));
     else teile.push(...[...new Set(state.slots)]);
-    teile.push(state.metal, state.oese === 'mit' ? 'mit Charmhalteröse' : 'ohne Charmhalteröse');
+    teile.push(state.metal);
+    if (hatLava() && istMetallLava(state.lava)) teile.push(`Lava ${state.lava}`);
+    teile.push(state.oese === 'mit' ? 'mit Charmhalteröse' : 'ohne Charmhalteröse');
     if (state.lavaReplace && hatExtras()) teile.push(`Kristalle statt Lava: ${state.lavaColor}`);
     if (ohnePlatzhalterAktiv()) teile.push('ohne Platzhalter Perlen');
     label.textContent = teile.join(' · ');
@@ -1128,12 +1205,12 @@ function updateLabel() {
 }
 
 function stepLabels() {
-  const s = ['Design', 'Edelstahl', 'Öse', 'Länge', 'Farb-Anzahl', 'Farben'];
+  const s = ['Design', 'Edelstahl', 'Öse', 'Länge', ...(hatLava() ? ['Lava'] : []), 'Farb-Anzahl', 'Farben'];
   if (state.design !== 'pur') s.push('Funkel-Wünsche');
   return s;
 }
 function stepDone() {
-  const d = [!!state.design, !!state.metal, !!state.oese, !!state.laenge, !!state.count, farbenKomplett()];
+  const d = [!!state.design, !!state.metal, !!state.oese, !!state.laenge, ...(hatLava() ? [!!state.lava] : []), !!state.count, farbenKomplett()];
   if (state.design !== 'pur') d.push(!!state.design && extrasComplete());
   return d;
 }
@@ -1314,6 +1391,7 @@ function HEADING_WERTE() {
     ['metal-section-label', state.metal],
     ['oese-section-label', state.oese],
     ['laenge-section-label', state.laenge ? `${state.laenge} cm · ${preis()} €` : null],
+    ['lava-section-label', hatLava() ? state.lava : null],
     ['count-section-label', state.count ? COUNT_NAMEN[state.design][state.count] : null],
     ['color-section-label', farbenWert()],
     ['extras-section-label', extrasWert()],
@@ -1346,6 +1424,7 @@ function STAND_ZEILEN() {
     ['Edelstahl', W['metal-section-label']],
     ['Charmhalteröse', W['oese-section-label']],
     ['Länge', W['laenge-section-label']],
+    ...(hatLava() ? [['Lava', W['lava-section-label']]] : []),
     ['Farb-Anzahl', W['count-section-label']],
     ['Farben', W['color-section-label']],
   ];
@@ -1459,6 +1538,7 @@ function lrSetze(f) {
   state.laenge = parseInt(f['Länge'], 10) || null;
   state.metal  = f.Edelstahl || null;
   state.oese   = f['Charmhalteröse'] || 'ohne';
+  state.lava   = f.Lava || (d !== 'pur' && LAVA_KUPFER_VERFUEGBAR ? 'Schwarz' : null);
   if (d === 'energie') Object.assign(state, lrEnergie(f.pos || {}));
   else { state.slots = d === 'dk' ? (f.liste || []) : f.nummern; state.count = state.slots.length; }
   state.noExtras = !!f.keineExtras;

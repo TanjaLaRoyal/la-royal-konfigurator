@@ -33,6 +33,8 @@ header { text-align: center; margin-bottom: 36px; }
 .lava-swatch { display:inline-block; width: 13px; height: 13px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
 .lava-swatch.schwarz { background: radial-gradient(circle at 35% 35%, #585858, #1a1a1a 60%, #0a0a0a); }
 .lava-swatch.kupfer  { background: radial-gradient(circle at 35% 35%, #fff5ea, #efcfaa 40%, #cf9a6c 80%, #8f6040); }
+.lava-swatch.lava-gold   { background: radial-gradient(circle at 35% 35%, #fff7d0, #f2d36b 40%, #c99f33 80%, #7a5714); }
+.lava-swatch.lava-silber { background: radial-gradient(circle at 35% 35%, #ffffff, #e9e9e6 40%, #b7b7b2 80%, #6b6b66); }
 .section-label { font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; color: #000; margin-bottom: 12px; font-weight: 500; }
 .section { margin-bottom: 28px; }
 .option-row { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -142,7 +144,9 @@ header { text-align: center; margin-bottom: 36px; }
       <div class="slot-label">Lava</div>
       <div class="option-row" id="lava-row">
         <button class="option-btn" onclick="setLava('Schwarz', this)"><span class="lava-swatch schwarz"></span>Schwarz</button>
-        <button class="option-btn" onclick="setLava('Helles Kupfer', this)"><span class="lava-swatch kupfer"></span>Helles Kupfer</button>
+        <button class="option-btn" data-lava="Gold" onclick="setLava('Gold', this)"><span class="lava-swatch lava-gold"></span>Gold</button>
+        <button class="option-btn" data-lava="Silber" onclick="setLava('Silber', this)"><span class="lava-swatch lava-silber"></span>Silber</button>
+        <button class="option-btn" data-lava="Helles Kupfer" onclick="setLava('Helles Kupfer', this)"><span class="lava-swatch kupfer"></span>Helles Kupfer</button>
       </div>
     </div>
   </div>
@@ -179,6 +183,7 @@ header { text-align: center; margin-bottom: 36px; }
 const COLORS = [
   { name: 'Schimmer Perle',                hex: '#FEFEFC', shimmer: '#FEFEFD', shape: 'round', stop: 'klar' },
   { name: 'Silbermine AB',                    hex: '#67655F', shimmer: '#D4D4D2', shape: 'bicone', stop: 0.75 },
+  { name: 'Vulkanglas',                    hex: '#1A1A1A', shimmer: '#313131', shape: 'round' },
   { name: 'Himmelblau AB',                 hex: '#99D6F8', shimmer: '#C2E6FB', shape: 'bicone' },
   { name: 'Capri Blau AB',                 hex: '#013CAC', shimmer: '#678ACD', shape: 'round'  },
   { name: 'Meeresblau',                    hex: '#3547A6', shimmer: '#8691CA', shape: 'bicone' },
@@ -210,7 +215,19 @@ const LAVA  = { hex: '#1a1a1a', shimmer: '#585858', shape: 'lava'  };
 
 // Lava "Helles Kupfer" (galvanisiert) – begrenzter Vorrat. Auf false stellen, wenn
 // sie ausverkauft ist: die Lava-Wahl bei "3 Farben + Lava" verschwindet.
-const LAVA_KUPFER_VERFUEGBAR = false;
+// Metall-Lavas (galvanisiert), je Farbe ein Schalter. Steht keine auf true, verschwindet die
+// Lava-Wahl, und es gibt nur schwarze Lava. Farben gleich wie im Wunscharmband (index.html).
+const LAVA_METALL = {
+  'Gold':          { verfuegbar: true,  verlauf: ['#fff7d0', '#f2d36b', '#c99f33', '#7a5714'], poren: 'rgba(105,72,12,0.5)' },
+  'Silber':        { verfuegbar: true,  verlauf: ['#ffffff', '#e9e9e6', '#b7b7b2', '#6b6b66'], poren: 'rgba(70,70,66,0.5)' },
+  'Helles Kupfer': { verfuegbar: false, verlauf: ['#fff5ea', '#efcfaa', '#cf9a6c', '#8f6040'], poren: 'rgba(110,60,35,0.5)' },
+};
+const LAVA_KUPFER_VERFUEGBAR = Object.values(LAVA_METALL).some(l => l.verfuegbar);   // = "es gibt eine Metall-Lava zur Wahl"
+function istMetallLava(l) { return !!l && l !== 'Schwarz'; }
+// Nicht verfügbare Lava-Knöpfe entfernen
+document.addEventListener('DOMContentLoaded', () => document.querySelectorAll('#lava-row .option-btn[data-lava]').forEach(b => {
+  if (!LAVA_METALL[b.dataset.lava] || !LAVA_METALL[b.dataset.lava].verfuegbar) b.remove();
+}));
 
 const state = {
   metal: null,
@@ -262,12 +279,15 @@ function getCrystalAt(pos) {
   return COLORS.find(c => c.name === name) || EMPTY;
 }
 
-function drawLavaKupfer(ctx, x, y, r) {
-  // Helles Kupfer: Champagner-Basis mit Kupfer-Wärme, grobe Poren, Glanzpunkt
+function drawLavaKupfer(ctx, x, y, r) { drawLavaMetall(ctx, x, y, r, 'Helles Kupfer'); }
+
+// Galvanisierte Lava (Gold, Silber, Helles Kupfer): metallischer Verlauf, grobe Poren, Glanzpunkt.
+function drawLavaMetall(ctx, x, y, r, name) {
+  const m = LAVA_METALL[name] || LAVA_METALL['Helles Kupfer'];
   const g = ctx.createRadialGradient(x - r * .3, y - r * .3, r * .05, x, y, r);
-  g.addColorStop(0, '#fff5ea'); g.addColorStop(.4, '#efcfaa'); g.addColorStop(.85, '#cf9a6c'); g.addColorStop(1, '#8f6040');
+  g.addColorStop(0, m.verlauf[0]); g.addColorStop(.4, m.verlauf[1]); g.addColorStop(.85, m.verlauf[2]); g.addColorStop(1, m.verlauf[3]);
   ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
-  ctx.fillStyle = 'rgba(110,60,35,0.5)';
+  ctx.fillStyle = m.poren;
   [[-.28, -.18], [.22, .28], [-.1, .35], [.34, -.12], [.1, -.34], [-.34, .12],
    [.05, .05], [-.45, -.3], [.4, .35], [-.2, -.42]].forEach(([dx, dy], i) => {
     ctx.beginPath(); ctx.arc(x + dx * r, y + dy * r, r * (i < 6 ? .11 : .07), 0, Math.PI * 2); ctx.fill();
@@ -513,7 +533,7 @@ function drawBuendel(ctx, cx, oeseY, mc, kristall) {
     ctx.lineWidth = 1.2;
     ctx.beginPath(); ctx.ellipse(ax + dx * 1.6, ay + dy * 1.6, 2.1, 3.7, -t, 0, Math.PI * 2); ctx.stroke();     // ovale Schlaufe
     drawSphere(ctx, bx + dx * (R + 2.3), by + dy * (R + 2.3), 2.9, mc.hex, mc.shimmer, 0.75);                  // Kugel am Stiftende
-    if (c.shape === 'lava') (state.lava === 'Helles Kupfer' ? drawLavaKupfer : drawLava)(ctx, bx, by, R);
+    if (c.shape === 'lava') (istMetallLava(state.lava) ? drawLavaMetall : drawLava)(ctx, bx, by, R, state.lava);
     else if (c.shape === 'bicone') drawBiconeSeite(ctx, bx, by, R, c, t);
     else drawSphere(ctx, bx, by, R, c.hex, c.shimmer, 0.65, c.stop);
   });
@@ -663,7 +683,7 @@ function updateLabel() {
   const label = document.getElementById('preview-label');
   if (isReady()) {
     const colorStr = state.count === 1 ? state.slots[0] : state.slots.join(' · ');
-    const lavaStr = state.count === 3 && state.lava === 'Helles Kupfer' ? ' · Lava Helles Kupfer' : '';
+    const lavaStr = state.count === 3 && istMetallLava(state.lava) ? ` · Lava ${state.lava}` : '';
     label.textContent = `Bündel Charm · ${colorStr} · ${state.metal}${lavaStr}`;
     label.className = 'preview-label filled';
   } else {

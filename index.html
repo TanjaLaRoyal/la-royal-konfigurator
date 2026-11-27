@@ -72,6 +72,8 @@ header { text-align: center; margin-bottom: 36px; }
 .metal-swatch.gold      { background: linear-gradient(135deg, #e8c97e, #b8863a); }
 .metal-swatch.schwarz   { background: radial-gradient(circle at 35% 35%, #585858, #1a1a1a 60%, #0a0a0a); }
 .metal-swatch.kupfer  { background: radial-gradient(circle at 35% 35%, #fff5ea, #efcfaa 40%, #cf9a6c 80%, #8f6040); }
+.metal-swatch.lava-gold   { background: radial-gradient(circle at 35% 35%, #fff7d0, #f2d36b 40%, #c99f33 80%, #7a5714); }
+.metal-swatch.lava-silber { background: radial-gradient(circle at 35% 35%, #ffffff, #e9e9e6 40%, #b7b7b2 80%, #6b6b66); }
 .design-btn.locked { opacity: 0.3; pointer-events: none; }
 .seiten-titel { font-family: 'Jost', sans-serif; font-weight: 400; font-size: clamp(1.4rem, 3.5vw, 2rem); letter-spacing: 0.18em; line-height: 1.35; text-transform: uppercase; text-align: center; color: #000; margin-bottom: 52px; }
 /* Schmale Handys: etwas enger, damit "Energie · Doppel Kristall" auf einer Zeile bleibt */
@@ -166,13 +168,30 @@ header { text-align: center; margin-bottom: 36px; }
 
     <div class="section" id="metal-section" style="display:none">
       <div class="section-label" id="metal-section-label">2 · Edelstahl</div>
-      <div class="metal-options">
-        <button class="metal-btn" onclick="setMetal('Silber',this)">
-          <span class="metal-swatch silber"></span> Silber
-        </button>
-        <button class="metal-btn" onclick="setMetal('Gold',this)">
-          <span class="metal-swatch gold"></span> Gold
-        </button>
+      <div id="platzhalter-farbe">
+        <div class="slot-label">Platzhalter Perlen</div>
+        <div class="metal-options">
+          <button class="metal-btn platz-btn" onclick="setMetal('Silber',this)">
+            <span class="metal-swatch silber"></span> Silber
+          </button>
+          <button class="metal-btn platz-btn" onclick="setMetal('Gold',this)">
+            <span class="metal-swatch gold"></span> Gold
+          </button>
+        </div>
+      </div>
+      <div id="barrel-block" style="margin-top:18px;">
+        <div class="slot-label">Grosslochperle</div>
+        <div class="metal-options">
+          <button class="metal-btn barrel-btn" data-barrel="Silber" onclick="setBarrel('Silber')">
+            <span class="metal-swatch silber"></span> Silber
+          </button>
+          <button class="metal-btn barrel-btn" data-barrel="Gold" onclick="setBarrel('Gold')">
+            <span class="metal-swatch gold"></span> Gold
+          </button>
+          <button class="metal-btn barrel-btn" data-barrel="Schwarz" onclick="setBarrel('Schwarz')">
+            <span class="metal-swatch schwarz"></span> Schwarz
+          </button>
+        </div>
       </div>
     </div>
 
@@ -182,7 +201,13 @@ header { text-align: center; margin-bottom: 36px; }
         <button class="metal-btn lava-btn" onclick="setLava('Schwarz',this)">
           <span class="metal-swatch schwarz"></span> Schwarz
         </button>
-        <button class="metal-btn lava-btn" onclick="setLava('Helles Kupfer',this)">
+        <button class="metal-btn lava-btn" data-lava="Gold" onclick="setLava('Gold',this)">
+          <span class="metal-swatch lava-gold"></span> Gold
+        </button>
+        <button class="metal-btn lava-btn" data-lava="Silber" onclick="setLava('Silber',this)">
+          <span class="metal-swatch lava-silber"></span> Silber
+        </button>
+        <button class="metal-btn lava-btn" data-lava="Helles Kupfer" onclick="setLava('Helles Kupfer',this)">
           <span class="metal-swatch kupfer"></span> Helles Kupfer
         </button>
       </div>
@@ -246,20 +271,6 @@ header { text-align: center; margin-bottom: 36px; }
           <span class="design-btn-desc">Eine einzelne Platzhalter Perle, gegenüber der Grosslochperle</span>
         </button>
       </div>
-      <div id="barrel-block" style="display:none; margin-top:18px;">
-        <div class="slot-label">Farbe der Grosslochperle</div>
-        <div class="metal-options">
-          <button class="metal-btn barrel-btn" data-barrel="Silber" onclick="setBarrel('Silber')">
-            <span class="metal-swatch silber"></span> Silber
-          </button>
-          <button class="metal-btn barrel-btn" data-barrel="Gold" onclick="setBarrel('Gold')">
-            <span class="metal-swatch gold"></span> Gold
-          </button>
-          <button class="metal-btn barrel-btn" data-barrel="Schwarz" onclick="setBarrel('Schwarz')">
-            <span class="metal-swatch schwarz"></span> Schwarz
-          </button>
-        </div>
-      </div>
       <div id="lava-color-block" style="display:none; margin-top:18px;">
         <div class="slot-label">Kristallfarbe statt Lava</div>
         <div class="color-options" id="lava-color-options"></div>
@@ -285,6 +296,7 @@ header { text-align: center; margin-bottom: 36px; }
 const COLORS = [
   { name: 'Schimmer Perle',                hex: '#FEFEFC', shimmer: '#FEFEFD', shape: 'round', stop: 'klar' },
   { name: 'Silbermine AB',                    hex: '#67655F', shimmer: '#D4D4D2', shape: 'bicone', stop: 0.75 },
+  { name: 'Vulkanglas',                    hex: '#1A1A1A', shimmer: '#313131', shape: 'round' },
   { name: 'Himmelblau AB',                 hex: '#99D6F8', shimmer: '#C2E6FB', shape: 'bicone' },
   { name: 'Capri Blau AB',                 hex: '#013CAC', shimmer: '#678ACD', shape: 'round'  },
   { name: 'Meeresblau',                    hex: '#3547A6', shimmer: '#8691CA', shape: 'bicone' },
@@ -315,7 +327,16 @@ const GREY  = { hex: '#c8c8c8', shimmer: '#e4e4e4' };
 
 // Lava "Helles Kupfer" (galvanisiert) – begrenzter Vorrat. Auf false stellen, wenn
 // sie ausverkauft ist: der Schritt "Lava" verschwindet, alles läuft wie vorher.
-const LAVA_KUPFER_VERFUEGBAR = false;
+// Metall-Lavas (galvanisiert), je Farbe ein Schalter. Steht keine auf true, verschwindet der
+// Schritt "Lava", und es gibt nur schwarze Lava. Farbverlauf der Zeichnung in "verlauf",
+// Farbe der Poren in "poren".
+const LAVA_METALL = {
+  'Gold':          { verfuegbar: true,  verlauf: ['#fff7d0', '#f2d36b', '#c99f33', '#7a5714'], poren: 'rgba(105,72,12,0.5)' },
+  'Silber':        { verfuegbar: true,  verlauf: ['#ffffff', '#e9e9e6', '#b7b7b2', '#6b6b66'], poren: 'rgba(70,70,66,0.5)' },
+  'Helles Kupfer': { verfuegbar: false, verlauf: ['#fff5ea', '#efcfaa', '#cf9a6c', '#8f6040'], poren: 'rgba(110,60,35,0.5)' },
+};
+const LAVA_KUPFER_VERFUEGBAR = Object.values(LAVA_METALL).some(l => l.verfuegbar);   // = "es gibt eine Metall-Lava zur Wahl"
+function istMetallLava(l) { return !!l && l !== 'Schwarz'; }
 
 const state = {
   design: null,
@@ -338,17 +359,32 @@ function metalColor() {
   return { hex: '#aab3bd', shimmer: '#f1f4f7' };
 }
 
-// Schwarze Grosslochperle: nur wählbar bei "Keine Platzhalter Perlen" (seit 21.10.2026).
-function istSchwarz() {
-  return state.design !== 'pur' && state.placeholders === 'keine' && state.barrel === 'Schwarz';
+// Grosslochperle: eigene Wahl im Schritt Edelstahl (Silber, Gold, Schwarz), bei jedem Armband.
+// Keine Vorauswahl: Die Kundin klickt Platzhalter Perlen und Grosslochperle selbst an (Tanja).
+function barrelWahl() { return state.barrel; }
+function istSchwarz() { return barrelWahl() === 'Schwarz'; }
+// Ist der Schritt Edelstahl fertig? Kristall Pur braucht nur die Grosslochperle.
+function edelstahlFertig() { return state.design === 'pur' ? !!state.barrel : !!(state.metal && state.barrel); }
+// Wert für Überschrift und Zeile unter dem Armband (null, solange der Schritt offen ist)
+function edelstahlWert() {
+  if (!edelstahlFertig()) return null;
+  const b = barrelWahl();
+  if (state.design === 'pur' || state.placeholders === 'keine') return b === 'Schwarz' ? 'Grosslochperle Schwarz' : b;
+  return b && b !== state.metal ? `${state.metal} · Grosslochperle ${b}` : state.metal;
 }
-function edelstahlWert() { return istSchwarz() ? 'Grosslochperle Schwarz' : state.metal; }
-function edelstahlZeile() { return istSchwarz() ? 'Grosslochperle: Schwarz' : `Edelstahl: ${state.metal}`; }
+// Bestelltext: "Edelstahl: …" für die Platzhalter Perlen, "Grosslochperle: …" nur, wenn sie
+// anders ist. Ohne Platzhalter Perlen (und bei Kristall Pur) zählt nur die Grosslochperle;
+// dann bleibt der Text wie bisher ("Edelstahl: Gold" bzw. "Grosslochperle: Schwarz").
+function edelstahlZeile() {
+  const b = barrelWahl();
+  if (state.design === 'pur' || state.placeholders === 'keine') return b === 'Schwarz' ? 'Grosslochperle: Schwarz' : `Edelstahl: ${b}`;
+  return `Edelstahl: ${state.metal}` + (b !== state.metal ? `\nGrosslochperle: ${b}` : '');
+}
 
 function barrelColor() {
-  // Die Grosslochperle gibt es in Silber, Gold und (nur ohne Platzhalter Perlen) Schwarz.
+  // Die Grosslochperle gibt es in Silber, Gold und Schwarz.
   if (istSchwarz())               return { hex: '#2a2a2a', shimmer: '#8a8a8a', glatt: true };
-  if (state.metal === 'Gold')     return { hex: '#d2a038', shimmer: '#f7e2a0' };
+  if (barrelWahl() === 'Gold')    return { hex: '#d2a038', shimmer: '#f7e2a0' };
   return { hex: '#aab3bd', shimmer: '#f1f4f7' };
 }
 
@@ -530,7 +566,7 @@ function drawBracelet() {
     const x = cx + ringR * Math.cos(angles[i]);
     const y = cy + ringR * Math.sin(angles[i]);
     const b = seq[i];
-    if      (b.type === 'lava')    (state.lava === 'Helles Kupfer' ? drawLavaKupfer : drawLava)(ctx, x, y, R_LAVA);
+    if      (b.type === 'lava')    (istMetallLava(state.lava) ? drawLavaMetall : drawLava)(ctx, x, y, R_LAVA, state.lava);
     else if (b.type === 'barrel')  (b.glatt ? drawBarrelGlatt : drawBarrel)(ctx, x, y, R_CRYSTAL, b.hex, b.shimmer, 0.82, angles[i]);
     else if (b.type === 'metal')   drawMetallKugel(ctx, x, y, R_METAL, b.hex, b.shimmer);
     else if (b.shape === 'bicone') drawBiconeBand(ctx, x, y, R_CRYSTAL, b, angles[i]);
@@ -618,7 +654,7 @@ function drawPur(ctx, W, H) {
   ctx.strokeStyle = 'rgba(120,110,100,0.1)';
   ctx.lineWidth   = 1.5;
   ctx.stroke();
-  const mc = state.metal === 'Gold' ? { hex: '#d2a038', shimmer: '#f7e2a0' } : { hex: '#aab3bd', shimmer: '#f1f4f7' };
+  const mc = barrelColor();   // Grosslochperle: Silber, Gold oder Schwarz
   const perlen = [];
   for (let i = 0; i < PUR_PERLEN; i++) {
     const a = (i / PUR_PERLEN) * 2 * Math.PI - Math.PI / 2;
@@ -626,7 +662,7 @@ function drawPur(ctx, W, H) {
   }
   // Oben (weit) zuerst, unten (nah) zuletzt
   perlen.slice().sort((a, b) => a.y - b.y).forEach(({ x, y, rot, idx }) => {
-    if (idx === 0) { drawBarrel(ctx, x, y, PUR_R, mc.hex, mc.shimmer, 0.82, rot - Math.PI / 2); return; }
+    if (idx === 0) { (mc.glatt ? drawBarrelGlatt : drawBarrel)(ctx, x, y, PUR_R, mc.hex, mc.shimmer, 0.82, rot - Math.PI / 2); return; }
     const c = purKristall(idx - 1);
     if (c.shape === 'bicone') drawBiconeBand(ctx, x, y, PUR_R, c, rot - Math.PI / 2);
     else                      drawRund(ctx, x, y, PUR_R, c, rot - Math.PI / 2);
@@ -656,7 +692,7 @@ function updateLabel() {
     label.className   = 'preview-label';
   } else if (ready && state.design === 'pur') {
     const colorStr = state.count === 1 ? state.slots[0] : state.slots.join(' · ');
-    label.textContent = `Kristall Pur · ${colorStr} · ${state.metal}`;
+    label.textContent = `Kristall Pur · ${colorStr} · ${edelstahlWert()}`;
     label.className   = 'preview-label filled';
   } else if (ready) {
     const designName = state.design === 'dk' ? 'Doppel Kristall' : 'Energie';
@@ -672,10 +708,10 @@ function updateLabel() {
       label.textContent = `${designName} · ${colorNames} · ${edelstahlWert()}${lavaLabel()}`;
     }
     label.className = 'preview-label filled';
-  } else if (allFilled && state.metal && !lavaComplete()) {
+  } else if (allFilled && edelstahlFertig() && !lavaComplete()) {
     label.textContent = 'Fast fertig – wähle noch deine Lava und deine Extra Funkel-Wünsche.';
     label.className   = 'preview-label';
-  } else if (allFilled && state.metal) {
+  } else if (allFilled && edelstahlFertig()) {
     label.textContent = 'Fast fertig – wähle noch deine Extra Funkel-Wünsche.';
     label.className   = 'preview-label';
   } else if (state.count) {
@@ -691,11 +727,11 @@ function updateLabel() {
 
 function isReady() {
   if (state.design === 'pur') {
-    return state.count && state.metal && state.slots.length === state.count && state.slots.every(Boolean);
+    return state.count && edelstahlFertig() && state.slots.length === state.count && state.slots.every(Boolean);
   }
   return state.design &&
          state.count &&
-         state.metal &&
+         edelstahlFertig() &&
          lavaComplete() &&
          state.slots.filter(Boolean).length === state.count &&
          extrasComplete();
@@ -721,7 +757,7 @@ function stepLabels() {
 }
 
 function stepDone() {
-  const steps = [!!state.design, !!state.metal];
+  const steps = [!!state.design, edelstahlFertig()];
   if (LAVA_KUPFER_VERFUEGBAR && state.design !== 'pur') steps.push(!!state.lava);
   steps.push(
     !!state.count,
@@ -866,13 +902,16 @@ function drawLava(ctx, x, y, r) {
   });
 }
 
-function drawLavaKupfer(ctx, x, y, r) {
-  // Galvanisierte Lava: goldener Glanz, die Poren bleiben sichtbar
+function drawLavaKupfer(ctx, x, y, r) { drawLavaMetall(ctx, x, y, r, 'Helles Kupfer'); }
+
+// Galvanisierte Lava (Gold, Silber, Helles Kupfer): metallischer Verlauf, grobe Poren, Glanzpunkt.
+// Farben aus LAVA_METALL. Aufbau wie Helles Kupfer (Variante F).
+function drawLavaMetall(ctx, x, y, r, name) {
+  const m = LAVA_METALL[name] || LAVA_METALL['Helles Kupfer'];
   const g = ctx.createRadialGradient(x - r * .3, y - r * .3, r * .05, x, y, r);
-  // Helles Kupfer (Variante F, 16.09.2026): Champagner-Basis mit Kupfer-Wärme, grobe Poren
-  g.addColorStop(0, '#fff5ea'); g.addColorStop(.4, '#efcfaa'); g.addColorStop(.85, '#cf9a6c'); g.addColorStop(1, '#8f6040');
+  g.addColorStop(0, m.verlauf[0]); g.addColorStop(.4, m.verlauf[1]); g.addColorStop(.85, m.verlauf[2]); g.addColorStop(1, m.verlauf[3]);
   ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
-  ctx.fillStyle = 'rgba(110,60,35,0.5)';
+  ctx.fillStyle = m.poren;
   [[-.28, -.18], [.22, .28], [-.1, .35], [.34, -.12], [.1, -.34], [-.34, .12],
    [.05, .05], [-.45, -.3], [.4, .35], [-.2, -.42]].forEach(([dx, dy], i) => {
     ctx.beginPath(); ctx.arc(x + dx * r, y + dy * r, r * (i < 6 ? .11 : .07), 0, Math.PI * 2); ctx.fill();
@@ -1153,15 +1192,15 @@ function updateExtraDimming() {
   ['extra-lava-btn', 'extra-keine-btn', 'extra-eine-btn'].forEach(id =>
     document.getElementById(id).classList.toggle('dimmed', state.noExtras));
   document.getElementById('extra-none-btn').classList.toggle('dimmed', anyExtra);
-  // Bei Kupfer-Lava gibt es nichts zu ersetzen – Option gesperrt
-  document.getElementById('extra-lava-btn').classList.toggle('locked', state.lava === 'Helles Kupfer');
+  // Bei Metall-Lava gibt es nichts zu ersetzen – Option gesperrt
+  document.getElementById('extra-lava-btn').classList.toggle('locked', istMetallLava(state.lava));
 }
 
 function setLava(lava, btn) {
   state.lava = lava;
   document.querySelectorAll('.lava-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  if (lava === 'Helles Kupfer' && state.lavaReplace) {
+  if (istMetallLava(lava) && state.lavaReplace) {
     state.lavaReplace = false;
     state.lavaColor   = null;
     document.getElementById('extra-lava-btn').classList.remove('active');
@@ -1174,6 +1213,9 @@ function setLava(lava, btn) {
 // Ist die Kupfer-Lava ausverkauft (Schalter oben auf false), verschwindet
 // der Schritt und die Nummerierung rückt nach.
 function applyLavaSwitch() {
+  document.querySelectorAll('.lava-btn[data-lava]').forEach(b => {
+    if (!LAVA_METALL[b.dataset.lava] || !LAVA_METALL[b.dataset.lava].verfuegbar) b.remove();
+  });
   if (LAVA_KUPFER_VERFUEGBAR) return;
   document.getElementById('lava-section').remove();
   document.querySelectorAll('.count-section-label').forEach(el => el.textContent = '3 · Wie viele Kristallfarben?');
@@ -1192,8 +1234,6 @@ function setNoExtras() {
     document.getElementById('extra-keine-btn').classList.remove('active');
     document.getElementById('extra-eine-btn').classList.remove('active');
     document.getElementById('lava-color-block').style.display = 'none';
-    state.barrel = null;
-    updateBarrelButtons();
   }
   document.getElementById('extra-none-btn').classList.toggle('active', state.noExtras);
   updateExtraDimming();
@@ -1222,7 +1262,6 @@ function setPlaceholders(mode) {
   if (state.placeholders !== 'alle') clearNoExtras();
   document.getElementById('extra-keine-btn').classList.toggle('active', state.placeholders === 'keine');
   document.getElementById('extra-eine-btn').classList.toggle('active', state.placeholders === 'eine');
-  if (state.placeholders !== 'keine') state.barrel = null;
   updateBarrelButtons();
   updateExtraDimming();
   drawBracelet();
@@ -1250,7 +1289,6 @@ function resetExtras() {
   state.lavaReplace  = false;
   state.lavaColor    = null;
   state.placeholders = 'alle';
-  state.barrel       = null;
   state.noExtras     = false;
   updateExtraDimming();
   document.getElementById('extra-none-btn').classList.remove('active');
@@ -1282,6 +1320,7 @@ function setDesign(design, btn) {
   document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
   if (LAVA_KUPFER_VERFUEGBAR) document.getElementById('lava-section').style.display = pur ? 'none' : 'block';
   document.getElementById('metal-section').style.display = 'block';
+  updateBarrelButtons();
   const sec = { dk: 'dk-count-section', energie: 'en-count-section', pur: 'pur-count-section' }[design];
   ['dk-count-section', 'en-count-section', 'pur-count-section'].forEach(id =>
     document.getElementById(id).style.display = id === sec ? 'block' : 'none');
@@ -1409,28 +1448,31 @@ function renderPositionTable() {
   });
 }
 
+// Platzhalter Perlen: Silber oder Gold. Die Grosslochperle folgt, solange sie nicht eigens gewählt ist.
 function setMetal(metal, btn) {
-  state.metal  = metal;
-  state.barrel = null;   // Silber oder Gold oben gewählt: Grosslochperle folgt wieder dem Edelstahl
+  state.metal = metal;
   updateBarrelButtons();
   drawBracelet();
 }
 
-// Edelstahl oben und Grosslochperle unten zeigen dieselbe Wahl; Schwarz gibt es nur unten.
+// Grosslochperle: Silber, Gold oder Schwarz, unabhängig von den Platzhalter Perlen.
+// Kristall Pur hat keine Platzhalter Perlen: dort ist die Grosslochperle das Edelstahl-Teil.
 function setBarrel(farbe) {
-  if (farbe === 'Schwarz') state.barrel = 'Schwarz';
-  else { state.metal = farbe; state.barrel = null; }
+  state.barrel = farbe;
+  if (state.design === 'pur') state.metal = farbe === 'Schwarz' ? (state.metal || 'Silber') : farbe;
   updateBarrelButtons();
   drawBracelet();
 }
 function updateBarrelButtons() {
-  const schwarz = istSchwarz();
-  document.querySelectorAll('#metal-section .metal-btn').forEach(b =>
-    b.classList.toggle('active', !schwarz && b.textContent.trim() === state.metal));
+  const pur = state.design === 'pur';
+  document.querySelectorAll('.platz-btn').forEach(b =>
+    b.classList.toggle('active', b.textContent.trim() === state.metal));
   document.querySelectorAll('.barrel-btn').forEach(b =>
-    b.classList.toggle('active', schwarz ? b.dataset.barrel === 'Schwarz' : b.dataset.barrel === state.metal));
-  const block = document.getElementById('barrel-block');
-  if (block) block.style.display = state.placeholders === 'keine' ? 'block' : 'none';
+    b.classList.toggle('active', b.dataset.barrel === state.barrel));
+  const platz = document.getElementById('platzhalter-farbe');
+  if (platz) platz.style.display = pur ? 'none' : 'block';
+  const gross = document.getElementById('barrel-block');
+  if (gross) gross.style.marginTop = pur ? '0' : '18px';
 }
 
 function getEnergieColorAtPos(pos) {
@@ -1463,7 +1505,7 @@ function buildSummaryPur() {
     colorLines = state.slots.map((s, i) => `Farbe ${i + 1}: ${s}`).join('\n');
     if (state.count >= 4) colorLines += `\nReihenfolge: ${state.slots.map((_, i) => `Farbe ${i + 1}`).join(' → ')}`;
   }
-  return `Kristall Pur\n${colorLines}\nEdelstahl: ${state.metal}\nPreis: 50 €`;
+  return `Kristall Pur\n${colorLines}\n${edelstahlZeile()}\nPreis: 50 €`;
 }
 
 function buildSummary() {
@@ -1719,8 +1761,8 @@ function lrSetze(f) {
   const k = f.kopf;
   state.design = /^Doppel Kristall/.test(k) ? 'dk' : /^Energie/.test(k) ? 'energie' : /^Kristall Pur/.test(k) ? 'pur' : null;
   if (!state.design) throw new Error('Kein Wunscharmband: ' + k);
-  if (f.Grosslochperle === 'Schwarz') { state.barrel = 'Schwarz'; state.placeholders = 'keine'; state.metal = 'Silber'; }
-  else state.metal = f.Edelstahl || null;
+  state.metal  = f.Edelstahl || (f.Grosslochperle && f.Grosslochperle !== 'Schwarz' ? f.Grosslochperle : f.Grosslochperle ? 'Silber' : null);
+  state.barrel = f.Grosslochperle || state.metal;   // ohne eigene Zeile hat die Grosslochperle die Farbe des Edelstahls
   if (f.Lava) state.lava = f.Lava;
   if (state.design === 'energie') Object.assign(state, lrEnergie(f.pos || {}));
   else { state.slots = state.design === 'dk' ? (f.liste || []) : f.nummern; state.count = state.slots.length; }
